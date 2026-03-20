@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="login-page">
     <!-- 背景装饰 -->
     <div class="background-decoration">
@@ -298,7 +298,15 @@ const hideBackendWarning = () => {
 
 // 加载记住的账户
 const loadRememberedAccount = () => {
-  import('@/utils/auth').then(({ auth }) => {
+  // Bootstrap permission store with data from login response
+    import('@/stores/permission').then(({ usePermissionStore }) => {
+      usePermissionStore().bootstrap({
+        role: loginData.role_meta ? loginData.user.role : loginData.user.role,
+        permissions: loginData.permissions || [],
+        role_meta: loginData.role_meta || { label: loginData.user.role, color: 'gray', dashboard_view: 'auditor' }
+      })
+    })
+    import('@/utils/auth').then(({ auth }) => {
     const lastUsername = auth.getLastUsername()
     if (lastUsername) {
       username.value = lastUsername
@@ -361,6 +369,14 @@ const handleLogin = async () => {
     })
     
     // 保存 token 和用户信息（使用统一管理）
+    // Bootstrap permission store with data from login response
+    import('@/stores/permission').then(({ usePermissionStore }) => {
+      usePermissionStore().bootstrap({
+        role: loginData.role_meta ? loginData.user.role : loginData.user.role,
+        permissions: loginData.permissions || [],
+        role_meta: loginData.role_meta || { label: loginData.user.role, color: 'gray', dashboard_view: 'auditor' }
+      })
+    })
     import('@/utils/auth').then(({ auth }) => {
       auth.saveLoginData(
         loginData.access_token,

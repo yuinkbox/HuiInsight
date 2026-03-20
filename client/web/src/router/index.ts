@@ -1,30 +1,42 @@
 /**
- * 路由配置 - 严格鉴权版本
+ * 路由配置 - 权限点驱动版本
+ *
+ * 路由守卫不再硬编码角色名。每条需要特殊权限的路由在 meta 中
+ * 声明所需的权限点字符串（如 "view:shadow_audit"），守卫统一
+ * 调用 permissionStore.can(permission) 进行校验。
+ *
+ * 新增角色或调整权限：只需修改后端 permissions.py，前端零改动。
  */
 
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
-import { auth } from '@/utils/auth' // ✅ 直接在顶部同步导入
+import { auth } from '@/utils/auth'
+import { usePermissionStore } from '@/stores/permission'
 
 import MainLayout from '@/layouts/MainLayout.vue'
 
-const LoginPage = () => import('@/views/LoginPage.vue')
-const DashboardPage = () => import('@/views/DashboardPage.vue')
-const RealTimePatrolPage = () => import('@/views/RealTimePatrolPage.vue')
-const ViolationReviewPage = () => import('@/views/ViolationReviewPage.vue')
-const SOPPage = () => import('@/views/SOPPage.vue')
-const SettingsPage = () => import('@/views/SettingsPage.vue')
-const NotFoundPage = () => import('@/views/NotFoundPage.vue')
+const LoginPage            = () => import('@/views/LoginPage.vue')
+const DashboardPage        = () => import('@/views/DashboardPage.vue')
+const RealTimePatrolPage   = () => import('@/views/RealTimePatrolPage.vue')
+const ViolationReviewPage  = () => import('@/views/ViolationReviewPage.vue')
+const SOPPage              = () => import('@/views/SOPPage.vue')
+const SettingsPage         = () => import('@/views/SettingsPage.vue')
+const NotFoundPage         = () => import('@/views/NotFoundPage.vue')
 const ShadowAuditDashboard = () => import('@/views/supervisor/ShadowAuditDashboard.vue')
 
+// ---------------------------------------------------------------------------
+// Route table
+// meta.permission  — if set, user must hold this permission point
+// meta.requiresAuth — if true, user must be logged in
+// ---------------------------------------------------------------------------
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/login' },
   {
     path: '/login',
     name: 'Login',
     component: LoginPage,
-    meta: { title: '登录', requiresAuth: false, hideLayout: true }
+    meta: { title: '登录', requiresAuth: false, hideLayout: true },
   },
   {
     path: '/',
@@ -35,7 +47,13 @@ const routes: RouteRecordRaw[] = [
         path: 'dashboard',
         name: 'Dashboard',
         component: DashboardPage,
-        meta: { title: '审核工作台', icon: 'icon-dashboard', menu: true, requiresAuth: true }
+        meta: {
+          title: '审核工作台',
+          icon: 'icon-dashboard',
+          menu: true,
+          requiresAuth: true,
+          permission: 'view:dashboard',
+        },
       },
       {
         path: 'risk-audit',
@@ -43,9 +61,19 @@ const routes: RouteRecordRaw[] = [
         redirect: '/risk-audit/realtime',
         meta: { title: '风险审核', icon: 'icon-shield', menu: true, requiresAuth: true },
         children: [
-          { path: 'realtime', name: 'RealTimePatrol', component: RealTimePatrolPage, meta: { title: '实时监控', requiresAuth: true } },
-          { path: 'violation-review', name: 'ViolationReview', component: ViolationReviewPage, meta: { title: '违规审核', requiresAuth: true } }
-        ]
+          {
+            path: 'realtime',
+            name: 'RealTimePatrol',
+            component: RealTimePatrolPage,
+            meta: { title: '实时监控', requiresAuth: true, permission: 'view:realtime' },
+          },
+          {
+            path: 'violation-review',
+            name: 'ViolationReview',
+            component: ViolationReviewPage,
+            meta: { title: '违规审核', requiresAuth: true, permission: 'view:violations' },
+          },
+        ],
       },
       {
         path: 'sop',
@@ -53,74 +81,96 @@ const routes: RouteRecordRaw[] = [
         redirect: '/sop/standards',
         meta: { title: '审核标准', icon: 'icon-book', menu: true, requiresAuth: true },
         children: [
-          { path: 'standards', name: 'SOPStandards', component: SOPPage, meta: { title: '红线标准', requiresAuth: true } },
-          { path: 'rules', name: 'SOPRules', component: () => import('@/views/SOPRulesPage.vue'), meta: { title: '业务规则', requiresAuth: true } }
-        ]
+          {
+            path: 'standards',
+            name: 'SOPStandards',
+            component: SOPPage,
+            meta: { title: '红线标准', requiresAuth: true, permission: 'view:sop' },
+          },
+          {
+            path: 'rules',
+            name: 'SOPRules',
+            component: () => import('@/views/SOPRulesPage.vue'),
+            meta: { title: '业务规则', requiresAuth: true, permission: 'view:sop' },
+          },
+        ],
       },
       {
         path: 'supervisor/shadow-audit',
         name: 'ShadowAuditDashboard',
         component: ShadowAuditDashboard,
-        meta: { 
-          title: '统帅大屏', 
-          icon: 'icon-eye', 
-          menu: true, 
+        meta: {
+          title: '统帅大屏',
+          icon: 'icon-eye',
+          menu: true,
           requiresAuth: true,
-          requiresSupervisor: true  // 新增：需要主管权限
-        }
+          permission: 'view:shadow_audit',   // only manager in matrix
+        },
       },
       {
         path: 'settings',
         name: 'Settings',
         component: SettingsPage,
-        meta: { title: '系统管理', icon: 'icon-settings', menu: true, requiresAuth: true, requiresAdmin: true }
-      }
-    ]
+        meta: {
+          title: '系统管理',
+          icon: 'icon-settings',
+          menu: true,
+          requiresAuth: true,
+          permission: 'view:settings',
+        },
+      },
+    ],
   },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage, meta: { title: '页面未找到', hideLayout: true } }
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFoundPage,
+    meta: { title: '页面未找到', hideLayout: true },
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-  scrollBehavior: (_to2, _from2, savedPosition) => savedPosition || { top: 0 }
+  scrollBehavior: (_to, _from, savedPosition) => savedPosition || { top: 0 },
 })
 
-// ✅ 移除所有花里胡哨的异步逻辑，回归最坚固的同步校验
-router.beforeEach((to, _from, next) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
-  if (to.meta.title) document.title = `${to.meta.title} - AHDUNYI 巡查终端`
-
-  const token = auth.getToken()
-  const user = auth.getUserInfo()
-  const isLoggedIn = !!(token && user)
-
-  if (to.meta.requiresAuth) {
-    if (!isLoggedIn) {
-      if (to.path !== '/login') {
-        Message.error('请先登录系统')
-        next({ name: 'Login', query: { redirect: to.fullPath } })
-        return
-      }
-      next()
-      return
-    }
-
-    // 管理员权限验证保护
-    if (to.meta.requiresAdmin && user.role !== 'supervisor') {
-      Message.error('需要系统主管权限')
-      next({ name: 'Dashboard' })
-      return
-    }
-    
-    // 主管权限验证保护（影子审计大屏）
-    if (to.meta.requiresSupervisor && user.role !== 'supervisor') {
-      Message.error('需要主管权限才能访问影子审计大屏')
-      next({ name: 'Dashboard' })
-      return
-    }
+// ---------------------------------------------------------------------------
+// Navigation guard — permission-point driven, role-agnostic
+// ---------------------------------------------------------------------------
+router.beforeEach((to, _from, next) => {
+  if (to.meta.title) {
+    document.title = `${to.meta.title} - AHDUNYI 巡查终端`
   }
 
-  // 拦截已登录用户重复访问登录页
+  const token      = auth.getToken()
+  const user       = auth.getUserInfo()
+  const isLoggedIn = !!(token && user)
+
+  // -- Auth check ----------------------------------------------------------
+  if (to.meta.requiresAuth && !isLoggedIn) {
+    if (to.path !== '/login') {
+      Message.error('请先登录系统')
+      next({ name: 'Login', query: { redirect: to.fullPath } })
+      return
+    }
+    next()
+    return
+  }
+
+  // -- Permission check ----------------------------------------------------
+  if (to.meta.permission && isLoggedIn) {
+    const permissionStore = usePermissionStore()
+    if (permissionStore.hydrated && !permissionStore.can(to.meta.permission as string)) {
+      Message.error('您没有访问该页面的权限')
+      next({ name: 'Dashboard' })
+      return
+    }
+    // If store not yet hydrated (first load), let the page through;
+    // the component itself can do a secondary guard via can() in template.
+  }
+
+  // -- Redirect logged-in users away from login ----------------------------
   if (to.name === 'Login' && isLoggedIn) {
     next({ name: 'Dashboard' })
     return

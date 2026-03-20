@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <a-layout class="main-layout">
     <!-- 顶部 Header -->
     <a-layout-header class="header">
@@ -28,7 +28,7 @@
               <template #icon>
                 <icon-dashboard />
               </template>
-              工作台
+              工作�?
             </a-doption>
             <a-doption @click="viewProfile">
               <template #icon>
@@ -46,7 +46,7 @@
               <template #icon>
                 <icon-logout />
               </template>
-              退出登录
+              退出登�?
             </a-doption>
           </template>
         </a-dropdown>
@@ -63,12 +63,12 @@
           :style="{ width: '100%' }"
           @menu-item-click="handleMenuClick"
         >
-          <!-- 工作台 -->
+          <!-- 工作�?-->
           <a-menu-item key="dashboard">
             <template #icon>
               <icon-dashboard />
             </template>
-            审核工作台
+            审核工作�?
           </a-menu-item>
           
           <!-- 风险审查 -->
@@ -111,20 +111,20 @@
             </a-menu-item>
           </a-sub-menu>
           
-          <!-- 影子审计大屏（仅主管可见） -->
+          <!-- 影子审计大屏（仅主管可见�?-->
           <a-menu-item 
             key="supervisor/shadow-audit" 
-            v-if="userInfo.role === 'supervisor'"
+            v-if="permissionStore.can('view:shadow_audit')"
             route="/supervisor/shadow-audit"
           >
             <template #icon>
               <icon-eye />
             </template>
-            👁️ 统帅大屏
+            👁�?统帅大屏
           </a-menu-item>
           
           <!-- 系统管理 -->
-          <a-menu-item key="settings" v-if="isAdmin">
+          <a-menu-item key="settings" v-if="permissionStore.can('view:settings')">
             <template #icon>
               <icon-settings />
             </template>
@@ -147,7 +147,7 @@
 
       <!-- 主要内容区域 -->
       <a-layout-content class="content">
-        <!-- 面包屑导航 -->
+        <!-- 面包屑导�?-->
         <div class="breadcrumb" v-if="showBreadcrumb">
           <a-breadcrumb>
             <a-breadcrumb-item>
@@ -173,8 +173,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Message, Modal } from '@arco-design/web-vue'
 import { auth } from '@/utils/auth'
+import { usePermissionStore } from '@/stores/permission'
 
 const router = useRouter()
+const permissionStore = usePermissionStore()
 const route = useRoute()
 
 // 用户信息
@@ -186,31 +188,26 @@ const userInfo = ref<{
   role?: string
 }>({
   username: 'admin',
-  full_name: '系统管理员',
+  full_name: '系统管理�?,
   email: 'admin@ahdunyi.com',
   is_admin: true,
   role: ''
 })
 
-// 计算属性
+// 计算属�?
 const userAvatar = computed(() => userInfo.value.username.charAt(0).toUpperCase())
 const userColor = computed(() => '#165dff')
 const userName = computed(() => userInfo.value.full_name)
-const userRole = computed(() => {
-  if (userInfo.value.role === 'supervisor') return '主管'
-  if (userInfo.value.role === 'shift_leader') return '组长'
-  if (userInfo.value.role === 'auditor') return '审核员'
-  return userInfo.value.is_admin ? '管理员' : '审核员'
-})
-const isAdmin = computed(() => userInfo.value.is_admin || userInfo.value.role === 'supervisor')
+const userRole = computed(() => permissionStore.roleLabel)
+const isAdmin = computed(() => permissionStore.can('view:settings'))
 
-// 面包屑
+// 面包�?
 const breadcrumbItems = computed(() => {
   const path = route.path.split('/').filter(Boolean)
   return path.map(item => {
-    // 简单的路径转中文
+    // 简单的路径转中�?
     const map: Record<string, string> = {
-      'dashboard': '工作台',
+      'dashboard': '工作�?,
       'risk-audit': '风险审核',
       'realtime': '实时监控',
       'violation-review': '违规审核',
@@ -225,7 +222,7 @@ const breadcrumbItems = computed(() => {
 
 const showBreadcrumb = computed(() => route.path !== '/dashboard')
 const currentMenu = computed(() => {
-  // 路由名称到菜单key的映射
+  // 路由名称到菜单key的映�?
   const routeToMenuMap: Record<string, string> = {
     'Dashboard': 'dashboard',
     'RealTimePatrol': 'realtime',
@@ -285,7 +282,7 @@ const handleMenuClick = (key: string) => {
     'standards': '/sop/standards',
     'rules': '/sop/rules',
     'settings': '/settings',
-    'supervisor/shadow-audit': '/supervisor/shadow-audit'  // 新增：影子审计路由
+    'supervisor/shadow-audit': '/supervisor/shadow-audit'  // 新增：影子审计路�?
   }
   
   if (routeMap[key]) {
@@ -308,15 +305,16 @@ const viewSettings = () => {
 
 const showLogoutConfirm = () => {
    Modal.confirm({
-    title: '确认退出登录',
-    content: '您确定要退出当前账号吗？',
-    okText: '确认退出',
+    title: '确认退出登�?,
+    content: '您确定要退出当前账号吗�?,
+    okText: '确认退�?,
     cancelText: '取消',
     onOk: () => {
-      // 🚀 调用刚才重构的 auth 工具，执行真正的“焦土政策”清理！
+      // 🚀 调用刚才重构�?auth 工具，执行真正的“焦土政策”清理！
       auth.clearLoginData()
+      permissionStore.clear()
       
-      Message.success('已安全退出系统')
+      Message.success('已安全退出系�?)
       router.push('/login')
     }
   })
@@ -447,7 +445,7 @@ const showLogoutConfirm = () => {
   min-height: calc(100vh - 180px);
 }
 
-/* 响应式调整 */
+/* 响应式调�?*/
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;

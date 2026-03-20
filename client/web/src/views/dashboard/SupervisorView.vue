@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="supervisor-view">
     <!-- 顶部：单兵战报精准查询 -->
     <div class="user-search-section">
@@ -748,10 +748,15 @@ import {
   getRoleColor,
   getShiftTypeLabel
 } from '@/api/rbac'
+import { usePermissionStore } from '@/stores/permission'
 
 // ==================== 响应式数据 ====================
 
 // 团队看板数据
+const permissionStore = usePermissionStore()
+
+// ==================== 响应式数据 ====================
+
 const startDate = ref<string>(dayjs().subtract(7, 'day').format('YYYY-MM-DD'))
 const endDate = ref<string>(dayjs().format('YYYY-MM-DD'))
 const teamInsight = ref<TeamInsightResponse | null>(null)
@@ -792,8 +797,8 @@ const roleDistribution = computed(() => {
 // 获取用户颜色
 const getUserColor = (role: string) => {
   const colors: Record<string, string> = {
-    'supervisor': '#f5222d',
-    'shift_leader': '#fa8c16',
+    'manager': '#f5222d',
+    'leader': '#fa8c16',
     'auditor': '#52c41a'
   }
   return colors[role] || '#1890ff'

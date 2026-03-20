@@ -270,8 +270,8 @@ const canDispatch = computed(() => {
 // 工具函数
 const getUserColor = (role: UserRole) => {
   const colors: Record<UserRole, string> = {
-    [UserRole.SUPERVISOR]: '#f5222d',
-    [UserRole.SHIFT_LEADER]: '#fa8c16',
+    [UserRole.MANAGER]: '#f5222d',
+    [UserRole.LEADER]: '#fa8c16',
     [UserRole.AUDITOR]: '#52c41a'
   }
   return colors[role] || '#1890ff'

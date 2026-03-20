@@ -6,8 +6,8 @@ import api from './index'
 
 // 用户角色类型
 export enum UserRole {
-  SUPERVISOR = 'supervisor',
-  SHIFT_LEADER = 'shift_leader',
+  MANAGER = 'manager',
+  LEADER = 'leader',
   AUDITOR = 'auditor'
 }
 
@@ -271,8 +271,8 @@ export async function getUserRole(): Promise<UserRole | null> { // eslint-disabl
     
     return userInfo.role as UserRole
   } catch (error) {
-    console.warn('使用auth工具失败，尝试降级方案:', error)
-    // 降级处理：使用旧的键名
+    console.warn('使用auth工具失败，尝试降级方�?', error)
+    // 降级处理：使用旧的键�?
     try {
       const userInfo = localStorage.getItem('user_info') || localStorage.getItem('ahdunyi_user_info')
       if (!userInfo) return null
@@ -292,8 +292,8 @@ export async function getCurrentUserInfo(): Promise<UserInfo | null> {
     const { auth } = await import('@/utils/auth')
     return auth.getUserInfo() as UserInfo | null
   } catch (error) {
-    console.warn('使用auth工具失败，尝试降级方案:', error)
-    // 降级处理：使用旧的键名
+    console.warn('使用auth工具失败，尝试降级方�?', error)
+    // 降级处理：使用旧的键�?
     try {
       const userInfo = localStorage.getItem('user_info') || localStorage.getItem('ahdunyi_user_info')
       if (!userInfo) return null
@@ -306,7 +306,7 @@ export async function getCurrentUserInfo(): Promise<UserInfo | null> {
   }
 }
 
-// 同步版本（兼容旧代码）
+// 同步版本（兼容旧代码�?
 export function getUserRoleSync(): UserRole | null {
   try {
     const userInfo = localStorage.getItem('user_info') || localStorage.getItem('ahdunyi_user_info')
@@ -337,7 +337,7 @@ export function getTaskChannelLabel(channel: TaskChannel): string {
     [TaskChannel.IMAGE]: '图片审核',
     [TaskChannel.CHAT]: '单聊审核',
     [TaskChannel.VIDEO]: '视频审核',
-    [TaskChannel.LIVE]: '直播间巡查'
+    [TaskChannel.LIVE]: '直播间巡�?
   }
   return labels[channel] || channel
 }
@@ -362,21 +362,21 @@ export function getRoleLabel(role: UserRole): string {
   const labels: Record<UserRole, string> = {
     [UserRole.SUPERVISOR]: '主管',
     [UserRole.SHIFT_LEADER]: '组长',
-    [UserRole.AUDITOR]: '审核员'
+    [UserRole.AUDITOR]: '审核�?
   }
   return labels[role] || role
 }
 
 export function getRoleColor(role: UserRole): string {
   const colors: Record<UserRole, string> = {
-    [UserRole.SUPERVISOR]: 'red',
-    [UserRole.SHIFT_LEADER]: 'orange',
+    [UserRole.MANAGER]: 'red',
+    [UserRole.LEADER]: 'orange',
     [UserRole.AUDITOR]: 'green'
   }
   return colors[role] || 'gray'
 }
 
-// 权限检查函数
+// 权限检查函�?
 export function hasPermission(requiredRole: UserRole, userRole?: UserRole): boolean {
   if (!userRole) {
     userRole = getUserRoleSync() ?? undefined
@@ -384,7 +384,7 @@ export function hasPermission(requiredRole: UserRole, userRole?: UserRole): bool
   
   if (!userRole) return false
   
-  // 权限等级：主管 > 组长 > 审核员
+  // 权限等级：主�?> 组长 > 审核�?
   const roleLevels: Record<UserRole, number> = {
     [UserRole.SUPERVISOR]: 3,
     [UserRole.SHIFT_LEADER]: 2,
@@ -397,12 +397,12 @@ export function hasPermission(requiredRole: UserRole, userRole?: UserRole): bool
   return userLevel >= requiredLevel
 }
 
-// 检查是否是主管
+// 检查是否是风控经理
 export function isSupervisor(userRole?: UserRole): boolean {
   if (!userRole) {
     userRole = getUserRoleSync() ?? undefined
   }
-  return userRole === UserRole.SUPERVISOR
+  return userRole === UserRole.MANAGER
 }
 
 // 检查是否是组长
@@ -410,10 +410,10 @@ export function isShiftLeader(userRole?: UserRole): boolean {
   if (!userRole) {
     userRole = getUserRoleSync() ?? undefined
   }
-  return userRole === UserRole.SHIFT_LEADER
+  return userRole === UserRole.LEADER
 }
 
-// 检查是否是审核员
+// 检查是否是审核�?
 export function isAuditor(userRole?: UserRole): boolean {
   if (!userRole) {
     userRole = getUserRoleSync() ?? undefined

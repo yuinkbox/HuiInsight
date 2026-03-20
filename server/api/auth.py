@@ -12,7 +12,7 @@ Version: 9.0.0
 """
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import jwt
@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from server.core.database import get_db
 from server.db.models import User
+from server.constants.permissions import get_permissions_for_role, get_role_meta
 
 # --------------------------------------------------------------------------
 # Security config (read from env; fall back to dev defaults)
@@ -60,16 +61,29 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class RoleMeta(BaseModel):
+    """UI display metadata for a role."""
+
+    label: str
+    color: str
+    dashboard_view: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserOut
+    permissions: List[str]
+    role_meta: RoleMeta
 
 
 # --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------
-def _create_access_token(data: Dict[str, Any], expires_hours: int = _ACCESS_TOKEN_EXPIRE_HOURS) -> str:
+def _create_access_token(
+    data: Dict[str, Any],
+    expires_hours: int = _ACCESS_TOKEN_EXPIRE_HOURS,
+) -> str:
     """Create a signed JWT with an expiry claim."""
     payload = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(hours=expires_hours)
@@ -108,12 +122,18 @@ def login(
 ) -> TokenResponse:
     """Authenticate user and return a 24-hour JWT access token.
 
+    The response now includes:
+    - ``permissions``: list of permission-point strings for the frontend
+      to drive all v-if guards without hardcoding role names.
+    - ``role_meta``: UI metadata (label, colour, dashboard_view) so the
+      frontend never needs a local role-label dictionary.
+
     Args:
         body: JSON payload with ``username`` and ``password``.
         db:   Injected database session.
 
     Returns:
-        :class:`TokenResponse` with token and user summary.
+        :class:`TokenResponse` with token, user, permissions, role_meta.
 
     Raises:
         HTTPException 401: Wrong credentials or inactive account.
@@ -126,16 +146,26 @@ def login(
             detail="Incorrect username or password.",
         )
 
+    role_value: str = user.role.value
+
     token = _create_access_token({
         "sub": user.username,
-        "role": user.role.value,
+        "role": role_value,
         "is_superuser": user.is_superuser,
     })
+
+    meta = get_role_meta(role_value)
 
     return TokenResponse(
         access_token=token,
         token_type="bearer",
         user=UserOut.model_validate(user),
+        permissions=get_permissions_for_role(role_value),
+        role_meta=RoleMeta(
+            label=meta["label"],
+            color=meta["color"],
+            dashboard_view=meta["dashboard_view"],
+        ),
     )
 
 

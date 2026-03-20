@@ -633,7 +633,7 @@ const loadTodayTask = async () => {
         Message.info('检测到未完成任务，已恢复工作状态')
       }
     } else {
-      // 没有今日任务（主管或未分配任务的审核员）
+      // 没有今日任务（风控经理或未分配任务的审核员）
       todayTask.value = null
       console.log('今日无任务分配')
     }

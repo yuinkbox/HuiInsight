@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from server.api.auth import router as auth_router
+from server.api.permissions import router as permissions_router
 
 app = FastAPI(title="AHDUNYI Terminal API", version="9.0.0")
 
@@ -22,6 +23,7 @@ app.add_middleware(
 
 # Routers
 app.include_router(auth_router)
+app.include_router(permissions_router)
 
 
 @app.get("/health")
