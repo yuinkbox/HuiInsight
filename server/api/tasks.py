@@ -14,11 +14,13 @@ Version: 9.0.0
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from server.api.permissions import _get_current_user
+from server.constants.permissions import Permission, get_permissions_for_role
 from server.core.database import get_db
 from server.db.models import ShiftTask, User
 from server.schemas import (
@@ -30,7 +32,6 @@ from server.schemas import (
     UserTaskResponse,
     WeeklyStats,
 )
-from server.api.permissions import _get_current_user
 from server.services.dispatch import dispatch_tasks
 
 router = APIRouter(tags=["tasks"])
@@ -55,26 +56,33 @@ def get_my_tasks(
 
         today_tasks = (
             db.query(ShiftTask)
-            .filter(ShiftTask.user_id == current_user.id, ShiftTask.shift_date == today)
+            .filter(
+                ShiftTask.user_id == current_user.id,
+                ShiftTask.shift_date == today,
+            )
             .order_by(ShiftTask.id.desc())
             .all()
         )
 
         historical = (
             db.query(ShiftTask)
-            .filter(ShiftTask.user_id == current_user.id, ShiftTask.shift_date < today)
+            .filter(
+                ShiftTask.user_id == current_user.id,
+                ShiftTask.shift_date < today,
+            )
             .order_by(ShiftTask.shift_date.desc())
             .limit(30)
             .all()
         )
 
-        # Weekly stats
-        from datetime import timedelta
         now = datetime.now(timezone.utc)
         week_start = (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d")
         week_tasks = (
             db.query(ShiftTask)
-            .filter(ShiftTask.user_id == current_user.id, ShiftTask.shift_date >= week_start)
+            .filter(
+                ShiftTask.user_id == current_user.id,
+                ShiftTask.shift_date >= week_start,
+            )
             .all()
         )
         weekly = WeeklyStats(
@@ -89,9 +97,9 @@ def get_my_tasks(
         def _enrich(task: ShiftTask) -> TaskOut:
             out = TaskOut.model_validate(task)
             out.user_info = {
-                "username":  current_user.username,
+                "username": current_user.username,
                 "full_name": current_user.full_name,
-                "role":      current_user.role.value,
+                "role": current_user.role.value,
             }
             return out
 
@@ -116,12 +124,19 @@ def update_task_progress(
 ) -> OkResponse:
     """Incrementally update a task's progress metrics."""
     try:
-        task = db.query(ShiftTask).filter(
-            ShiftTask.id == task_id,
-            ShiftTask.user_id == current_user.id,
-        ).first()
+        task = (
+            db.query(ShiftTask)
+            .filter(
+                ShiftTask.id == task_id,
+                ShiftTask.user_id == current_user.id,
+            )
+            .first()
+        )
         if not task:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Task not found.",
+            )
 
         if body.reviewed_count is not None:
             task.reviewed_count = body.reviewed_count
@@ -152,12 +167,19 @@ def complete_task(
 ) -> OkResponse:
     """Mark a task as completed."""
     try:
-        task = db.query(ShiftTask).filter(
-            ShiftTask.id == task_id,
-            ShiftTask.user_id == current_user.id,
-        ).first()
+        task = (
+            db.query(ShiftTask)
+            .filter(
+                ShiftTask.id == task_id,
+                ShiftTask.user_id == current_user.id,
+            )
+            .first()
+        )
         if not task:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Task not found.",
+            )
         task.is_completed = True
         db.commit()
         return OkResponse(message="Task completed.")
@@ -181,7 +203,6 @@ def auto_dispatch(
 
     Requires ``action:dispatch_task`` permission.
     """
-    from server.constants.permissions import Permission, get_permissions_for_role
     perms = get_permissions_for_role(current_user.role.value)
     if Permission.ACTION_DISPATCH_TASK not in perms:
         raise HTTPException(

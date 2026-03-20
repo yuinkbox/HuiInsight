@@ -9,7 +9,7 @@ Usage (from repo root)::
 Steps
 -----
 1. Add project root to sys.path.
-2. Create all tables (idempotent — safe to re-run).
+2. Create all tables (idempotent -- safe to re-run).
 3. Seed default accounts for every role if they do not exist.
 
 Author : AHDUNYI
@@ -30,27 +30,25 @@ except ImportError:
     print('[ERROR] passlib is not installed.  Run: pip install "passlib[bcrypt]"')
     sys.exit(1)
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session  # noqa: E402
 
-from server.core.database import Base, engine, SessionLocal
-from server.constants.roles import UserRole
-from server.db.models import User  # noqa: F401 — imported so metadata is populated
+from server.constants.roles import UserRole  # noqa: E402
+from server.core.database import Base, SessionLocal, engine  # noqa: E402
+from server.db.models import User  # noqa: E402, F401
 
-# ---------------------------------------------------------------------------
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Seed accounts: (username, full_name, password, role, is_superuser)
 _SEED_USERS = [
-    ("superyu",      "xuyu",        "melody2026", UserRole.MANAGER,       True),
-    ("leader_am",    "早班组长",     "ahdunyi2026", UserRole.TEAM_LEADER,  False),
-    ("leader_pm",    "中班组长",     "ahdunyi2026", UserRole.TEAM_LEADER,  False),
-    ("leader_night", "晚班组长",     "ahdunyi2026", UserRole.TEAM_LEADER,  False),
-    ("qa_001",       "质检专员001",  "ahdunyi2026", UserRole.QA_SPECIALIST, False),
-    ("auditor_001",  "审核员001",   "ahdunyi2026", UserRole.AUDITOR,      False),
-    ("auditor_002",  "审核员002",   "ahdunyi2026", UserRole.AUDITOR,      False),
-    ("auditor_003",  "审核员003",   "ahdunyi2026", UserRole.AUDITOR,      False),
-    ("auditor_004",  "审核员004",   "ahdunyi2026", UserRole.AUDITOR,      False),
-    ("auditor_005",  "审核员005",   "ahdunyi2026", UserRole.AUDITOR,      False),
+    ("superyu", "xuyu", "melody2026", UserRole.MANAGER, True),
+    ("leader_am", "早班组长", "ahdunyi2026", UserRole.TEAM_LEADER, False),
+    ("leader_pm", "中班组长", "ahdunyi2026", UserRole.TEAM_LEADER, False),
+    ("leader_night", "晚班组长", "ahdunyi2026", UserRole.TEAM_LEADER, False),
+    ("qa_001", "质检专员001", "ahdunyi2026", UserRole.QA_SPECIALIST, False),
+    ("auditor_001", "审核员001", "ahdunyi2026", UserRole.AUDITOR, False),
+    ("auditor_002", "审核员002", "ahdunyi2026", UserRole.AUDITOR, False),
+    ("auditor_003", "审核员003", "ahdunyi2026", UserRole.AUDITOR, False),
+    ("auditor_004", "审核员004", "ahdunyi2026", UserRole.AUDITOR, False),
+    ("auditor_005", "审核员005", "ahdunyi2026", UserRole.AUDITOR, False),
 ]
 
 
@@ -82,8 +80,9 @@ def seed_users(db: Session) -> None:
 
 
 def main() -> None:
+    """Entry point: create tables then seed data."""
     print("=" * 52)
-    print(" AHDUNYI Terminal PRO — DB Init v9.0.0")
+    print(" AHDUNYI Terminal PRO -- DB Init v9.0.0")
     print("=" * 52)
 
     print("\n[STEP 1] Synchronising table structure...")

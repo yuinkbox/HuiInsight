@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Task dispatch service — "Least Assigned First" algorithm.
+Task dispatch service -- "Least Assigned First" algorithm.
 
 Given a list of user_ids and required channels, assigns channels to users
 such that each user's historical task count for that channel is minimised.
-This guarantees fairness over time: no single auditor gets stuck with the
-same channel every shift.
 
 Author : AHDUNYI
 Version: 9.0.0
@@ -13,8 +11,8 @@ Version: 9.0.0
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -33,10 +31,19 @@ def _get_weekly_channel_counts(
     user_ids: List[int],
     channel: str,
 ) -> Dict[int, int]:
-    """Return the number of times each user was assigned *channel* in the past 7 days."""
-    from datetime import timedelta
+    """Return the number of times each user was assigned *channel* in the past 7 days.
 
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")
+    Args:
+        db:       Active SQLAlchemy session.
+        user_ids: List of user primary keys to check.
+        channel:  Channel string, e.g. ``"image"``.
+
+    Returns:
+        Mapping of user_id to assignment count.
+    """
+    cutoff = (
+        datetime.now(timezone.utc) - timedelta(days=7)
+    ).strftime("%Y-%m-%d")
     rows = (
         db.query(ShiftTask.user_id, func.count(ShiftTask.id))
         .filter(
@@ -63,7 +70,6 @@ def dispatch_tasks(db: Session, request: DispatchRequest) -> DispatchResponse:
     Returns:
         :class:`DispatchResponse` with assignment list and summary.
     """
-    # Load user info
     users: List[User] = (
         db.query(User)
         .filter(User.id.in_(request.user_ids), User.is_active.is_(True))
@@ -74,21 +80,17 @@ def dispatch_tasks(db: Session, request: DispatchRequest) -> DispatchResponse:
     assignments: List[TaskAssignment] = []
     channel_distribution: Dict[str, int] = defaultdict(int)
 
-    # Round-robin over channels, picking the least-assigned user each time
     channels = list(request.required_channels)
     user_ids = [u.id for u in users]
 
-    # Build historical counts per channel
     channel_counts: Dict[str, Dict[int, int]] = {}
     for ch in channels:
         channel_counts[ch] = _get_weekly_channel_counts(db, user_ids, ch)
 
-    # Track how many channels we've already assigned to each user this round
     assigned_this_round: Dict[int, int] = defaultdict(int)
 
     for channel in channels:
         counts = channel_counts[channel]
-        # Sort users by (historical_count ASC, assigned_this_round ASC, user_id ASC)
         eligible = sorted(
             user_ids,
             key=lambda uid: (counts.get(uid, 0), assigned_this_round[uid], uid),
@@ -109,7 +111,6 @@ def dispatch_tasks(db: Session, request: DispatchRequest) -> DispatchResponse:
         channel_distribution[channel] += 1
         assigned_this_round[chosen_id] += 1
 
-    # Persist to DB
     for assignment in assignments:
         task = ShiftTask(
             user_id=assignment.user_id,

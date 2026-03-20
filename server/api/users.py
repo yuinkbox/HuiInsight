@@ -4,8 +4,8 @@ Users API router.
 
 Endpoints
 ---------
-GET  /api/users/active         -- List active users (optional role filter)
-PUT  /api/users/{user_id}/role -- Update a user's role (manager only)
+GET /api/users/active          -- List active users (optional role filter)
+PUT /api/users/{user_id}/role  -- Update a user's role (manager only)
 
 Author : AHDUNYI
 Version: 9.0.0
@@ -17,11 +17,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from server.api.permissions import _get_current_user
+from server.constants.permissions import Permission, get_permissions_for_role
+from server.constants.roles import UserRole
 from server.core.database import get_db
 from server.db.models import User
 from server.schemas import ActiveUsersResponse, OkResponse, UserOut, UserRoleUpdate
-from server.api.permissions import _get_current_user
-from server.constants.permissions import Permission, get_permissions_for_role
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -33,9 +34,6 @@ def list_active_users(
     current_user: User = Depends(_get_current_user),
 ) -> ActiveUsersResponse:
     """Return all active users, optionally filtered by role.
-
-    Any authenticated user may call this endpoint so that team-leaders
-    can build their dispatch list.
 
     Args:
         role:         Optional role filter string.
@@ -85,7 +83,6 @@ def update_user_role(
         HTTPException 404: Target user not found.
         HTTPException 400: Invalid role value.
     """
-    # Permission check
     caller_perms = get_permissions_for_role(current_user.role.value)
     if Permission.ACTION_UPDATE_ROLE not in caller_perms:
         raise HTTPException(
@@ -96,10 +93,11 @@ def update_user_role(
     try:
         target = db.query(User).filter(User.id == user_id).first()
         if not target:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found.",
+            )
 
-        # Validate role value against known roles
-        from server.constants.roles import UserRole
         valid_roles = {r.value for r in UserRole}
         if body.role not in valid_roles:
             raise HTTPException(
@@ -110,7 +108,9 @@ def update_user_role(
         target.role = body.role  # type: ignore[assignment]
         db.commit()
         db.refresh(target)
-        return OkResponse(message=f"User {target.username} role updated to '{body.role}'.")
+        return OkResponse(
+            message=f"User {target.username} role updated to '{body.role}'."
+        )
 
     except HTTPException:
         raise
