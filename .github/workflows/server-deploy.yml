@@ -31,7 +31,14 @@ jobs:
           key: ${{ secrets.ALIYUN_SSH_KEY }}
           script: |
             cd /app/AHDUNYI_Terminal_PRO
-            git pull origin main
-            pip install -r server/requirements.txt
+            
+            # 使用 OpenClaw 创建的专用虚拟环境的 pip 来安装依赖
+            if [ -f "server/requirements.txt" ]; then
+              /app/AHDUNYI_Terminal_PRO/server/venv/bin/pip install -r server/requirements.txt
+            fi
+            
+            # 重启服务
+            systemctl daemon-reload
             systemctl restart ahdunyi-api
-            echo "Deploy complete: $(date)"
+            echo "✅ 部署完成，服务已重启: $(date)"
+            
