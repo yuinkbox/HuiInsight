@@ -22,3 +22,4 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "version": "9.0.0"}
+# Trigger CI/CD pipeline test
