@@ -8,7 +8,6 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
-.env
 
 # Logs
 logs/
@@ -21,10 +20,16 @@ client/build/_pyinstaller/
 # Config (contains production server IP)
 config.json
 
+# Server environment variables (contains DB credentials - never commit)
+server/.env
+
 # Temp scripts
 m1.py
 migrate_step*.py
 fix_ts_errors*.py
+fix_flake8.py
+fix_w391.py
+fix_build_encoding.py
 
 # OS
 .DS_Store
