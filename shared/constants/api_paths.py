@@ -1,1 +1,5 @@
-AUTH_LOGIN=" /api/auth/login\nAUTH_LOGOUT=\/api/auth/logout\nRBAC_USERS=\/api/rbac/users\nPATROLS_REALTIME=\/api/patrols/realtime\nSUPERVISOR_STATUS=\/api/supervisor/realtime-status\n
+AUTH_LOGIN = "/api/auth/login"
+AUTH_LOGOUT = "/api/auth/logout"
+RBAC_USERS = "/api/rbac/users"
+PATROLS_REALTIME = "/api/patrols/realtime"
+SUPERVISOR_STATUS = "/api/supervisor/realtime-status"

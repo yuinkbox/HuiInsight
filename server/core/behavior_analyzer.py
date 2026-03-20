@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Contextual Audit Engine - multi-dimensional behaviour analysis.
 
@@ -13,9 +13,8 @@ Version: 9.0.0
 
 import time
 import threading
-from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import logging
 
@@ -140,6 +139,115 @@ class MemoryCache:
                 return self._reports.get(key, 0)
             if time.time() - self._ts.get(key, 0) > 60:
                 return 0
-            return self._reports.get(key, 0)
 
-    def 
+    def set_report_count(self, room_id: str, window: int, count: int) -> None:
+        """Update the cached report count for *room_id*."""
+        key = f"r_{room_id}_{window}"
+        with self._lock:
+            self._reports[key] = count
+            if not _CACHETOOLS_OK:
+                self._ts[key] = time.time()
+
+
+# ---------------------------------------------------------------------------
+# Audit engine
+# ---------------------------------------------------------------------------
+
+class ContextualAuditEngine:
+    """Multi-dimensional behaviour analysis engine.
+
+    Args:
+        provider: External risk-data source.
+        cache: Optional shared cache instance.
+        risk_refresh_interval: Seconds between risk-list refreshes.
+    """
+
+    def __init__(
+        self,
+        provider: RiskDataProvider,
+        cache: Optional[MemoryCache] = None,
+        risk_refresh_interval: int = 300,
+    ) -> None:
+        self._provider = provider
+        self._cache = cache or MemoryCache()
+        self._risk_refresh_interval = risk_refresh_interval
+        self._last_risk_refresh: float = 0.0
+        self._lock = threading.RLock()
+
+    def _refresh_risk_list_if_needed(self) -> None:
+        """Refresh the risk list from the provider if the TTL has expired."""
+        now = time.time()
+        with self._lock:
+            if now - self._last_risk_refresh < self._risk_refresh_interval:
+                return
+            try:
+                risk_ids = self._provider.get_risk_user_ids()
+                self._cache.set_risk_list(risk_ids)
+                self._last_risk_refresh = now
+                logger.debug("Risk list refreshed: %d entries", len(risk_ids))
+            except Exception as exc:  # pylint: disable=broad-except
+                logger.warning("Failed to refresh risk list: %s", exc)
+
+    def _is_risk_user(self, user_id: Optional[int]) -> bool:
+        """Return True if *user_id* is on the risk list."""
+        if user_id is None:
+            return False
+        self._refresh_risk_list_if_needed()
+        return user_id in self._cache.get_risk_list()
+
+    def analyze_behavior(
+        self,
+        user_id: Optional[int],
+        room_id: str,
+        dwell_seconds: float,
+        report_window: int = 300,
+        suspicious_threshold: int = 3,
+        risk_dwell_threshold: float = 1800.0,
+        normal_dwell_threshold: float = 600.0,
+        exemption_checker: Optional[Callable[[str], bool]] = None,
+    ) -> AuditResult:
+        """Analyse one user/room observation and return an :class:`AuditResult`."""
+        checks: List[Dict[str, Any]] = []
+
+        if exemption_checker is not None:
+            try:
+                if exemption_checker(room_id):
+                    checks.append({"check": "exemption", "result": "exempted"})
+                    return AuditResult(AuditStatus.EXEMPTED, "Room is exempted.", checks)
+            except Exception as exc:  # pylint: disable=broad-except
+                logger.warning("Exemption checker raised: %s", exc)
+
+        is_risk = self._is_risk_user(user_id)
+        checks.append({"check": "risk_user", "result": is_risk})
+        if is_risk and dwell_seconds >= risk_dwell_threshold:
+            return AuditResult(
+                AuditStatus.RISK_TRACKING,
+                f"Risk user exceeded dwell threshold ({dwell_seconds:.0f}s).",
+                checks,
+            )
+
+        try:
+            report_count = self._provider.get_report_count(room_id, report_window)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.warning("Report count fetch failed: %s", exc)
+            report_count = self._cache.get_report_count(room_id, report_window)
+        else:
+            self._cache.set_report_count(room_id, report_window, report_count)
+
+        checks.append({"check": "report_count", "value": report_count})
+        if report_count >= suspicious_threshold:
+            return AuditResult(
+                AuditStatus.SUSPICIOUS,
+                f"Report count {report_count} >= threshold {suspicious_threshold}.",
+                checks,
+            )
+
+        checks.append({"check": "dwell_seconds", "value": dwell_seconds})
+        if dwell_seconds >= normal_dwell_threshold:
+            return AuditResult(
+                AuditStatus.SUDDEN_ISSUE,
+                f"Dwell time {dwell_seconds:.0f}s >= threshold {normal_dwell_threshold:.0f}s.",
+                checks,
+            )
+
+        return AuditResult(AuditStatus.NORMAL, "No anomaly detected.", checks)
