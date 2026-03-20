@@ -246,11 +246,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
 import { 
   rbacApi, 
-  getUserRole, 
   getTaskChannelLabel, 
-  getShiftTypeLabel,
-  formatDuration,
-  type UserTaskResponse
+  getShiftTypeLabel
 } from '@/api/rbac'
 
 // 防作弊常量

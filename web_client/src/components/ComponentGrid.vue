@@ -19,13 +19,12 @@
             <component :is="component.icon" size="32" />
           </div>
         </template>
-        
+
         <a-card-meta :title="component.name">
           <template #description>
             <div class="component-description">
               {{ component.description }}
             </div>
-            
             <div class="component-tags">
               <a-space :size="4" wrap>
                 <a-tag
@@ -38,7 +37,6 @@
                 </a-tag>
               </a-space>
             </div>
-            
             <div class="component-usage">
               <a-typography-text type="secondary">
                 {{ component.usage }}
@@ -46,27 +44,15 @@
             </div>
           </template>
         </a-card-meta>
-        
+
         <template #actions>
           <a-space :size="8">
-            <a-button
-              type="text"
-              size="small"
-              @click.stop="handlePreview(component)"
-            >
-              <template #icon>
-                <icon-eye />
-              </template>
+            <a-button type="text" size="small" @click.stop="handlePreview(component)">
+              <template #icon><icon-eye /></template>
               预览
             </a-button>
-            <a-button
-              type="text"
-              size="small"
-              @click.stop="handleCopyCode(component)"
-            >
-              <template #icon>
-                <icon-copy />
-              </template>
+            <a-button type="text" size="small" @click.stop="handleCopyCode(component)">
+              <template #icon><icon-copy /></template>
               复制
             </a-button>
           </a-space>
@@ -99,21 +85,16 @@ const emit = defineEmits<{
   viewDetail: [component: ComponentItem]
 }>()
 
-// 点击卡片
-const handleClick = (component: ComponentItem) => {
+const handleClick = (component: ComponentItem): void => {
   emit('viewDetail', component)
 }
 
-// 预览组件
-const handlePreview = (component: ComponentItem) => {
-  Message.info(`预览组件: ${component.name}`)
-  // 这里可以打开预览模态框
+const handlePreview = (component: ComponentItem): void => {
+  Message.info('预览组件: ' + component.name)
 }
 
-// 复制代码
-const handleCopyCode = async (component: ComponentItem) => {
+const handleCopyCode = async (component: ComponentItem): Promise<void> => {
   const code = generateComponentCode(component)
-  
   try {
     await navigator.clipboard.writeText(code)
     Message.success('代码已复制到剪贴板')
@@ -123,75 +104,45 @@ const handleCopyCode = async (component: ComponentItem) => {
   }
 }
 
-// 生成组件代码
+const COMPONENT_TEMPLATES: Record<string, string> = {
+  button: [
+    '<template>',
+    '  <a-space>',
+    '    <a-button type="primary">主要按钮</a-button>',
+    '    <a-button type="outline">轮廓按钮</a-button>',
+    '    <a-button type="text">文字按钮</a-button>',
+    '  </a-space>',
+    '</template>',
+  ].join('\n'),
+  input: [
+    '<template>',
+    '  <a-space direction="vertical" :size="16">',
+    '    <a-input placeholder="请输入内容" />',
+    '    <a-input placeholder="带前缀" add-before="https://"></a-input>',
+    '    <a-textarea placeholder="多行文本" />',
+    '  </a-space>',
+    '</template>',
+  ].join('\n'),
+  select: [
+    '<template>',
+    '  <a-select placeholder="请选择" style="width: 200px">',
+    '    <a-option value="option1">选项一</a-option>',
+    '    <a-option value="option2">选项二</a-option>',
+    '    <a-option value="option3">选项三</a-option>',
+    '  </a-select>',
+    '</template>',
+  ].join('\n'),
+  card: [
+    '<template>',
+    '  <a-card title="卡片标题" :style="{ width: \'360px\' }">',
+    '    <p>卡片内容</p>',
+    '  </a-card>',
+    '</template>',
+  ].join('\n'),
+}
+
 const generateComponentCode = (component: ComponentItem): string => {
-  const templates: Record<string, string> = {
-    button: `<template>
-  <a-space>
-    <a-button type="primary">主要按钮</a-button>
-    <a-button type="outline">轮廓按钮</a-button>
-    <a-button type="text">文字按钮</a-button>
-  </a-space>
-</template>
-
-<script setup lang="ts">
-// Button 组件示例
-</script>`,
-    
-    input: `<template>
-  <a-space direction="vertical" :size="16">
-    <a-input placeholder="请输入内容" />
-    <a-input placeholder="带前缀" add-before="https://">
-      <template #suffix>
-        <icon-search />
-      </template>
-    </a-input>
-    <a-textarea placeholder="多行文本" />
-  </a-space>
-</template>
-
-<script setup lang="ts">
-// Input 组件示例
-</script>`,
-    
-    select: `<template>
-  <a-select placeholder="请选择" style="width: 200px">
-    <a-option value="option1">选项一</a-option>
-    <a-option value="option2">选项二</a-option>
-    <a-option value="option3">选项三</a-option>
-  </a-select>
-</template>
-
-<script setup lang="ts">
-// Select 组件示例
-</script>`,
-    
-    card: `<template>
-  <a-card title="卡片标题" :style="{ width: '360px' }">
-    <template #extra>
-      <a-link>更多</a-link>
-    </template>
-    <p>卡片内容</p>
-    <p>卡片内容</p>
-    <p>卡片内容</p>
-  </a-card>
-</template>
-
-<script setup lang="ts">
-// Card 组件示例
-</script>`
-  }
-  
-  return templates[component.id] || `<!-- ${component.name} 组件示例 -->
-<template>
-  <div>
-    <!-- 在这里使用 ${component.name} 组件 -->
-  </div>
-</template>
-
-<script setup lang="ts">
-// ${component.name} 组件示例代码
-</script>`
+  return COMPONENT_TEMPLATES[component.id] ?? ('<!-- ' + component.name + ' 组件 -->\n<template>\n  <div></div>\n</template>')
 }
 </script>
 

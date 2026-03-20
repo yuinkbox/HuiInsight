@@ -154,13 +154,13 @@ export const rbacApi = {
   // 获取用户今日任务
   async getMyTasks(): Promise<UserTaskResponse> {
     const response = await api.get('/api/task/my')
-    return response
+    return response as any
   },
 
   // 自动任务派发
   async dispatchTasks(request: DispatchRequest): Promise<DispatchResponse> {
     const response = await api.post('/api/dispatch/auto', request)
-    return response
+    return response as any
   },
 
   // 获取团队数据洞察
@@ -180,14 +180,14 @@ export const rbacApi = {
     }
     
     const response = await api.get('/api/team/insight', { params })
-    return response
+    return response as any
   },
 
   // 获取活跃用户列表
   async getActiveUsers(role?: UserRole): Promise<{ users: ActiveUser[], count: number, filter_role: string }> {
     const params = role ? { role } : {}
     const response = await api.get('/api/users/active', { params })
-    return response
+    return response as any
   },
 
   // 记录操作日志（每次按键）
@@ -209,7 +209,7 @@ export const rbacApi = {
   // 更新用户角色（主管专用）
   async updateUserRole(userId: number, newRole: string): Promise<{ success: boolean; message: string; user: any }> {
     const response = await api.put(`/api/users/${userId}/role`, { role: newRole })
-    return response
+    return response as any
   },
 
   // 获取用户详细统计（主管专用）
@@ -219,7 +219,7 @@ export const rbacApi = {
     if (endDate) params.end_date = endDate
     
     const response = await api.get(`/api/team/user/${userId}/stats`, { params })
-    return response
+    return response as any
   },
 
   // 更新任务进度
@@ -262,7 +262,7 @@ export const rbacApi = {
 }
 
 // 工具函数
-export async function getUserRole(): Promise<UserRole | null> {
+export async function getUserRole(): Promise<UserRole | null> { // eslint-disable-line @typescript-eslint/no-unused-vars
   try {
     // 尝试使用新的统一auth工具
     const { auth } = await import('@/utils/auth')
@@ -379,7 +379,7 @@ export function getRoleColor(role: UserRole): string {
 // 权限检查函数
 export function hasPermission(requiredRole: UserRole, userRole?: UserRole): boolean {
   if (!userRole) {
-    userRole = getUserRole()
+    userRole = getUserRoleSync() ?? undefined
   }
   
   if (!userRole) return false
@@ -400,7 +400,7 @@ export function hasPermission(requiredRole: UserRole, userRole?: UserRole): bool
 // 检查是否是主管
 export function isSupervisor(userRole?: UserRole): boolean {
   if (!userRole) {
-    userRole = getUserRole()
+    userRole = getUserRoleSync() ?? undefined
   }
   return userRole === UserRole.SUPERVISOR
 }
@@ -408,7 +408,7 @@ export function isSupervisor(userRole?: UserRole): boolean {
 // 检查是否是组长
 export function isShiftLeader(userRole?: UserRole): boolean {
   if (!userRole) {
-    userRole = getUserRole()
+    userRole = getUserRoleSync() ?? undefined
   }
   return userRole === UserRole.SHIFT_LEADER
 }
@@ -416,7 +416,7 @@ export function isShiftLeader(userRole?: UserRole): boolean {
 // 检查是否是审核员
 export function isAuditor(userRole?: UserRole): boolean {
   if (!userRole) {
-    userRole = getUserRole()
+    userRole = getUserRoleSync() ?? undefined
   }
   return userRole === UserRole.AUDITOR
 }

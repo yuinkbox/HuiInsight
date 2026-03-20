@@ -105,7 +105,7 @@ export const roomAPI = {
       if (bridge) return bridge.getRoomId()
     }
     const data = await _http.get('/api/room/current')
-    return data?.room_id ?? ''
+    return (data as any)?.room_id ?? ''
   },
 }
 
@@ -130,4 +130,9 @@ export default {
   system: systemAPI,
   room:   roomAPI,
   patrol: patrolAPI,
+  get:    (url: string, config?: object) => _http.get(url, config),
+  post:   (url: string, data?: any, config?: object) => _http.post(url, data, config),
+  put:    (url: string, data?: any, config?: object) => _http.put(url, data, config),
+  patch:  (url: string, data?: any, config?: object) => _http.patch(url, data, config),
+  delete: (url: string, config?: object) => _http.delete(url, config),
 }

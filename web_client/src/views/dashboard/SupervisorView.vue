@@ -50,7 +50,7 @@
         <div v-if="searchResults.length > 0" class="search-results-hint">
           <icon-check-circle style="color: #52c41a" />
           找到 {{ searchResults.length }} 个匹配的员工
-          <a-button type="text" size="mini" @click="clearSearch">
+          <a-button type="text" size="small" @click="clearSearch">
             <template #icon>
               <icon-close />
             </template>
@@ -72,7 +72,7 @@
                   <template #title>
                     <div class="user-title">
                       <span class="user-name">{{ item.full_name }}</span>
-                      <a-tag :color="getRoleColor(item.role)" size="mini">
+                      <a-tag :color="getRoleColor(item.role)" size="small">
                         {{ getRoleLabel(item.role) }}
                       </a-tag>
                     </div>
@@ -469,8 +469,8 @@
                   <a-select
                     v-model="record.role"
                     :style="{ width: '100px' }"
-                    size="mini"
-                    @change="(value) => updateUserRole(record.id, value)"
+                    size="small"
+                    @change="(value: any) => handleUpdateUserRole(record.id, value)"
                     :disabled="record.id === currentUserId"
                   >
                     <a-option value="supervisor">主管</a-option>
@@ -479,7 +479,7 @@
                   </a-select>
                   
                   <!-- 查看详情按钮 -->
-                  <a-button type="text" size="mini" @click="showUserStats(record)">
+                  <a-button type="text" size="small" @click="showUserStats(record)">
                     <template #icon>
                       <icon-eye />
                     </template>
@@ -503,8 +503,8 @@
               <icon-user-group />
               <span>角色分布:</span>
               <div class="role-distribution">
-                <a-tag v-for="(count, role) in roleDistribution" :key="role" :color="getRoleColor(role)" size="mini">
-                  {{ getRoleLabel(role) }}: {{ count }}
+                <a-tag v-for="(count, role) in roleDistribution" :key="role" :color="getRoleColor(role as any)" size="small">
+                  {{ getRoleLabel(role as any) }}: {{ count }}
                 </a-tag>
               </div>
             </div>
@@ -554,7 +554,7 @@
             <a-col :span="6">
               <a-statistic
                 title="总任务量"
-                :value="userStats.summary?.total_tasks || 0"
+                :value="Number(userStats.summary?.total_tasks || 0)"
                 :precision="0"
                 show-group-separator
               >
@@ -567,7 +567,7 @@
             <a-col :span="6">
               <a-statistic
                 title="总审核场次"
-                :value="userStats.summary?.total_reviewed || 0"
+                :value="Number(userStats.summary?.total_reviewed || 0)"
                 :precision="0"
                 show-group-separator
               >
@@ -580,7 +580,7 @@
             <a-col :span="6">
               <a-statistic
                 title="违规拦截"
-                :value="userStats.summary?.total_violations || 0"
+                :value="Number(userStats.summary?.total_violations || 0)"
                 :precision="0"
                 show-group-separator
               >
@@ -593,7 +593,7 @@
             <a-col :span="6">
               <a-statistic
                 title="违规率"
-                :value="((userStats.summary?.violation_rate || 0) * 100).toFixed(1)"
+                :value="+(((userStats.summary?.violation_rate || 0) * 100).toFixed(1))"
                 suffix="%"
                 :precision="1"
               >
@@ -743,14 +743,9 @@ import { Message } from '@arco-design/web-vue'
 import dayjs from 'dayjs'
 import { 
   rbacApi, 
-  type ActiveUser, 
   type TeamInsightResponse,
-  UserRole,
-  TaskChannel,
-  ShiftType,
   getRoleLabel,
   getRoleColor,
-  getTaskChannelLabel,
   getShiftTypeLabel
 } from '@/api/rbac'
 
@@ -837,14 +832,6 @@ const getShiftTypeColor = (shiftType: string) => {
 }
 
 // 获取班次类型标签
-const getShiftTypeLabel = (shiftType: string) => {
-  const labels: Record<string, string> = {
-    'morning': '早班',
-    'afternoon': '中班',
-    'night': '晚班'
-  }
-  return labels[shiftType] || shiftType
-}
 
 // 格式化时长
 const formatDuration = (seconds: number): string => {
@@ -1014,7 +1001,7 @@ const filterUsersByRole = () => {
 }
 
 // 5. 更新用户角色
-const updateUserRole = async (userId: number, newRole: string) => {
+const handleUpdateUserRole = async (userId: number, newRole: string) => {
   try {
     const response = await rbacApi.updateUserRole(userId, newRole)
     

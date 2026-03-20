@@ -11,7 +11,7 @@ export const supervisorApi = {
    */
   async getRealtimeStatus(): Promise<RealtimeStatusResponse> {
     const response = await api.get('/api/supervisor/realtime-status')
-    return response
+    return response as any
   },
 
   /**
@@ -25,7 +25,7 @@ export const supervisorApi = {
     launch_command?: any
   }> {
     const response = await api.post('/api/supervisor/launch-dashboard')
-    return response
+    return response as any
   },
 
   /**
@@ -40,7 +40,7 @@ export const supervisorApi = {
     config: any
   }> {
     const response = await api.get('/api/system/room-monitor/status')
-    return response
+    return response as any
   },
 
   /**
@@ -51,7 +51,7 @@ export const supervisorApi = {
     message: string
   }> {
     const response = await api.post('/api/system/room-monitor/control', { action })
-    return response
+    return response as any
   }
 }
 

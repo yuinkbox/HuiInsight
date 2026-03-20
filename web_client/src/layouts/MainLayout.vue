@@ -178,11 +178,18 @@ const router = useRouter()
 const route = useRoute()
 
 // 用户信息
-const userInfo = ref({
+const userInfo = ref<{
+  username: string
+  full_name: string
+  email: string
+  is_admin: boolean
+  role?: string
+}>({
   username: 'admin',
   full_name: '系统管理员',
   email: 'admin@ahdunyi.com',
-  is_admin: true
+  is_admin: true,
+  role: ''
 })
 
 // 计算属性

@@ -148,12 +148,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { 
-  IconRefresh, IconSync, IconApps, IconHome, IconClockCircle,
+  IconRefresh, IconSync, IconApps, IconClockCircle,
   IconEye, IconCheckCircle, IconDownload, IconExclamationCircle,
-  IconNotification, IconUserGroup, IconCloseCircle, IconSettings
+  IconNotification
 } from '@arco-design/web-vue/es/icon'
 import { supervisorApi } from '@/api/supervisor'
 
@@ -177,7 +177,7 @@ const auditStats = ref({
 })
 const roomMonitor = ref({
   running: false,
-  current_room_id: null,
+  current_room_id: null as string | null,
   stats: { total_scans: 0 }
 })
 
@@ -204,21 +204,21 @@ const refreshData = async () => {
     const response = await supervisorApi.getRealtimeStatus();
     
     if (response.success) {
-    // ... 后面的逻辑保持不变 ...
-    activeUsers.value = (data.active_users || []).sort((a: any, b: any) => {
-      if (a.status === 'SUSPICIOUS' && b.status !== 'SUSPICIOUS') return -1;
-      return a.status !== 'SUSPICIOUS' && b.status === 'SUSPICIOUS' ? 1 : 0;
-    });
-    
-    // 更新时间
-    lastUpdateTime.value = new Date().toLocaleTimeString('zh-CN', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    
-    lastError.value = '';
+      activeUsers.value = (response.active_users || []).sort((a: any, b: any) => {
+        if (a.status === 'SUSPICIOUS' && b.status !== 'SUSPICIOUS') return -1;
+        return a.status !== 'SUSPICIOUS' && b.status === 'SUSPICIOUS' ? 1 : 0;
+      });
+      systemStats.value = response.system || systemStats.value;
+      auditStats.value = response.audit_stats || auditStats.value;
+      roomMonitor.value = response.room_monitor || roomMonitor.value;
+      lastUpdateTime.value = new Date().toLocaleTimeString('zh-CN', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      lastError.value = '';
+    }
   } catch (err: any) {
     console.error('刷新数据失败:', err);
     lastError.value = err.message || '网络请求失败';

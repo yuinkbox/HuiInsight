@@ -160,7 +160,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Message } from '@arco-design/web-vue'
 
 interface ComponentProp {
   name: string
@@ -194,32 +193,9 @@ interface Props {
 const props = defineProps<Props>()
 
 // 属性表格列定义
-const propColumns = [
-  {
-    title: '属性名',
-    dataIndex: 'name',
-    width: 120
-  },
-  {
-    title: '类型',
-    dataIndex: 'type',
-    slotName: 'type',
-    width: 120
-  },
-  {
-    title: '默认值',
-    dataIndex: 'default',
-    slotName: 'default',
-    width: 120
-  },
-  {
-    title: '说明',
-    dataIndex: 'description'
-  }
-]
 
 // 激活的示例
-const activeExample = ref(0)
+
 
 // 基础示例代码
 const basicExampleCode = `<template>

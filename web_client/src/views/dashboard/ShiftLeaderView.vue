@@ -36,7 +36,7 @@
                     <div class="user-info">
                       <div class="user-name">{{ user.username }}</div>
                       <div class="user-role">
-                        <a-tag :color="getRoleColor(user.role)" size="mini">
+                        <a-tag :color="getRoleColor(user.role)" size="small">
                           {{ getRoleLabel(user.role) }}
                         </a-tag>
                       </div>
@@ -199,7 +199,7 @@
                   v-for="(count, channel) in dispatchResult.summary.channel_distribution"
                   :key="channel"
                   :color="getChannelColor(channel)"
-                  size="mini"
+                  size="small"
                 >
                   {{ getChannelLabel(channel) }}: {{ count }}
                 </a-tag>
@@ -238,7 +238,6 @@ import {
   ShiftType,
   getRoleLabel,
   getRoleColor,
-  getTaskChannelLabel,
   getShiftTypeLabel
 } from '@/api/rbac'
 

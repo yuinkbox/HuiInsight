@@ -35,7 +35,6 @@ def _sep() -> None:
 
 
 def _run(cmd: list, cwd: Path, label: str, timeout: int = 600) -> bool:
-    enc = locale.getpreferredencoding(False) or "utf-8"
     print("[CMD] " + " ".join(str(c) for c in cmd))
     try:
         proc = subprocess.Popen(
@@ -44,13 +43,15 @@ def _run(cmd: list, cwd: Path, label: str, timeout: int = 600) -> bool:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            encoding=enc,
+            encoding="utf-8",
             errors="replace",
         )
         for line in proc.stdout:  # type: ignore[union-attr]
             line = line.rstrip()
             if line:
-                print("    " + line)
+                # Strip non-ASCII chars that crash GBK terminals
+                safe = line.encode("gbk", errors="replace").decode("gbk", errors="replace")
+                print("    " + safe)
         proc.wait(timeout=timeout)
         if proc.returncode != 0:
             print("[ERR] " + label + " failed (exit " + str(proc.returncode) + ")")

@@ -51,7 +51,7 @@
     <!-- 组件详情模态框 -->
     <a-modal
       v-model:visible="detailVisible"
-      :title="selectedComponent?.name"
+      :title="selectedComponent?.name ?? ''"
       width="800px"
       :footer="false"
       @cancel="handleCloseDetail"
@@ -65,8 +65,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+// @ts-ignore
 import ComponentGrid from '@/components/ComponentGrid.vue'
+// @ts-ignore
 import ComponentDetail from '@/components/ComponentDetail.vue'
 
 interface ComponentItem {

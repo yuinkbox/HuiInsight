@@ -83,11 +83,11 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-  scrollBehavior: (to, from, savedPosition) => savedPosition || { top: 0 }
+  scrollBehavior: (_to2, _from2, savedPosition) => savedPosition || { top: 0 }
 })
 
 // ✅ 移除所有花里胡哨的异步逻辑，回归最坚固的同步校验
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
   if (to.meta.title) document.title = `${to.meta.title} - AHDUNYI 巡查终端`
 
   const token = auth.getToken()
