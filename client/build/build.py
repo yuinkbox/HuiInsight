@@ -49,9 +49,11 @@ def _run(cmd: list, cwd: Path, label: str, timeout: int = 600) -> bool:
         for line in proc.stdout:  # type: ignore[union-attr]
             line = line.rstrip()
             if line:
-                # Strip non-ASCII chars that crash GBK terminals
-                safe = line.encode("gbk", errors="replace").decode("gbk", errors="replace")
-                print("    " + safe)
+                # Safe-print: avoid GBK encode errors on Windows CI
+                try:
+                    print("    " + line)
+                except UnicodeEncodeError:
+                    print("    " + line.encode("ascii", errors="replace").decode("ascii"))
         proc.wait(timeout=timeout)
         if proc.returncode != 0:
             print("[ERR] " + label + " failed (exit " + str(proc.returncode) + ")")
