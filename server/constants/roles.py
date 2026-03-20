@@ -10,8 +10,8 @@ class UserRole(str, Enum):
     as a VARCHAR without extra serialisation.
     """
 
-    MANAGER       = "manager"
-    TEAM_LEADER   = "team_leader"
+    MANAGER = "manager"
+    TEAM_LEADER = "team_leader"
     QA_SPECIALIST = "qa_specialist"
     ADMIN_SUPPORT = "admin_support"
-    AUDITOR       = "auditor"
+    AUDITOR = "auditor"
