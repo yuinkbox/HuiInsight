@@ -9,6 +9,8 @@ Version: 9.0.0
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from server.api.auth import router as auth_router
+
 app = FastAPI(title="AHDUNYI Terminal API", version="9.0.0")
 
 app.add_middleware(
@@ -18,8 +20,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Routers
+app.include_router(auth_router)
+
 
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "version": "9.0.0"}
-# Trigger CI/CD pipeline test

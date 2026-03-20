@@ -2,12 +2,10 @@
 """
 ORM models for the AHDUNYI server.
 
-All tables use:
-  - utf8mb4 charset (configured at engine level via DATABASE_URL)
-  - UTC timestamps managed automatically by SQLAlchemy
-  - Soft-delete via ``is_active`` flag (no hard DELETE in production)
+Table structure is aligned with the OpenClaw-initialised ``users`` table.
+All timestamps are UTC.  Soft-delete via ``is_active``.
 """
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
@@ -28,16 +26,10 @@ from server.constants.roles import UserRole
 class User(Base):
     """Application user account.
 
-    Columns
-    -------
-    id            -- Auto-increment primary key.
-    username      -- Login name; unique, indexed.
-    real_name     -- Display / audit name (Chinese name supported via utf8mb4).
-    hashed_password -- bcrypt hash produced by ``passlib``.
-    role          -- One of :class:`~server.constants.roles.UserRole`.
-    is_active     -- Soft-delete flag; False = deactivated account.
-    created_at    -- Row insertion timestamp (UTC, auto-set).
-    updated_at    -- Last update timestamp (UTC, auto-updated).
+    Aligned with OpenClaw schema:
+      username, hashed_password, is_superuser, full_name
+    Extended with AHDUNYI fields:
+      role, is_active, created_at, updated_at
     """
 
     __tablename__ = "users"
@@ -51,11 +43,16 @@ class User(Base):
     username: Mapped[str] = mapped_column(
         String(64), unique=True, nullable=False, comment="登录用户名"
     )
-    real_name: Mapped[str] = mapped_column(
+    # OpenClaw compat: full_name (replaces real_name)
+    full_name: Mapped[str] = mapped_column(
         String(128), nullable=False, default="", comment="真实姓名"
     )
     hashed_password: Mapped[str] = mapped_column(
         String(255), nullable=False, comment="bcrypt密码哈希"
+    )
+    # OpenClaw compat: is_superuser
+    is_superuser: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, comment="是否超级管理员"
     )
     role: Mapped[UserRole] = mapped_column(
         SAEnum(UserRole, values_callable=lambda e: [m.value for m in e]),

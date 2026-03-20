@@ -67,9 +67,10 @@ def seed_superuser(db: Session) -> None:
     hashed = _pwd_ctx.hash(_SEED_PLAIN_PASSWORD)
     user = User(
         username=_SEED_USERNAME,
-        real_name=_SEED_REAL_NAME,
+        full_name=_SEED_REAL_NAME,
         hashed_password=hashed,
         role=_SEED_ROLE,
+        is_superuser=True,
         is_active=True,
     )
     db.add(user)
