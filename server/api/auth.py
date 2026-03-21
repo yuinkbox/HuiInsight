@@ -14,19 +14,17 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
+import bcrypt as _bcrypt_lib
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from server.constants.permissions import get_permissions_for_role, get_role_meta
 from server.core.database import get_db
 from server.db.models import User
-from server.constants.permissions import get_permissions_for_role, get_role_meta
 
-# --------------------------------------------------------------------------
-# Security config (read from env; fall back to dev defaults)
-# --------------------------------------------------------------------------
 _SECRET_KEY: str = os.environ.get(
     "JWT_SECRET_KEY", "CHANGE_ME_IN_PRODUCTION_USE_LONG_RANDOM_STRING"
 )
@@ -92,8 +90,31 @@ def _create_access_token(
 
 
 def _verify_password(plain: str, hashed: str) -> bool:
-    """Return True if *plain* matches the *hashed* bcrypt digest."""
-    return _pwd_ctx.verify(plain, hashed)
+    """Verify plain password against bcrypt hash.
+
+    Uses passlib first; falls back to raw bcrypt on compatibility errors
+    (passlib 1.7.4 + bcrypt 4.x known issue).
+
+    Args:
+        plain:  The plaintext password supplied by the user.
+        hashed: The bcrypt hash stored in the database.
+
+    Returns:
+        True if the password matches, False otherwise.
+    """
+    try:
+        return _pwd_ctx.verify(plain, hashed)
+    except Exception:
+        pass
+    # Fallback: call bcrypt directly, bypassing passlib wrapper
+    try:
+        plain_bytes = plain.encode("utf-8")
+        hash_bytes = (
+            hashed.encode("utf-8") if isinstance(hashed, str) else hashed
+        )
+        return _bcrypt_lib.checkpw(plain_bytes, hash_bytes)
+    except Exception:
+        return False
 
 
 def _get_user_or_401(db: Session, username: str) -> User:
@@ -121,12 +142,6 @@ def login(
     db: Session = Depends(get_db),
 ) -> TokenResponse:
     """Authenticate user and return a 24-hour JWT access token.
-
-    The response now includes:
-    - ``permissions``: list of permission-point strings for the frontend
-      to drive all v-if guards without hardcoding role names.
-    - ``role_meta``: UI metadata (label, colour, dashboard_view) so the
-      frontend never needs a local role-label dictionary.
 
     Args:
         body: JSON payload with ``username`` and ``password``.
