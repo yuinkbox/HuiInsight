@@ -53,7 +53,8 @@ const routes: RouteRecordRaw[] = [
           icon: 'icon-dashboard',
           menu: true,
           requiresAuth: true,
-          permission: 'view:dashboard',
+          // 移除权限限制：所有登录用户都能访问 Dashboard
+          // 具体显示内容由 DashboardPage 组件根据角色决定
         },
       },
       {
