@@ -50,14 +50,6 @@ _http.interceptors.response.use(
 
 export const authAPI = {
   async login(username: string, password: string): Promise<any> {
-    if (isDesktopMode()) {
-      // In desktop mode login is handled by the Python LoginWindow.
-      // The Vue app receives token_info via the tokenInfoChanged signal.
-      // This method is kept for browser compatibility only.
-      throw new Error(
-        'In desktop mode authentication is handled by the native login window.'
-      )
-    }
     return _http.post('/api/auth/login', { username, password })
   },
 
