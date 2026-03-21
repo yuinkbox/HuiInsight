@@ -19,7 +19,7 @@
             HuiInsight 徽鉴
           </a-typography-title>
           <a-typography-text type="secondary" class="subtitle">
-            欢迎登录，请输入您的账号信息
+            工作辛苦了，但也需要保持专注与严谨哦
           </a-typography-text>
         </div>
       </template>
@@ -28,11 +28,15 @@
         <!-- 用户名 -->
         <div class="form-item">
           <a-input
+            ref="usernameInputRef"
             v-model="username"
             placeholder="请输入用户名"
             size="large"
             allow-clear
+            inputmode="latin"
             @keyup.enter="handleLogin"
+            @input="handleUsernameInput"
+            @paste="handleUsernamePaste"
           >
             <template #prefix><icon-user /></template>
           </a-input>
@@ -41,11 +45,15 @@
         <!-- 密码 -->
         <div class="form-item">
           <a-input-password
+            ref="passwordInputRef"
             v-model="password"
             placeholder="请输入密码"
             size="large"
             allow-clear
+            inputmode="latin"
             @keyup.enter="handleLogin"
+            @input="handlePasswordInput"
+            @paste="handlePasswordPaste"
           >
             <template #prefix><icon-lock /></template>
           </a-input-password>
@@ -124,6 +132,8 @@ const rememberMe      = ref(false)
 const loginLoading    = ref(false)
 const backendConnected = ref(true)
 const apiBaseUrl      = config.api.baseUrl
+const usernameInputRef = ref()
+const passwordInputRef = ref()
 
 interface ApiStatus {
   type: 'success' | 'warning' | 'error' | 'info'
@@ -135,9 +145,87 @@ const apiStatus = ref<ApiStatus | null>(null)
 // ---- 计算属性 --------------------------------------------------------------
 const canLogin = computed(() => username.value.trim().length > 0 && password.value.length >= 6)
 
+// ---- 输入校验工具函数 -------------------------------------------------------
+
+/** 检查字符是否为英文字母或数字 */
+function isValidChar(char: string): boolean {
+  return /^[a-zA-Z0-9]$/.test(char)
+}
+
+/** 过滤非法字符 */
+function filterValidChars(text: string): string {
+  return text.split('').filter(isValidChar).join('')
+}
+
+/** 触发视觉反馈（红色外发光 + 微震动） */
+function triggerInvalidFeedback(inputRef: any) {
+  if (!inputRef?.value) return
+
+  const inputElement = inputRef.value.$el?.querySelector('input')
+  if (!inputElement) return
+
+  // 添加红色外发光效果
+  inputElement.classList.add('input-error-glow')
+  setTimeout(() => {
+    inputElement.classList.remove('input-error-glow')
+  }, 600)
+
+  // 微震动效果
+  if (navigator.vibrate) {
+    navigator.vibrate([50, 30, 50])
+  }
+
+  // 显示提示
+  Message.warning('仅支持英文与数字，请切换输入法')
+}
+
+// ---- 用户名输入处理 --------------------------------------------------------
+
+function handleUsernameInput(value: string) {
+  const filtered = filterValidChars(value)
+  if (filtered !== value) {
+    username.value = filtered
+    triggerInvalidFeedback(usernameInputRef)
+  }
+}
+
+function handleUsernamePaste(event: ClipboardEvent) {
+  event.preventDefault()
+  const pastedText = event.clipboardData?.getData('text') || ''
+  const filtered = filterValidChars(pastedText)
+  
+  if (filtered !== pastedText) {
+    triggerInvalidFeedback(usernameInputRef)
+  }
+  
+  username.value += filtered
+}
+
+// ---- 密码输入处理 ----------------------------------------------------------
+
+function handlePasswordInput(value: string) {
+  const filtered = filterValidChars(value)
+  if (filtered !== value) {
+    password.value = filtered
+    triggerInvalidFeedback(passwordInputRef)
+  }
+}
+
+function handlePasswordPaste(event: ClipboardEvent) {
+  event.preventDefault()
+  const pastedText = event.clipboardData?.getData('text') || ''
+  const filtered = filterValidChars(pastedText)
+  
+  if (filtered !== pastedText) {
+    triggerInvalidFeedback(passwordInputRef)
+  }
+  
+  password.value += filtered
+}
+
 // ---- 生命周期 --------------------------------------------------------------
 onMounted(() => {
-  document.title = 'AHDUNYI 巡查终端 - 登录'
+  document.title = 'HuiInsight 徽鉴 - 登录'
   loadRememberedAccount()
   checkBackend()
 })
@@ -345,6 +433,26 @@ function showForgetPassword() {
   padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
+}
+
+/* 输入框错误状态 - 红色外发光 */
+.input-error-glow {
+  animation: errorGlow 0.6s ease-out !important;
+}
+
+@keyframes errorGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 63, 63, 0.7),
+                inset 0 0 0 1px rgba(245, 63, 63, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(245, 63, 63, 0.2),
+                inset 0 0 0 1px rgba(245, 63, 63, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 63, 63, 0),
+                inset 0 0 0 1px rgba(245, 63, 63, 0);
+  }
 }
 
 @media (max-width: 480px) {
