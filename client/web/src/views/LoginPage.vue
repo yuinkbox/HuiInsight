@@ -16,7 +16,7 @@
             <span class="logo-text">AHDUNYI</span>
           </div>
           <a-typography-title :level="3" class="welcome-text">
-            AHDUNYI 审核工作台
+            HuiInsight 徽鉴
           </a-typography-title>
           <a-typography-text type="secondary" class="subtitle">
             欢迎登录，请输入您的账号信息
@@ -97,7 +97,7 @@
 
         <!-- 版本信息 -->
         <div class="version-info">
-          <a-typography-text type="secondary">© 2026 AHDUNYI</a-typography-text>
+          <a-typography-text type="secondary">© 2026 HuiInsight</a-typography-text>
         </div>
       </div>
     </a-card>

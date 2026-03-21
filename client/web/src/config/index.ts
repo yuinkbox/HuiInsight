@@ -67,9 +67,9 @@ const loadConfig = (): AppConfig => {
     },
     
     app: {
-      title: env.VITE_APP_TITLE || 'AHDUNYI 风控审核中台',
+      title: env.VITE_APP_TITLE || 'HuiInsight 徽鉴',
       version: env.VITE_APP_VERSION || '2.0.0',
-      copyright: env.VITE_APP_COPYRIGHT || '© 2026 AHDUNYI'
+      copyright: env.VITE_APP_COPYRIGHT || '© 2026 HuiInsight. The Infrastructure of Risk Control.'
     },
     
     features: {

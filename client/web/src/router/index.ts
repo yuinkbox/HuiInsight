@@ -49,7 +49,7 @@ const routes: RouteRecordRaw[] = [
         name: 'Dashboard',
         component: DashboardPage,
         meta: {
-          title: '审核工作台',
+          title: '工作概览',
           icon: 'icon-dashboard',
           menu: true,
           requiresAuth: true,
@@ -60,19 +60,19 @@ const routes: RouteRecordRaw[] = [
         path: 'risk-audit',
         name: 'RiskAudit',
         redirect: '/risk-audit/realtime',
-        meta: { title: '风险审核', icon: 'icon-shield', menu: true, requiresAuth: true },
+        meta: { title: '实时监看', icon: 'icon-shield', menu: true, requiresAuth: true },
         children: [
           {
             path: 'realtime',
             name: 'RealTimePatrol',
             component: RealTimePatrolPage,
-            meta: { title: '实时监控', requiresAuth: true, permission: 'view:realtime' },
+            meta: { title: '直播监测', requiresAuth: true, permission: 'view:realtime' },
           },
           {
             path: 'violation-review',
             name: 'ViolationReview',
             component: ViolationReviewPage,
-            meta: { title: '违规审核', requiresAuth: true, permission: 'view:violations' },
+            meta: { title: '内容审核', requiresAuth: true, permission: 'view:violations' },
           },
         ],
       },
@@ -101,7 +101,7 @@ const routes: RouteRecordRaw[] = [
         name: 'ShadowAuditDashboard',
         component: ShadowAuditDashboard,
         meta: {
-          title: '统帅大屏',
+          title: '管理大屏',
           icon: 'icon-eye',
           menu: true,
           requiresAuth: true,
@@ -143,7 +143,7 @@ const router = createRouter({
 // ---------------------------------------------------------------------------
 router.beforeEach((to, _from, next) => {
   if (to.meta.title) {
-    document.title = `${to.meta.title} - AHDUNYI 巡查终端`
+    document.title = `${to.meta.title} - HuiInsight 徽鉴`
   }
 
   const token      = auth.getToken()

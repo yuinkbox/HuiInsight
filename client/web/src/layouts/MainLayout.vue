@@ -5,7 +5,7 @@
       <div class="header-left">
         <div class="logo">
           <icon-computer :size="22" />
-          <span class="logo-text">AHDUNYI 风控审核中台</span>
+          <span class="logo-text">HuiInsight 徽鉴</span>
         </div>
       </div>
 
@@ -52,17 +52,17 @@
           @menu-item-click="handleMenuClick"
         >
           <a-menu-item key="dashboard">
-            <template #icon><icon-dashboard /></template>审核工作台
+            <template #icon><icon-dashboard /></template>工作概览
           </a-menu-item>
 
           <a-sub-menu key="risk-audit">
             <template #icon><icon-shield /></template>
-            <template #title>风险审核</template>
+            <template #title>实时监看</template>
             <a-menu-item key="realtime">
-              <template #icon><icon-radar-chart /></template>实时监控
+              <template #icon><icon-radar-chart /></template>直播监测
             </a-menu-item>
             <a-menu-item key="violation-review">
-              <template #icon><icon-file-search /></template>违规审核
+              <template #icon><icon-file-search /></template>内容审核
             </a-menu-item>
           </a-sub-menu>
 
@@ -81,7 +81,7 @@
             key="supervisor/shadow-audit"
             v-if="permissionStore.can('view:shadow_audit')"
           >
-            <template #icon><icon-eye /></template>统帅大屏
+            <template #icon><icon-eye /></template>管理大屏
           </a-menu-item>
 
           <a-menu-item key="settings" v-if="permissionStore.can('view:settings')">
@@ -158,14 +158,14 @@ const userName = computed(() => userInfo.value.full_name || userInfo.value.usern
 const userRole = computed(() => permissionStore.roleLabel)
 
 const breadcrumbMap: Record<string, string> = {
-  dashboard:        '工作台',
-  'risk-audit':     '风险审核',
-  realtime:         '实时监控',
-  'violation-review': '违规审核',
+  dashboard:        '工作概览',
+  'risk-audit':     '实时监看',
+  realtime:         '直播监测',
+  'violation-review': '内容审核',
   sop:              '审核标准',
   settings:         '系统管理',
   supervisor:       '主管',
-  'shadow-audit':   '统帅大屏',
+  'shadow-audit':   '管理大屏',
   standards:        '红线标准',
   rules:            '业务规则',
 }
