@@ -8,9 +8,8 @@ Startup sequence
 2. Initialise logging (UTF-8 safe, GBK-proof).
 3. Check runtime dependencies.
 4. Launch GUI event loop:
-   a. Show LoginWindow.
-   b. On login_success -> hide login, show MainWindow (WebEngine).
-   c. Start RoomMonitor, wire callbacks to AppBridge.
+   a. Open MainWindow directly (Vue Web login page is the single login UI).
+   b. Start RoomMonitor, wire callbacks to AppBridge.
 5. On GUI exit: stop RoomMonitor, flush logs.
 
 Author : AHDUNYI
@@ -47,7 +46,6 @@ def _check_dependencies() -> list:
         ("uiautomation",    ["uiautomation"]),
         ("PyQt6",           ["PyQt6.QtWidgets"]),
         ("PyQt6-WebEngine", ["PyQt6.QtWebEngineWidgets"]),
-        ("requests",        ["requests"]),
     ]
     missing = []
     for display, imports in required:
@@ -115,39 +113,31 @@ def _run_gui(settings: AppSettings) -> int:
     app.setPalette(pal)
 
     try:
-        from client.desktop.app.ui.login_window import LoginWindow
         from client.desktop.app.ui.main_window import MainWindow
     except ImportError as exc:
         logger.error("UI import failed: %s", exc)
         QMessageBox.critical(None, "Startup Error", f"Failed to load UI:\n{exc}")
         return 1
 
-    _main_windows: list = []
     _monitors: list = []
 
-    login_win = LoginWindow(server_url=settings.server.url)
+    try:
+        # Unified login strategy: always open Vue app directly.
+        # Vue LoginPage is now the single source of truth for authentication.
+        main_win = MainWindow(settings=settings)
 
-    def _on_login_success(token_info: dict) -> None:
-        login_win.hide()
-        try:
-            main_win = MainWindow(settings=settings, token_info=token_info)
-            _main_windows.append(main_win)
-            if settings.features.auto_start_monitor:
-                mon = _start_room_monitor(settings, main_win.bridge)
-                if mon:
-                    _monitors.append(mon)
-            main_win.show()
-            logger.info("MainWindow displayed.")
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.error("Failed to open MainWindow: %s", exc, exc_info=True)
-            QMessageBox.critical(
-                None, "Error", f"Could not open main window:\n{exc}"
-            )
-            login_win.show()
+        if settings.features.auto_start_monitor:
+            mon = _start_room_monitor(settings, main_win.bridge)
+            if mon:
+                _monitors.append(mon)
 
-    login_win.login_success.connect(_on_login_success)
-    login_win.show()
-    logger.info("LoginWindow displayed.")
+        main_win.show()
+        logger.info("MainWindow displayed.")
+
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.error("Failed to open MainWindow: %s", exc, exc_info=True)
+        QMessageBox.critical(None, "Error", f"Could not open main window:\n{exc}")
+        return 1
 
     exit_code = app.exec()
 

@@ -1,24 +1,15 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Main application window - PyQt6 WebEngine container.
 
-Loads the compiled Vue frontend from client/web/dist/index.html and
-exposes AppBridge via QWebChannel so Vue communicates with Python
-without any HTTP server.
-
-Token injection strategy
-------------------------
-The Python LoginWindow authenticates BEFORE the Vue page loads.
-QWebChannel signals fired before page-load are missed by JS listeners.
-Instead, on ``loadFinished`` we inject the full login response directly
-into ``localStorage`` via ``runJavaScript``, then dispatch a custom
-``ahdunyi:token-ready`` event so Vue can react immediately.
+Loads the compiled Vue frontend from client/web/dist/index.html.
+Vue handles all authentication via its LoginPage component.
+No token injection from Python — Vue manages login/logout entirely.
 
 Author : AHDUNYI
 Version: 9.0.0
 """
 
-import json
 import logging
 from pathlib import Path
 from typing import Optional
@@ -36,34 +27,27 @@ from client.desktop.config.settings import AppSettings
 logger = logging.getLogger(__name__)
 
 
-def _extract_user_field(token_info: dict, field: str, default: str = "") -> str:
-    """Extract a field from token_info, checking user sub-dict then top-level."""
-    user_sub = token_info.get("user") or {}
-    return user_sub.get(field) or token_info.get(field) or default
-
-
 class MainWindow(QMainWindow):
-    """Primary application window hosting the Vue WebEngine frontend."""
+    """Primary application window hosting the Vue WebEngine frontend.
+    
+    Vue handles all authentication and routing. Python just provides:
+    - WebEngine container
+    - QWebChannel bridge for room monitoring
+    """
 
     def __init__(
         self,
         settings: AppSettings,
-        token_info: dict,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
         self._settings = settings
-        self._token_info = token_info
-
         self._bridge = AppBridge(parent=self)
-        self._bridge.update_token_info(token_info)
 
         self._setup_window()
         self._setup_webengine()
 
-        username = _extract_user_field(token_info, "username", "?")
-        role = _extract_user_field(token_info, "role", "?")
-        logger.info("MainWindow ready: user=%s role=%s", username, role)
+        logger.info("MainWindow ready (Vue handles auth)")
 
     @property
     def bridge(self) -> AppBridge:
@@ -75,9 +59,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _setup_window(self) -> None:
-        username = _extract_user_field(self._token_info, "username", "user")
-        role = _extract_user_field(self._token_info, "role", "UNKNOWN")
-        self.setWindowTitle(f"AHDUNYI Terminal PRO  -  {username}  ({role})")
+        self.setWindowTitle("AHDUNYI Terminal PRO")
         self.resize(self._settings.gui.window_width, self._settings.gui.window_height)
         screen = QApplication.primaryScreen().geometry()
         self.move(
@@ -89,7 +71,7 @@ class MainWindow(QMainWindow):
         self._view = QWebEngineView(self)
         self.setCentralWidget(self._view)
 
-        # Register bridge with QWebChannel
+        # Register bridge with QWebChannel for room monitoring
         channel = QWebChannel(self._view.page())
         channel.registerObject("bridge", self._bridge)
         self._view.page().setWebChannel(channel)
@@ -104,9 +86,6 @@ class MainWindow(QMainWindow):
             QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True
         )
 
-        # Inject token into localStorage once the page has fully loaded
-        self._view.loadFinished.connect(self._on_load_finished)
-
         # Load frontend
         index_html = self._settings.web_client_dist / "index.html"
         if index_html.exists():
@@ -114,66 +93,6 @@ class MainWindow(QMainWindow):
             logger.info("WebEngine loading: %s", index_html)
         else:
             self._show_build_error(self._settings.web_client_dist)
-
-    def _on_load_finished(self, ok: bool) -> None:
-        """Called by WebEngine after every page load.
-
-        Injects the JWT token and user info directly into localStorage so
-        the Vue app can read them synchronously before any route guard runs.
-        Also dispatches ``ahdunyi:token-ready`` so Vue can react instantly.
-
-        Args:
-            ok: True if the page loaded successfully.
-        """
-        if not ok:
-            logger.warning("WebEngine page load failed.")
-            return
-
-        token = self._token_info.get("access_token", "")
-        user = self._token_info.get("user") or {}
-        permissions = self._token_info.get("permissions") or []
-        role_meta = self._token_info.get("role_meta") or {}
-        role = user.get("role") or self._token_info.get("role", "")
-
-        if not token:
-            logger.warning("_on_load_finished: no access_token in token_info")
-            return
-
-        # Serialise payloads for JS injection
-        token_json = json.dumps(token)
-        user_json = json.dumps(user)
-        perm_data = json.dumps({
-            "role": role,
-            "permissions": permissions,
-            "role_meta": role_meta,
-        })
-
-        js = f"""
-(function() {{
-  try {{
-    localStorage.setItem('ahdunyi_access_token', {token_json});
-    localStorage.setItem('ahdunyi_user_info',   {user_json});
-    localStorage.setItem('ahdunyi_permissions', {perm_data});
-    console.info('[PyBridge] Token injected into localStorage for user: ' +
-      ({user_json}.username || '?'));
-    window.dispatchEvent(new CustomEvent('ahdunyi:token-ready', {{
-      detail: {{
-        access_token: {token_json},
-        user: {user_json},
-        permissions: {perm_data}
-      }}
-    }}));
-  }} catch(e) {{
-    console.error('[PyBridge] Token injection failed:', e);
-  }}
-}})();
-"""
-        self._view.page().runJavaScript(js)
-        logger.info(
-            "Token injected into WebEngine localStorage: user=%s role=%s",
-            user.get("username", "?"),
-            role,
-        )
 
     def _show_build_error(self, dist_path: Path) -> None:
         logger.error("Frontend dist not found: %s", dist_path)
