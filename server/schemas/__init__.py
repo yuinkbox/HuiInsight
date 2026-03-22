@@ -52,6 +52,31 @@ class UserRoleUpdate(BaseModel):
     )
 
 
+class UserCreate(BaseModel):
+    """Request body for creating a new user."""
+    username: str = Field(..., min_length=2, max_length=64, description="Login username")
+    full_name: str = Field(..., min_length=1, max_length=128, description="Display name")
+    password: str = Field(..., min_length=6, max_length=128, description="Initial password")
+    email: Optional[str] = Field(None, max_length=128, description="Email address")
+    role: Literal["manager", "team_leader", "qa_specialist", "admin_support", "auditor"] = Field(
+        ..., description="User role"
+    )
+    is_active: bool = Field(True, description="Whether user is active on creation")
+
+
+class UserUpdate(BaseModel):
+    """Request body for updating user profile fields."""
+    full_name: Optional[str] = Field(None, min_length=1, max_length=128)
+    email: Optional[str] = Field(None, max_length=128)
+    role: Optional[Literal["manager", "team_leader", "qa_specialist", "admin_support", "auditor"]] = None
+    is_active: Optional[bool] = None
+
+
+class UserPasswordReset(BaseModel):
+    """Request body for resetting a user's password."""
+    new_password: str = Field(..., min_length=6, max_length=128, description="New password")
+
+
 class ActiveUsersResponse(BaseModel):
     users: List[UserOut]
     count: int

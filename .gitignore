@@ -9,13 +9,24 @@ __pycache__/
 .venv/
 venv/
 .env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
 
 # Logs
 logs/
 *.log
 
-# PyInstaller output
-dist/
+# PyInstaller / 打包产物（勿入库；仅仓库根目录，避免误伤 client/build/*.spec）
+/dist/
+/dist_release/
+/build/
+*.exe
+*.zip
+*.pyz
 client/build/_pyinstaller/
 
 # Server environment variables (contains DB credentials - NEVER commit)
@@ -41,9 +52,13 @@ Thumbs.db
 *.swo
 .vscode/settings.json
 
-# Node
+# Node / 前端构建（根目录 node_modules；web 子项目单独列出）
+/node_modules/
 client/web/node_modules/
 client/web/dist/
+*.tsbuildinfo
+.npm/
+.eslintcache
 
 # Python virtual env in desktop client
 client/desktop/.venv/

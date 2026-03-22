@@ -221,9 +221,59 @@ export const rbacApi = {
     }
   },
 
-  /** ?????????????? */
-  async updateUserRole(userId: number, newRole: string): Promise<{ success: boolean; message: string; user: UserInfo }> {
+  /** 获取全部用户（含停用） */
+  async getAllUsers(role?: string, isActive?: boolean): Promise<{ users: ActiveUser[]; count: number; filter_role: string }> {
+    const params: Record<string, string> = {}
+    if (role) params.role = role
+    if (isActive !== undefined) params.is_active = String(isActive)
+    return api.get('/api/users/all', { params }) as any
+  },
+
+  /** 新增用户 */
+  async createUser(data: {
+    username: string
+    full_name: string
+    password: string
+    email?: string | undefined
+    role: string
+    is_active: boolean
+  }): Promise<ActiveUser> {
+    return api.post('/api/users/', data) as any
+  },
+
+  /** 获取单个用户详情 */
+  async getUser(userId: number): Promise<ActiveUser> {
+    return api.get(`/api/users/${userId}`) as any
+  },
+
+  /** 更新用户资料（姓名/邮箱/角色/状态） */
+  async updateUser(userId: number, data: {
+    full_name?: string
+    email?: string
+    role?: string
+    is_active?: boolean
+  }): Promise<ActiveUser> {
+    return api.put(`/api/users/${userId}`, data) as any
+  },
+
+  /** 仅更新用户角色 */
+  async updateUserRole(userId: number, newRole: string): Promise<{ success: boolean; message: string }> {
     return api.put(`/api/users/${userId}/role`, { role: newRole }) as any
+  },
+
+  /** 切换用户启用/停用状态 */
+  async toggleUserStatus(userId: number): Promise<{ success: boolean; message: string }> {
+    return api.put(`/api/users/${userId}/status`) as any
+  },
+
+  /** 重置用户密码 */
+  async resetUserPassword(userId: number, newPassword: string): Promise<{ success: boolean; message: string }> {
+    return api.post(`/api/users/${userId}/reset-password`, { new_password: newPassword }) as any
+  },
+
+  /** 删除用户 */
+  async deleteUser(userId: number): Promise<{ success: boolean; message: string }> {
+    return api.delete(`/api/users/${userId}`) as any
   },
 
   /** ???????? */

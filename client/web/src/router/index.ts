@@ -123,12 +123,12 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'settings',
+        path: 'dashboard/hr',
         name: 'Settings',
         component: SettingsPage,
         meta: {
-          title: '系统管理',
-          icon: 'icon-settings',
+          title: '人事权限',
+          icon: 'icon-team',
           menu: true,
           requiresAuth: true,
           permission: 'view:settings',
