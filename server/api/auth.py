@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from server.constants.permissions import get_permissions_for_role, get_role_meta
 from server.core.database import get_db
 from server.db.models import User
+from server.schemas import UserOut
 
 _SECRET_KEY: str = os.environ.get(
     "JWT_SECRET_KEY", "CHANGE_ME_IN_PRODUCTION_USE_LONG_RANDOM_STRING"

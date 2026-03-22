@@ -16,19 +16,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-# 统一使用北京时间 (UTC+8) 避免跨日期 Bug
-CST = timezone(timedelta(hours=8))
-
-
-def _cst_today() -> str:
-    """Return today's date string in CST (UTC+8)."""
-    return datetime.now(CST).strftime("%Y-%m-%d")
-
-
-def _cst_now() -> datetime:
-    """Return current datetime in CST."""
-    return datetime.now(CST)
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -46,6 +33,19 @@ from server.schemas import (
     WeeklyStats,
 )
 from server.services.dispatch import dispatch_tasks
+
+# 统一使用北京时间 (UTC+8) 避免跨日期 Bug
+CST = timezone(timedelta(hours=8))
+
+
+def _cst_today() -> str:
+    """Return today's date string in CST (UTC+8)."""
+    return datetime.now(CST).strftime("%Y-%m-%d")
+
+
+def _cst_now() -> datetime:
+    """Return current datetime in CST."""
+    return datetime.now(CST)
 
 router = APIRouter(tags=["tasks"])
 

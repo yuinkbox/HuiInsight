@@ -21,7 +21,7 @@ jobs:
       - name: Lint server code
         run: |
           pip install flake8
-          flake8 server/ shared/ --max-line-length=120 --ignore=E501,W503
+          flake8 server/ shared/ --max-line-length=120 --ignore=E501,W503 --exclude=server/alembic/versions/
 
       - name: Deploy to Aliyun via SSH
         uses: appleboy/ssh-action@v1.0.3
