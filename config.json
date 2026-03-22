@@ -18,12 +18,16 @@
   "room_monitor": {
     "target_process": "small_dimple.exe",
     "heartbeat_interval": 2.0,
-    "max_search_depth": 8
+    "max_search_depth": 8,
+    "memory_probe_enabled": true,
+    "memory_merge_mode": "override",
+    "memory_max_region_bytes": 524288,
+    "memory_max_total_bytes": 12582912
   },
   "features": {
     "auto_start_monitor": true
   },
   "debug": {
-    "enable_console": false
+    "enable_console": true
   }
 }

@@ -50,11 +50,18 @@ export interface AppBridge {
   setAlwaysOnTop(enabled: boolean): void
   /** Switch between mini-float and normal window (desktop only). */
   setMiniMode(enabled: boolean): void
+  /** Open a separate OS window for violation form (desktop mini mode). */
+  openViolationPopup(): void
+  /** Close the auxiliary violation form window. */
+  closeViolationPopup(): void
+  /** Notify main WebView that violation was submitted from the popup. */
+  notifyViolationSubmitted(payloadJson: string): void
   // Signals
   roomIdChanged:       { connect: (cb: (id: string) => void) => void }
   roomInfoChanged:     { connect: (cb: (info: string) => void) => void }
   systemStatusChanged: { connect: (cb: (status: string) => void) => void }
   tokenInfoChanged:    { connect: (cb: (info: string) => void) => void }
+  violationSubmitted:  { connect: (cb: (payload: string) => void) => void }
 }
 
 // ---------------------------------------------------------------------------
@@ -162,6 +169,18 @@ export async function onRoomInfoChanged(
   const bridge = await getBridge()
   if (bridge) {
     bridge.roomInfoChanged.connect(callback)
+  }
+}
+
+/**
+ * Subscribe to violationSubmitted from the desktop popup window (sync state on main page).
+ */
+export async function onViolationSubmitted(
+  callback: (payload: string) => void
+): Promise<void> {
+  const bridge = await getBridge()
+  if (bridge?.violationSubmitted) {
+    bridge.violationSubmitted.connect(callback)
   }
 }
 

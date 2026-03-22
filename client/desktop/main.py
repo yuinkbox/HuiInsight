@@ -75,6 +75,10 @@ def _start_room_monitor(settings: AppSettings, bridge) -> Optional[object]:
             target_process=settings.room_monitor.target_process,
             heartbeat_interval=settings.room_monitor.heartbeat_interval,
             max_depth=settings.room_monitor.max_search_depth,
+            memory_probe_enabled=settings.room_monitor.memory_probe_enabled,
+            memory_merge_mode=settings.room_monitor.memory_merge_mode,
+            memory_max_region_bytes=settings.room_monitor.memory_max_region_bytes,
+            memory_max_total_bytes=settings.room_monitor.memory_max_total_bytes,
         )
         if monitor:
             monitor.start()
@@ -198,5 +202,9 @@ if __name__ == "__main__":
             )
         except Exception:  # pylint: disable=broad-except
             pass
-        input("Press Enter to exit...")
+        try:
+            if sys.stdin is not None and getattr(sys.stdin, "isatty", lambda: False)():
+                input("Press Enter to exit...")
+        except (EOFError, OSError, RuntimeError):
+            pass
         sys.exit(1)

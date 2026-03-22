@@ -380,7 +380,7 @@
     </template>
 
     <!-- 派发 / 违规弹窗：须挂在迷你与正常模式之外，否则迷你窗内未挂载无法显示 -->
-    <a-modal v-model:visible="dispatchModal.visible" title="智能任务派发" :width="520" @ok="submitDispatch" :ok-loading="dispatchModal.loading" ok-text="开始派发">
+    <a-modal v-model:visible="dispatchModal.visible" title="智能任务派发" :width="600" @ok="submitDispatch" :ok-loading="dispatchModal.loading" ok-text="开始派发">
       <a-form :model="dispatchForm" layout="vertical">
         <a-form-item label="派发日期" required><a-input v-model="dispatchForm.shift_date" placeholder="YYYY-MM-DD" /></a-form-item>
         <a-form-item label="班次" required>
@@ -397,51 +397,54 @@
       </a-form>
     </a-modal>
 
-    <a-modal
-      v-model:visible="violationModal.visible"
-      title="违规处置上报"
-      :width="480"
-      @ok="submitViolation"
-      :ok-loading="violationModal.loading"
-      ok-text="确认处置"
-      cancel-text="取消"
-      :mask-closable="false"
-    >
-      <a-form :model="violationForm" layout="vertical">
-        <a-form-item label="房间号">
-          <a-input v-model="violationForm.room_id" placeholder="自动识别或手动输入">
-            <template #prefix><icon-live-broadcast /></template>
-          </a-input>
-        </a-form-item>
-        <a-form-item label="违规主播ID">
-          <a-input v-model="violationForm.user_id" placeholder="自动识别或手动输入">
-            <template #prefix><icon-user /></template>
-          </a-input>
-        </a-form-item>
-        <a-form-item label="违规原因" required>
-          <a-textarea
-            v-model="violationForm.reason"
-            placeholder="请描述违规行为（如：涉黄、低俗、诱导未成年人等）"
-            :max-length="200"
-            show-word-limit
-            :auto-size="{ minRows: 2, maxRows: 4 }"
-          />
-        </a-form-item>
-        <a-form-item label="处罚动作" required>
-          <a-radio-group v-model="violationForm.action" type="button" size="large">
-            <a-radio value="ban">
-              <icon-stop /> 封禁
-            </a-radio>
-            <a-radio value="mute">
-              <icon-mute /> 禁言
-            </a-radio>
-            <a-radio value="close_room">
-              <icon-poweroff /> 关播
-            </a-radio>
-          </a-radio-group>
-        </a-form-item>
-      </a-form>
-    </a-modal>
+    <!-- 违规处置弹窗：使用 teleport 挂载到 body，避免被迷你窗口挤占 -->
+    <teleport to="body">
+      <a-modal
+        v-model:visible="violationModal.visible"
+        title="违规处置上报"
+        :width="520"
+        @ok="submitViolation"
+        :ok-loading="violationModal.loading"
+        ok-text="确认处置"
+        cancel-text="取消"
+        :mask-closable="false"
+      >
+        <a-form :model="violationForm" layout="vertical">
+          <a-form-item label="房间号">
+            <a-input v-model="violationForm.room_id" placeholder="自动识别或手动输入">
+              <template #prefix><icon-live-broadcast /></template>
+            </a-input>
+          </a-form-item>
+          <a-form-item label="违规主播ID">
+            <a-input v-model="violationForm.user_id" placeholder="自动识别或手动输入">
+              <template #prefix><icon-user /></template>
+            </a-input>
+          </a-form-item>
+          <a-form-item label="违规原因" required>
+            <a-textarea
+              v-model="violationForm.reason"
+              placeholder="请描述违规行为（如：涉黄、低俗、诱导未成年人等）"
+              :max-length="200"
+              show-word-limit
+              :auto-size="{ minRows: 3, maxRows: 5 }"
+            />
+          </a-form-item>
+          <a-form-item label="处罚动作" required>
+            <a-radio-group v-model="violationForm.action" type="button" size="large">
+              <a-radio value="ban">
+                <icon-stop /> 封禁
+              </a-radio>
+              <a-radio value="mute">
+                <icon-mute /> 禁言
+              </a-radio>
+              <a-radio value="close_room">
+                <icon-poweroff /> 关播
+              </a-radio>
+            </a-radio-group>
+          </a-form-item>
+        </a-form>
+      </a-modal>
+    </teleport>
   </div>
 </template>
 
@@ -450,35 +453,32 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
 import { rbacApi, type TaskItem, getTaskChannelLabel, getShiftTypeLabel } from '@/api/rbac'
 import { usePermissionStore } from '@/stores/permission'
-import { getBridge, isDesktopMode, onRoomInfoChanged } from '@/bridge/qt_channel'
+import { useWorkflowStore } from '@/stores/workflow'
+import { getBridge, isDesktopMode, onRoomInfoChanged, onViolationSubmitted } from '@/bridge/qt_channel'
 import api from '@/api'
 import { isMiniMode } from '@/composables/useMiniMode'
 import { auth } from '@/utils/auth'
 
 const permissionStore = usePermissionStore()
+const workflowStore   = useWorkflowStore()
 
 // ---- 房间/用户 ID 实时监测 ---------------------------------------------------
 const currentRoomId = ref('')
 const currentUserId = ref('')
 
 async function initRoomMonitor() {
-  if (isDesktopMode()) {
-    const bridge = await getBridge()
-    if (bridge) {
-      try {
-        const raw = await bridge.getRoomInfo()
-        const info = JSON.parse(raw)
-        if (info.room_id) currentRoomId.value = info.room_id
-        if (info.user_id) currentUserId.value = info.user_id
-      } catch { /* 首次获取失败静默 */ }
-    }
-  }
-
+  // 仅在工作流激活后才允许更新 ID（阀门：未接入工作流时丢弃底层推送）
   await onRoomInfoChanged((raw: string) => {
+    if (!isWorking.value) return  // 未接入工作流，拒绝更新
     try {
       const info = JSON.parse(raw)
-      currentRoomId.value = info.room_id || ''
-      currentUserId.value = info.user_id || ''
+      const newRoomId = info.room_id || ''
+      const newUserId = info.user_id || ''
+      if (newRoomId && newRoomId !== currentRoomId.value) {
+        isHandlingViolation.value = false
+      }
+      currentRoomId.value = newRoomId
+      currentUserId.value = newUserId
     } catch { /* 忽略解析失败 */ }
   })
 }
@@ -515,7 +515,12 @@ const violationForm = ref({
   action: 'ban' as 'ban' | 'mute' | 'close_room',
 })
 
-function openViolationModal() {
+async function openViolationModal() {
+  if (isDesktopMode() && isMiniMode.value) {
+    const b = await getBridge()
+    b?.openViolationPopup()
+    return
+  }
   violationForm.value.room_id = currentRoomId.value
   violationForm.value.user_id = currentUserId.value
   violationForm.value.reason = ''
@@ -612,17 +617,23 @@ const channelColor = (ch: string): string =>
 async function loadTasks() {
   loading.value = true
   try {
+    // 直播巡查是审核员默认日常任务，无需派发，自动创建今日任务记录
+    const liveTask = await rbacApi.getOrCreateLivePatrolTask()
+    todayTask.value = liveTask
+    workflowStore.todayTaskId = liveTask.id
+
+    // 如果当前未在工作流中，从数据库恢复上次进度（断线续传）
+    if (!isWorking.value) {
+      workflowStore.reviewedCount  = liveTask.reviewed_count  || 0
+      workflowStore.violationCount = liveTask.violation_count || 0
+      workflowStore.totalSeconds   = liveTask.work_duration   || 0
+    }
+
+    // 同时加载完整任务列表（用于任务面板展示）
     const res = await rbacApi.getMyTasks()
     todayTasks.value = res.today_tasks
-    if (res.today_tasks.length > 0) {
-      todayTask.value = res.today_tasks[0]
-      if (!isWorking.value) {
-        reviewedCount.value = todayTask.value.reviewed_count || 0
-        violationCount.value = todayTask.value.violation_count || 0
-        totalSeconds.value = todayTask.value.work_duration || 0
-      }
-    }
-  } catch {
+  } catch (err) {
+    console.error('[Patrol] loadTasks failed:', err)
     Message.error('加载任务失败，请检查后端连接')
   } finally {
     loading.value = false
@@ -664,14 +675,16 @@ async function submitDispatch() {
 const MIN_STAY_TIME = 3000
 const MAX_IDLE_TIME = 5 * 60 * 1000
 
-const workStatus          = ref<'offline' | 'patrolling' | 'handling' | 'suspended'>('offline')
-const totalSeconds        = ref(0)
-const reviewedCount       = ref(0)
-const violationCount      = ref(0)
-const isHandlingViolation = ref(false)
-const isSuspended         = ref(false)
+// ---- 工作流核心状态（来自全局 Store，路由切换不丢失）--------------------
+const workStatus          = computed({ get: () => workflowStore.workStatus,          set: v => { workflowStore.workStatus = v } })
+const totalSeconds        = computed({ get: () => workflowStore.totalSeconds,        set: v => { workflowStore.totalSeconds = v } })
+const reviewedCount       = computed({ get: () => workflowStore.reviewedCount,       set: v => { workflowStore.reviewedCount = v } })
+const violationCount      = computed({ get: () => workflowStore.violationCount,      set: v => { workflowStore.violationCount = v } })
+const isHandlingViolation = computed({ get: () => workflowStore.isHandlingViolation, set: v => { workflowStore.isHandlingViolation = v } })
+const isSuspended         = computed({ get: () => workflowStore.isSuspended,         set: v => { workflowStore.isSuspended = v } })
+const lastActionTime      = computed({ get: () => workflowStore.lastActionTime,      set: v => { workflowStore.lastActionTime = v } })
+
 const startingWorkflow    = ref(false)
-const lastActionTime      = ref<number>(0)
 const isCoolingDown       = ref(false)
 const afkTimer            = ref<ReturnType<typeof setInterval> | null>(null)
 const todayTask           = ref<any>(null)
@@ -680,16 +693,16 @@ let workTimer: ReturnType<typeof setInterval> | null = null
 
 const actionLog = ref<Array<{ id: number; timestamp: string; action: string; details: string }>>([])
 
-const statusText = computed(() => ({ offline: '离线', patrolling: '巡查中', handling: '处置中', suspended: '挂起' })[workStatus.value])
-const statusColor = computed(() => ({ offline: 'gray', patrolling: 'green', handling: 'red', suspended: 'yellow' })[workStatus.value])
+const statusText = computed(() => workflowStore.statusText)
+const statusColor = computed(() => ({ offline: 'gray', patrolling: 'green', handling: 'red', suspended: 'yellow' })[workflowStore.workStatus])
 const statusDesc = computed(() => ({
   offline: '未接入工作流', patrolling: '正在巡查直播间', handling: '处理违规内容', suspended: '暂停计时，临时休整',
-})[workStatus.value])
+})[workflowStore.workStatus])
 
-const isWorking       = computed(() => workStatus.value !== 'offline')
-const canSwitchRoom   = computed(() => workStatus.value === 'patrolling')
-const canMarkViolation = computed(() => workStatus.value === 'patrolling')
-const canSuspend      = computed(() => workStatus.value === 'patrolling')
+const isWorking        = computed(() => workflowStore.isWorking)
+const canSwitchRoom    = computed(() => workflowStore.workStatus === 'patrolling')
+const canMarkViolation = computed(() => workflowStore.workStatus === 'patrolling')
+const canSuspend       = computed(() => workflowStore.workStatus === 'patrolling')
 
 const formatTime = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
@@ -706,7 +719,7 @@ const getCurrentTime = () => {
 const getActionColor = (action: string): string =>
   ({ '开始巡查': 'green', '结束巡查': 'gray', '切房审查': 'blue', '违规标记': 'red', '处置完成': 'green', '挂起休整': 'yellow', '恢复工作': 'blue' })[action] ?? 'gray'
 
-const updateLastActionTime = () => { lastActionTime.value = Date.now() }
+const updateLastActionTime = () => { workflowStore.lastActionTime = Date.now() }
 
 const checkCoolingDown = (): boolean => {
   const timeSince = Date.now() - lastActionTime.value
@@ -722,10 +735,10 @@ const checkCoolingDown = (): boolean => {
 const startAFKDetection = () => {
   if (afkTimer.value) clearInterval(afkTimer.value)
   afkTimer.value = setInterval(() => {
-    if (workStatus.value === 'patrolling' && !isSuspended.value) {
-      if (Date.now() - lastActionTime.value > MAX_IDLE_TIME) {
-        workStatus.value = 'suspended'
-        isSuspended.value = true
+    if (workflowStore.workStatus === 'patrolling' && !workflowStore.isSuspended) {
+      if (Date.now() - workflowStore.lastActionTime > MAX_IDLE_TIME) {
+        workflowStore.workStatus = 'suspended'
+        workflowStore.isSuspended = true
         Modal.warning({ title: '防挂机检测', content: '检测到长时间未操作，已自动挂起并暂停计时！', okText: '知道了', hideCancel: true })
         addLog('自动挂起', '系统检测到长时间未操作，自动暂停计时')
       }
@@ -747,9 +760,9 @@ const addLog = async (action: string, details: string) => {
 const startTimer = () => {
   if (workTimer) clearInterval(workTimer)
   workTimer = setInterval(() => {
-    if (!isSuspended.value) {
-      totalSeconds.value++
-      if (totalSeconds.value % 10 === 0 && todayTask.value) updateTaskProgress()
+    if (!workflowStore.isSuspended) {
+      workflowStore.totalSeconds++
+      if (workflowStore.totalSeconds % 10 === 0 && todayTask.value) updateTaskProgress()
     }
   }, 1000)
 }
@@ -759,23 +772,32 @@ const stopTimer = () => {
 }
 
 const updateTaskProgress = async () => {
-  if (!todayTask.value) return
+  if (!todayTask.value) {
+    console.warn('[Patrol] updateTaskProgress skipped: todayTask is null')
+    return
+  }
   try {
     await rbacApi.updateTaskProgress(todayTask.value.id, {
-      reviewed_count: reviewedCount.value, violation_count: violationCount.value,
-      work_duration: totalSeconds.value, is_completed: workStatus.value === 'offline',
+      reviewed_count: workflowStore.reviewedCount,
+      violation_count: workflowStore.violationCount,
+      work_duration: workflowStore.totalSeconds,
+      is_completed: workflowStore.workStatus === 'offline',
     })
-  } catch { /* 静默 */ }
+  } catch (err) {
+    console.error('[Patrol] updateTaskProgress failed:', err)
+  }
 }
 
 const startWorkflow = async () => {
   startingWorkflow.value = true
   setTimeout(async () => {
-    workStatus.value = 'patrolling'
-    isSuspended.value = false
-    isHandlingViolation.value = false
+    workflowStore.workStatus = 'patrolling'
+    workflowStore.isSuspended = false
+    workflowStore.isHandlingViolation = false
+    // 记录当前任务 ID 到 Store，供路由切换后恢复
+    workflowStore.todayTaskId = todayTask.value?.id ?? null
     startingWorkflow.value = false
-    updateLastActionTime()
+    workflowStore.lastActionTime = Date.now()
     startTimer()
     startAFKDetection()
     await addLog('开始巡查', '接入工作流，开始计时')
@@ -789,16 +811,26 @@ const stopWorkflow = () => {
     title: '结束工作流', content: '确定要结束当前工作流吗？所有计时将停止。',
     okText: '确认结束', cancelText: '取消',
     onOk: async () => {
-      workStatus.value = 'offline'
       stopTimer()
       stopAFKDetection()
-      await addLog('结束巡查', `本次巡查总时长: ${formatTime(totalSeconds.value)}`)
+      await addLog('结束巡查', `本次巡查总时长: ${formatTime(workflowStore.totalSeconds)}`)
       if (todayTask.value) {
         await rbacApi.updateTaskProgress(todayTask.value.id, {
-          reviewed_count: reviewedCount.value, violation_count: violationCount.value,
-          work_duration: totalSeconds.value, is_completed: true,
+          reviewed_count: workflowStore.reviewedCount,
+          violation_count: workflowStore.violationCount,
+          work_duration: workflowStore.totalSeconds,
+          is_completed: true,
         })
       }
+      // 标记工作流为 offline，但保留数据供本页面继续展示
+      // 不调用 reset()，避免数据瞬间清零
+      workflowStore.workStatus = 'offline'
+      workflowStore.isSuspended = false
+      workflowStore.isHandlingViolation = false
+      workflowStore.clearPersist()
+      localStorage.removeItem('blind_checker_log')
+      currentRoomId.value = ''
+      currentUserId.value = ''
       Message.success('工作流已结束')
       exitMiniMode()
       if (isAlwaysOnTop.value) {
@@ -812,34 +844,46 @@ const stopWorkflow = () => {
 
 const switchRoom = async () => {
   if (!canSwitchRoom.value || checkCoolingDown()) return
-  reviewedCount.value++
-  await addLog('切房审查', `已审场次: ${reviewedCount.value}`)
-  Message.success(`切房完成，已审场次: ${reviewedCount.value}`)
+  workflowStore.reviewedCount++
+  await addLog('切房审查', `已审场次: ${workflowStore.reviewedCount}`)
+  Message.success(`切房完成，已审场次: ${workflowStore.reviewedCount}`)
 }
 
 const markViolation = () => {
   if (!canMarkViolation.value) return
-  openViolationModal()
+  void openViolationModal()
 }
 
 const completeViolation = async () => {
-  workStatus.value = 'patrolling'
-  isHandlingViolation.value = false
+  workflowStore.workStatus = 'patrolling'
+  workflowStore.isHandlingViolation = false
   await addLog('处置完成', '违规处置完成')
   Message.success('违规处置完成，返回巡查状态')
 }
 
 const suspendWork = async () => {
   if (!canSuspend.value) return
-  workStatus.value = 'suspended'
-  isSuspended.value = true
+  workflowStore.workStatus = 'suspended'
+  workflowStore.isSuspended = true
+  // 挂起时强制同步进度到后端
+  if (todayTask.value) {
+    try {
+      await rbacApi.updateTaskProgress(todayTask.value.id, {
+        reviewed_count: workflowStore.reviewedCount,
+        violation_count: workflowStore.violationCount,
+        work_duration: workflowStore.totalSeconds,
+        is_completed: false,
+      })
+    } catch { /* 静默 */ }
+  }
+  workflowStore.persist()
   await addLog('挂起休整', '暂停计时，临时休整')
   Message.info('工作已挂起，计时器暂停')
 }
 
 const resumeWork = async () => {
-  workStatus.value = 'patrolling'
-  isSuspended.value = false
+  workflowStore.workStatus = 'patrolling'
+  workflowStore.isSuspended = false
   await addLog('恢复工作', '恢复计时，继续巡查')
   Message.success('已恢复工作，继续计时')
 }
@@ -853,35 +897,60 @@ const handleKeyDown = (event: KeyboardEvent) => {
 }
 
 onMounted(async () => {
-  await loadTasks()
-  initRoomMonitor()
-  const savedState = localStorage.getItem('blind_checker_state')
-  if (savedState) {
-    try {
-      const state = JSON.parse(savedState)
-      totalSeconds.value = state.totalSeconds || 0
-      reviewedCount.value = state.reviewedCount || 0
-      violationCount.value = state.violationCount || 0
-      if (state.isWorking) {
-        workStatus.value = state.workStatus || 'offline'
-        isSuspended.value = state.isSuspended || false
-        isHandlingViolation.value = state.isHandlingViolation || false
-        if (workStatus.value === 'patrolling' && !isSuspended.value) { startTimer(); startAFKDetection() }
-        if (state.isMiniMode) enterMiniMode()
-      }
-    } catch { /* ignore */ }
+  // ── 工作流状态兼容逻辑 ───────────────────────────────────────────
+  // 尝试从 Store 恢复活跃工作流（路由切换回来场景）
+  // 如果 Store 中已有激活状态（isWorking），直接复用，不清零
+  // 如果 Store 无活跃工作流，再尝试从 localStorage 恢复（页面刷新场景）
+  // 如果都没有，则强制重置为干净状态（新登录场景）
+  const hasActiveWorkflow = workflowStore.isWorking || workflowStore.restore()
+
+  if (!hasActiveWorkflow) {
+    // 新登录或无工作流：强制重置
+    workflowStore.reset()
+    currentRoomId.value = ''
+    currentUserId.value = ''
+    actionLog.value = []
+    localStorage.removeItem('blind_checker_log')
+  } else {
+    // 有活跃工作流：恢复计时器
+    if (workflowStore.workStatus === 'patrolling' && !workflowStore.isSuspended) {
+      startTimer()
+      startAFKDetection()
+    }
+    // 恢复操作日志
+    const savedLog = localStorage.getItem('blind_checker_log')
+    if (savedLog) { try { actionLog.value = JSON.parse(savedLog) } catch { /* ignore */ } }
   }
-  const savedLog = localStorage.getItem('blind_checker_log')
-  if (savedLog) { try { actionLog.value = JSON.parse(savedLog) } catch { /* ignore */ } }
+
+  await loadTasks()
+
+  // 若工作流已激活但 todayTask 未绑定，尝试从 store 恢复任务 ID
+  if (hasActiveWorkflow && !todayTask.value && workflowStore.todayTaskId) {
+    const res = await rbacApi.getMyTasks().catch(() => null)
+    if (res) {
+      todayTask.value = [...res.today_tasks, ...res.historical_tasks]
+        .find(t => t.id === workflowStore.todayTaskId) ?? res.today_tasks?.[0] ?? null
+    }
+  }
+
+  initRoomMonitor()
+  await onViolationSubmitted((payload: string) => {
+    try {
+      const data = JSON.parse(payload) as { type?: string; logDetails?: string }
+      if (data.type !== 'submitted' || !data.logDetails) return
+      if (!isWorking.value) return
+      workflowStore.workStatus = 'handling'
+      workflowStore.isHandlingViolation = true
+      workflowStore.violationCount++
+      void addLog('违规处置', data.logDetails)
+    } catch { /* ignore */ }
+  })
   window.addEventListener('keydown', handleKeyDown)
+
+  // 定时持久化（每5秒）
   setInterval(() => {
-    localStorage.setItem('blind_checker_state', JSON.stringify({
-      totalSeconds: totalSeconds.value, reviewedCount: reviewedCount.value,
-      violationCount: violationCount.value, workStatus: workStatus.value,
-      isWorking: isWorking.value, isSuspended: isSuspended.value,
-      isHandlingViolation: isHandlingViolation.value, isMiniMode: isMiniMode.value,
-      timestamp: new Date().toISOString(),
-    }))
+    if (!isWorking.value) return
+    workflowStore.persist()
     localStorage.setItem('blind_checker_log', JSON.stringify(actionLog.value))
   }, 5000)
 })
@@ -890,6 +959,19 @@ onUnmounted(async () => {
   stopTimer()
   stopAFKDetection()
   window.removeEventListener('keydown', handleKeyDown)
+  // 离开页面时强制同步一次进度到后端，防止数据流失
+  if (isWorking.value && todayTask.value) {
+    try {
+      await rbacApi.updateTaskProgress(todayTask.value.id, {
+        reviewed_count: workflowStore.reviewedCount,
+        violation_count: workflowStore.violationCount,
+        work_duration: workflowStore.totalSeconds,
+        is_completed: false,
+      })
+    } catch { /* 静默 */ }
+  }
+  // 持久化当前状态到 Store（路由切换后可恢复）
+  workflowStore.persist()
   // 离开页面时清理迷你模式状态
   if (isMiniMode.value) {
     await exitMiniMode()

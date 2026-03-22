@@ -57,6 +57,7 @@ hiddenimports = [
     "client.desktop.utils.file_helper", "client.desktop.utils.network_client",
     "client.desktop.app.bridge.web_channel",
     "client.desktop.app.core.room_monitor",
+    "client.desktop.app.core.memory_room_probe",
     "client.desktop.app.ui.login_window", "client.desktop.app.ui.main_window",
     "shared.constants.api_paths",
     "shared.schemas.token", "shared.schemas.audit",

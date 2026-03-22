@@ -65,6 +65,12 @@ class RoomMonitorConfig:
     heartbeat_interval: float = 2.0
     max_search_depth: int = 8
     room_id_pattern: str = r"(?:\u9765\s*|ID[:\uff1a]\s*)?(\d{3,10})"
+    # 可选：从目标进程内存扫描「房间类型丨ID:」与「ID:… IP属地」文本（ReadProcessMemory）
+    memory_probe_enabled: bool = False
+    # override: 内存命中则覆盖 UI 结果；fill: 仅当 UI 未解析出对应字段时用内存补齐
+    memory_merge_mode: str = "override"
+    memory_max_region_bytes: int = 524288
+    memory_max_total_bytes: int = 12582912
 
 
 @dataclass
@@ -188,6 +194,14 @@ class ConfigManager:
             settings.room_monitor.heartbeat_interval = float(rm["heartbeat_interval"])
         if "max_search_depth" in rm:
             settings.room_monitor.max_search_depth = int(rm["max_search_depth"])
+        if "memory_probe_enabled" in rm:
+            settings.room_monitor.memory_probe_enabled = bool(rm["memory_probe_enabled"])
+        if "memory_merge_mode" in rm:
+            settings.room_monitor.memory_merge_mode = str(rm["memory_merge_mode"]).lower()
+        if "memory_max_region_bytes" in rm:
+            settings.room_monitor.memory_max_region_bytes = int(rm["memory_max_region_bytes"])
+        if "memory_max_total_bytes" in rm:
+            settings.room_monitor.memory_max_total_bytes = int(rm["memory_max_total_bytes"])
 
         feat = data.get("features", {})
         if "auto_start_monitor" in feat:

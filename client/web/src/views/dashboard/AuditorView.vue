@@ -145,13 +145,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import { rbacApi, getTaskChannelLabel, getShiftTypeLabel } from '@/api/rbac'
 import { auth } from '@/utils/auth'
 
 const router = useRouter()
+const route  = useRoute()
 
 const todayTask   = ref<any>(null)
 const taskLoading = ref(false)
@@ -196,8 +197,11 @@ const goToPatrol = () => router.push('/risk-audit/realtime')
 const loadData = async () => {
   taskLoading.value = true
   try {
+    // 直播巡查是默认日常任务，用幂等接口确保任务存在且数据最新
+    const liveTask = await rbacApi.getOrCreateLivePatrolTask()
+    todayTask.value = liveTask
+    // 同时拉取本周统计
     const res = await rbacApi.getMyTasks()
-    todayTask.value = res.today_tasks?.[0] ?? null
     if (res.weekly_stats) weeklyStats.value = res.weekly_stats
   } catch {
     Message.error('加载任务信息失败')
@@ -206,7 +210,15 @@ const loadData = async () => {
   }
 }
 
-onMounted(loadData)
+onMounted(() => setTimeout(loadData, 300))
+
+// 每次路由切换进入 dashboard 时重新拉取最新数据
+// 延迟 500ms 确保直播监测页的后端同步已完成
+watch(() => route.path, (newPath) => {
+  if (newPath === '/dashboard' || newPath.includes('dashboard')) {
+    setTimeout(loadData, 500)
+  }
+})
 </script>
 
 <style scoped>

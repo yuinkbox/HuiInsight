@@ -138,11 +138,13 @@ import { useRouter, useRoute } from 'vue-router'
 import { Message, Modal } from '@arco-design/web-vue'
 import { auth } from '@/utils/auth'
 import { usePermissionStore } from '@/stores/permission'
+import { useWorkflowStore } from '@/stores/workflow'
 import { isMiniMode } from '@/composables/useMiniMode'
 
 const router          = useRouter()
 const route           = useRoute()
 const permissionStore = usePermissionStore()
+const workflowStore   = useWorkflowStore()
 
 const sidebarCollapsed = ref(false)
 
@@ -213,6 +215,11 @@ function showLogoutConfirm() {
     title: '确认退出登录', content: '您确定要退出当前账号吗？',
     okText: '确认退出', cancelText: '取消',
     onOk() {
+      // 清空工作流相关的本地缓存，确保新账号进入是干净状态
+      workflowStore.reset()
+      workflowStore.clearPersist()
+      localStorage.removeItem('blind_checker_state')
+      localStorage.removeItem('blind_checker_log')
       auth.clearLoginData()
       permissionStore.clear()
       Message.success('已安全退出系统')

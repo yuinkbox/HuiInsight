@@ -174,7 +174,12 @@ export interface ActionLogItem {
 // API ????
 // ---------------------------------------------------------------------------
 export const rbacApi = {
-  /** ?????????? */
+  /** 获取或自动创建今日直播巡查任务（审核员默认任务，无需派发） */
+  async getOrCreateLivePatrolTask(): Promise<TaskItem> {
+    return api.get('/api/task/my/live-patrol') as any
+  },
+
+  /** 获取我的任务列表 */
   async getMyTasks(): Promise<UserTaskResponse> {
     return api.get('/api/task/my') as any
   },
@@ -229,24 +234,24 @@ export const rbacApi = {
     return api.get(`/api/team/user/${userId}/stats`, { params }) as any
   },
 
-  /** ?????? */
+  /** 更新任务进度 */
   async updateTaskProgress(
     taskId: number,
     data: { reviewed_count?: number; violation_count?: number; work_duration?: number; is_completed?: boolean },
   ): Promise<void> {
     try {
       await api.patch(`/api/task/${taskId}/progress`, data)
-    } catch {
-      // ????
+    } catch (err) {
+      console.error('[rbacApi] updateTaskProgress failed, taskId=' + taskId, err)
     }
   },
 
-  /** ???? */
+  /** 完成任务 */
   async completeTask(taskId: number): Promise<void> {
     try {
       await api.post(`/api/task/${taskId}/complete`)
-    } catch {
-      // ????
+    } catch (err) {
+      console.error('[rbacApi] completeTask failed, taskId=' + taskId, err)
     }
   },
 

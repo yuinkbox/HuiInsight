@@ -49,10 +49,7 @@ def write_action_log(
     try:
         ts: datetime
         if body.timestamp:
-            try:
-                ts = datetime.fromisoformat(body.timestamp.replace("Z", "+00:00"))
-            except ValueError:
-                ts = datetime.now(timezone.utc)
+            ts = body.timestamp if isinstance(body.timestamp, datetime) else body.timestamp
         else:
             ts = datetime.now(timezone.utc)
 

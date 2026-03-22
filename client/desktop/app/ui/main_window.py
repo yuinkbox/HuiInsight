@@ -17,9 +17,16 @@ from typing import Optional
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWebChannel import QWebChannel
-from PyQt6.QtWebEngineCore import QWebEngineSettings
+from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile, QWebEngineSettings
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QMainWindow,
+    QMessageBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from client.desktop.app.bridge.web_channel import AppBridge
 from client.desktop.config.settings import AppSettings
@@ -46,6 +53,7 @@ class MainWindow(QMainWindow):
 
         self._is_mini = False
         self._normal_geometry = None
+        self._violation_dialog: Optional[QDialog] = None
 
         self._setup_window()
         self._setup_webengine()
@@ -88,6 +96,18 @@ class MainWindow(QMainWindow):
         ws.setAttribute(
             QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True
         )
+        ws.setAttribute(
+            QWebEngineSettings.WebAttribute.AllowRunningInsecureContent, True
+        )
+
+        # 开启开发者工具（debug 模式）
+        if self._settings.debug.enable_console:
+            self._devtools = QWebEngineView()
+            self._devtools.setWindowTitle("DevTools - AHDUNYI Terminal")
+            self._devtools.resize(1200, 700)
+            self._view.page().setDevToolsPage(self._devtools.page())
+            self._devtools.show()
+            logger.info("DevTools opened")
 
         # Load frontend
         index_html = self._settings.web_client_dist / "index.html"
@@ -153,6 +173,52 @@ class MainWindow(QMainWindow):
                 )
             self._is_mini = False
             logger.info("Exited mini mode")
+
+    def open_violation_popup(self) -> None:
+        """Second top-level WebEngine window sharing profile (same login storage)."""
+        if self._violation_dialog is not None and self._violation_dialog.isVisible():
+            self._violation_dialog.raise_()
+            self._violation_dialog.activateWindow()
+            return
+
+        index_html = self._settings.web_client_dist / "index.html"
+        if not index_html.exists():
+            logger.error("Cannot open violation popup: dist missing at %s", index_html)
+            return
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("违规处置上报")
+        dlg.setModal(False)
+        dlg.resize(560, 640)
+        layout = QVBoxLayout(dlg)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        popup_view = QWebEngineView(dlg)
+        profile = QWebEngineProfile.defaultProfile()
+        page = QWebEnginePage(profile, popup_view)
+        popup_view.setPage(page)
+
+        channel = QWebChannel(page)
+        channel.registerObject("bridge", self._bridge)
+        page.setWebChannel(channel)
+
+        url = QUrl.fromLocalFile(str(index_html.resolve()))
+        url.setFragment("/desktop/violation-popup")
+        popup_view.load(url)
+
+        layout.addWidget(popup_view)
+        self._violation_dialog = dlg
+
+        def _clear_ref(_result: int = 0) -> None:
+            self._violation_dialog = None
+
+        dlg.finished.connect(_clear_ref)
+        dlg.show()
+
+    def close_violation_popup(self) -> None:
+        if self._violation_dialog is not None:
+            self._violation_dialog.close()
+            self._violation_dialog = None
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
         reply = QMessageBox.question(

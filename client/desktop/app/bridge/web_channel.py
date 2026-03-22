@@ -37,6 +37,7 @@ class AppBridge(QObject):
     roomInfoChanged     = pyqtSignal(str, name="roomInfoChanged")
     systemStatusChanged = pyqtSignal(str, name="systemStatusChanged")
     tokenInfoChanged    = pyqtSignal(str, name="tokenInfoChanged")
+    violationSubmitted  = pyqtSignal(str, name="violationSubmitted")
 
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -97,6 +98,27 @@ class AppBridge(QObject):
         if win and hasattr(win, "set_mini_mode"):
             win.set_mini_mode(enabled)
             logger.info("Bridge: miniMode -> %s", enabled)
+
+    @pyqtSlot()
+    def openViolationPopup(self) -> None:
+        """Open a separate OS window for the violation form (mini mode)."""
+        win = self.parent()
+        if win and hasattr(win, "open_violation_popup"):
+            win.open_violation_popup()
+            logger.info("Bridge: openViolationPopup")
+
+    @pyqtSlot()
+    def closeViolationPopup(self) -> None:
+        """Close the auxiliary violation form window."""
+        win = self.parent()
+        if win and hasattr(win, "close_violation_popup"):
+            win.close_violation_popup()
+            logger.info("Bridge: closeViolationPopup")
+
+    @pyqtSlot(str)
+    def notifyViolationSubmitted(self, payload_json: str) -> None:
+        """Forward violation submit from the popup WebView to the main window."""
+        self.violationSubmitted.emit(payload_json)
 
     # ------------------------------------------------------------------
     # Python-side setters (called by main application logic)

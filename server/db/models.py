@@ -36,27 +36,30 @@ class User(Base):
     """Application user account."""
 
     __tablename__ = "users"
-    __table_args__ = (Index("ix_users_username", "username"),)
+    __table_args__ = (
+        # unique=True 已内联，此处只保留普通索引避免重复索引
+        Index("ix_users_username", "username", unique=True),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    full_name: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    # unique 交由上方 Index 管理，避免 MySQL 产生重复索引
+    username: Mapped[str] = mapped_column(String(64), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(128), nullable=False, server_default="")
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_superuser: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
     role: Mapped[UserRole] = mapped_column(
         SAEnum(UserRole, values_callable=lambda e: [m.value for m in e]),
         nullable=False,
-        default=UserRole.AUDITOR,
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="1")
     email: Mapped[Optional[str]] = mapped_column(
-        String(128), nullable=True, default=""
+        String(128), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True, onupdate=func.now()
+        DateTime(timezone=False), nullable=True, onupdate=func.now()
     )
 
     def __repr__(self) -> str:
@@ -72,23 +75,24 @@ class ShiftTask(Base):
     __tablename__ = "shift_tasks"
     __table_args__ = (
         Index("ix_shift_tasks_user_date", "user_id", "shift_date"),
+        Index("ix_shift_tasks_user_id", "user_id"),
         Index("ix_shift_tasks_date_type", "shift_date", "shift_type"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
     shift_date: Mapped[str] = mapped_column(String(10), nullable=False)
     shift_type: Mapped[str] = mapped_column(String(16), nullable=False)
     task_channel: Mapped[str] = mapped_column(String(16), nullable=False)
-    is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    reviewed_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    violation_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    work_duration: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
+    reviewed_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    violation_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    work_duration: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
+        DateTime(timezone=False), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True, onupdate=func.now()
+        DateTime(timezone=False), nullable=True, onupdate=func.now()
     )
 
     def __repr__(self) -> str:
@@ -103,19 +107,21 @@ class ActionLog(Base):
 
     __tablename__ = "action_logs"
     __table_args__ = (
+        Index("ix_action_logs_timestamp", "timestamp"),
         Index("ix_action_logs_user_ts", "user_id", "timestamp"),
         Index("ix_action_logs_action", "action"),
+        Index("ix_action_logs_user_id", "user_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    username: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    username: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
     action: Mapped[str] = mapped_column(String(64), nullable=False)
-    details: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    details: Mapped[str] = mapped_column(Text, nullable=False)
     task_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     duration: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime(timezone=False),
         nullable=False,
         server_default=func.now(),
         index=True,

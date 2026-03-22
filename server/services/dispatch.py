@@ -42,7 +42,7 @@ def _get_weekly_channel_counts(
         Mapping of user_id to assignment count.
     """
     cutoff = (
-        datetime.now(timezone.utc) - timedelta(days=7)
+        datetime.now(timezone(timedelta(hours=8))) - timedelta(days=7)
     ).strftime("%Y-%m-%d")
     rows = (
         db.query(ShiftTask.user_id, func.count(ShiftTask.id))
@@ -50,6 +50,7 @@ def _get_weekly_channel_counts(
             ShiftTask.user_id.in_(user_ids),
             ShiftTask.task_channel == channel,
             ShiftTask.shift_date >= cutoff,
+            ShiftTask.is_completed.is_(True),  # 只统计已完成任务，避免派发算法偏差
         )
         .group_by(ShiftTask.user_id)
         .all()
@@ -117,6 +118,10 @@ def dispatch_tasks(db: Session, request: DispatchRequest) -> DispatchResponse:
             shift_date=request.shift_date,
             shift_type=request.shift_type,
             task_channel=assignment.task_channel,
+            is_completed=False,
+            reviewed_count=0,
+            violation_count=0,
+            work_duration=0,
         )
         db.add(task)
     db.commit()
@@ -128,6 +133,6 @@ def dispatch_tasks(db: Session, request: DispatchRequest) -> DispatchResponse:
         summary=DispatchSummary(
             total_assignments=len(assignments),
             channel_distribution=dict(channel_distribution),
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(timezone(timedelta(hours=8))).isoformat(),
         ),
     )

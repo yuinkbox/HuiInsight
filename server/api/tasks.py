@@ -16,6 +16,19 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+# 统一使用北京时间 (UTC+8) 避免跨日期 Bug
+CST = timezone(timedelta(hours=8))
+
+
+def _cst_today() -> str:
+    """Return today's date string in CST (UTC+8)."""
+    return datetime.now(CST).strftime("%Y-%m-%d")
+
+
+def _cst_now() -> datetime:
+    """Return current datetime in CST."""
+    return datetime.now(CST)
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -37,6 +50,69 @@ from server.services.dispatch import dispatch_tasks
 router = APIRouter(tags=["tasks"])
 
 
+@router.get("/api/task/my/live-patrol", response_model=TaskOut)
+def get_or_create_live_patrol_task(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(_get_current_user),
+) -> TaskOut:
+    """Get or auto-create today's live patrol task for the calling auditor.
+
+    This endpoint is idempotent: calling it multiple times on the same day
+    always returns the same task row. No dispatcher required.
+
+    Args:
+        db:           Injected DB session.
+        current_user: Resolved from JWT.
+
+    Returns:
+        :class:`TaskOut` — the auditor's live patrol task for today.
+    """
+    today = _cst_today()
+
+    # 幂等查询：先找今日已有的直播巡查任务
+    task = (
+        db.query(ShiftTask)
+        .filter(
+            ShiftTask.user_id == current_user.id,
+            ShiftTask.shift_date == today,
+            ShiftTask.task_channel == "live",
+        )
+        .first()
+    )
+
+    if task is None:
+        # 自动推断班次
+        hour = _cst_now().hour
+        if hour < 12:
+            shift_type = "morning"
+        elif hour < 18:
+            shift_type = "afternoon"
+        else:
+            shift_type = "night"
+
+        task = ShiftTask(
+            user_id=current_user.id,
+            shift_date=today,
+            shift_type=shift_type,
+            task_channel="live",
+            is_completed=False,
+            reviewed_count=0,
+            violation_count=0,
+            work_duration=0,
+        )
+        db.add(task)
+        db.commit()
+        db.refresh(task)
+
+    out = TaskOut.model_validate(task)
+    out.user_info = {
+        "username": current_user.username,
+        "full_name": current_user.full_name,
+        "role": current_user.role.value,
+    }
+    return out
+
+
 @router.get("/api/task/my", response_model=UserTaskResponse)
 def get_my_tasks(
     db: Session = Depends(get_db),
@@ -52,7 +128,7 @@ def get_my_tasks(
         :class:`UserTaskResponse`
     """
     try:
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = _cst_today()
 
         today_tasks = (
             db.query(ShiftTask)
@@ -60,7 +136,8 @@ def get_my_tasks(
                 ShiftTask.user_id == current_user.id,
                 ShiftTask.shift_date == today,
             )
-            .order_by(ShiftTask.id.desc())
+            # 进行中（is_completed=False）排在前面，已完成排在后面
+            .order_by(ShiftTask.is_completed.asc(), ShiftTask.id.desc())
             .all()
         )
 
@@ -75,7 +152,7 @@ def get_my_tasks(
             .all()
         )
 
-        now = datetime.now(timezone.utc)
+        now = _cst_now()
         week_start = (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d")
         week_tasks = (
             db.query(ShiftTask)

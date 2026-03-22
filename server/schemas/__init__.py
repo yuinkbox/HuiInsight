@@ -9,12 +9,12 @@ Naming convention:
   *Response — top-level response envelope
 
 Author : AHDUNYI
-Version: 9.0.0
+Version: 9.1.0
 """
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -46,7 +46,10 @@ class UserOut(BaseModel):
 
 
 class UserRoleUpdate(BaseModel):
-    role: str = Field(..., description="New role value, must match server/constants/roles.py")
+    # Literal 枚举：Pydantic 在入口层拦截非法角色值，无需 API 层手动校验
+    role: Literal["manager", "team_leader", "qa_specialist", "admin_support", "auditor"] = Field(
+        ..., description="New role value, must match server/constants/roles.py"
+    )
 
 
 class ActiveUsersResponse(BaseModel):
@@ -188,7 +191,8 @@ class ActionLogCreate(BaseModel):
     details: str = ""
     task_id: Optional[int] = None
     duration: Optional[int] = None
-    timestamp: Optional[str] = None
+    # 使用 datetime 类型，Pydantic 自动解析 ISO 格式，避免字符串解析失败时静默失效
+    timestamp: Optional[datetime] = None
 
 
 class ActionLogOut(BaseModel):

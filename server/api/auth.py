@@ -50,7 +50,8 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 
-class UserOut(BaseModel):
+class AuthUserOut(BaseModel):
+    """精简版用户信息，仅用于登录响应 Token 中。完整版请使用 schemas.UserOut。"""
     username: str
     full_name: str
     role: str
@@ -70,7 +71,7 @@ class RoleMeta(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
-    user: UserOut
+    user: AuthUserOut
     permissions: List[str]
     role_meta: RoleMeta
 

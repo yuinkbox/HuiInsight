@@ -13,7 +13,9 @@ import type { RouteRecordRaw } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import { auth } from '@/utils/auth'
 import { usePermissionStore } from '@/stores/permission'
+import { useWorkflowStore } from '@/stores/workflow'
 import { isDesktopMode } from '@/bridge/qt_channel'
+import { rbacApi } from '@/api/rbac'
 
 import MainLayout from '@/layouts/MainLayout.vue'
 
@@ -38,6 +40,17 @@ const routes: RouteRecordRaw[] = [
     name: 'Login',
     component: LoginPage,
     meta: { title: '登录', requiresAuth: false, hideLayout: true },
+  },
+  {
+    path: '/desktop/violation-popup',
+    name: 'ViolationPopupWindow',
+    component: () => import('@/views/ViolationPopupStandalone.vue'),
+    meta: {
+      title: '违规处置',
+      requiresAuth: true,
+      permission: 'view:realtime',
+      hideLayout: true,
+    },
   },
   {
     path: '/',
@@ -142,9 +155,24 @@ const router = createRouter({
 // ---------------------------------------------------------------------------
 // Navigation guard — permission-point driven, role-agnostic
 // ---------------------------------------------------------------------------
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, from, next) => {
   if (to.meta.title) {
     document.title = `${to.meta.title} - HuiInsight 徽鉴`
+  }
+
+  // -- 离开直播监测时：强制同步工作流进度到后端，确保概览数据最新 --------
+  if (from.name === 'RealTimePatrol' && to.name !== 'RealTimePatrol') {
+    const workflowStore = useWorkflowStore()
+    if (workflowStore.isWorking && workflowStore.todayTaskId) {
+      try {
+        await rbacApi.updateTaskProgress(workflowStore.todayTaskId, {
+          reviewed_count:  workflowStore.reviewedCount,
+          violation_count: workflowStore.violationCount,
+          work_duration:   workflowStore.totalSeconds,
+          is_completed:    false,
+        })
+      } catch { /* 静默，不阻塞导航 */ }
+    }
   }
 
   const token      = auth.getToken()
