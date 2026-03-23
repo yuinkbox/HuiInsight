@@ -1,0 +1,117 @@
+name: Develop Branch CI (Code Scan & Test Build)
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - '**'
+      - '!.github/workflows/server-deploy.yml'
+  pull_request:
+    branches: [develop]
+
+jobs:
+  code-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Python Code Quality Check
+        run: |
+          echo "🔍 Running Python code quality checks..."
+          pip install flake8 black isort
+          
+          # Check Python code style
+          echo "📝 Checking code style with black..."
+          black --check server/ shared/ --exclude=server/alembic/versions/
+          
+          echo "📋 Checking imports with isort..."
+          isort --check-only server/ shared/ --skip=server/alembic/versions/
+          
+          echo "🧹 Running flake8 linting..."
+          flake8 server/ shared/ --max-line-length=120 --ignore=E501,W503 --exclude=server/alembic/versions/
+          
+          echo "✅ Python code quality checks passed!"
+
+  frontend-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: client/web
+      
+      - name: TypeScript type check
+        run: npm run type-check
+        working-directory: client/web
+      
+      - name: Lint frontend code
+        run: npm run lint
+        working-directory: client/web
+      
+      - name: Test build (development mode)
+        run: npm run build:development
+        working-directory: client/web
+        env:
+          VITE_ENV: development
+          VITE_API_BASE_URL_DEVELOPMENT: http://localhost:8000
+          VITE_API_BASE_URL_PRODUCTION: http://106.15.32.246:8000
+          VITE_API_BASE_URL_TEST: http://localhost:8000
+      
+      - name: Verify build output
+        run: |
+          echo "📦 Build output verification..."
+          ls -la client/web/dist/
+          echo "✅ Test build completed successfully!"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Security scan with Bandit
+        run: |
+          echo "🔒 Running security scan..."
+          pip install bandit
+          bandit -r server/ -x server/alembic/versions/ -f json -o bandit-report.json || true
+          echo "✅ Security scan completed (warnings are allowed for development)"
+      
+      - name: Check for secrets in code
+        run: |
+          echo "🔑 Checking for potential secrets in code..."
+          # Simple check for common secret patterns
+          grep -r "password\|secret\|key\|token" --include="*.py" --include="*.ts" --include="*.vue" --include="*.js" \
+            server/ client/ shared/ | grep -v "test_" | grep -v "example" | grep -v "placeholder" || true
+          echo "✅ Secrets check completed"
+
+  deployment-block:
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: 🚫 DEPLOYMENT BLOCKED - Develop Branch Safety
+        run: |
+          echo "================================================"
+          echo "🚫  DEPLOYMENT TO PRODUCTION BLOCKED"
+          echo "================================================"
+          echo "This is the develop branch CI pipeline."
+          echo "For security reasons, deployment to production"
+          echo "servers is strictly prohibited from this branch."
+          echo ""
+          echo "✅ Code scanning and test builds are allowed."
+          echo "❌ Production deployment is blocked."
+          echo ""
+          echo "To deploy to production:"
+          echo "1. Merge changes from develop to main"
+          echo "2. Push to main branch"
+          echo "3. Server-deploy.yml will trigger automatically"
+          echo "================================================"
