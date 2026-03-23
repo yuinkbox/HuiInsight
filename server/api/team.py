@@ -10,6 +10,7 @@ GET /api/team/user/{user_id}/stats -- Detailed stats for a single user
 Author : AHDUNYI
 Version: 9.0.0
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -23,15 +24,9 @@ from server.api.permissions import _get_current_user
 from server.constants.permissions import Permission, get_permissions_for_role
 from server.core.database import get_db
 from server.db.models import ShiftTask, User
-from server.schemas import (
-    ChannelStats,
-    OverallStats,
-    TaskOut,
-    TeamInsightResponse,
-    UserDetailedStats,
-    UserOut,
-    UserStats,
-)
+from server.schemas import (ChannelStats, OverallStats, TaskOut,
+                            TeamInsightResponse, UserDetailedStats, UserOut,
+                            UserStats)
 
 router = APIRouter(prefix="/api/team", tags=["team"])
 
@@ -73,9 +68,7 @@ def get_team_insight(
         uid_filter: Optional[List[int]] = None
         if user_ids:
             uid_filter = [
-                int(x.strip())
-                for x in user_ids.split(",")
-                if x.strip().isdigit()
+                int(x.strip()) for x in user_ids.split(",") if x.strip().isdigit()
             ]
 
         ch_filter: Optional[List[str]] = None
@@ -97,15 +90,17 @@ def get_team_insight(
         users = db.query(User).filter(User.id.in_(user_ids_in_tasks)).all()
         user_map: Dict[int, User] = {u.id: u for u in users}
 
-        user_agg: Dict[int, Dict[str, Any]] = defaultdict(lambda: {
-            "total_tasks": 0,
-            "total_reviewed": 0,
-            "total_violations": 0,
-            "total_duration": 0,
-            "channels": defaultdict(
-                lambda: {"count": 0, "reviewed": 0, "violations": 0}
-            ),
-        })
+        user_agg: Dict[int, Dict[str, Any]] = defaultdict(
+            lambda: {
+                "total_tasks": 0,
+                "total_reviewed": 0,
+                "total_violations": 0,
+                "total_duration": 0,
+                "channels": defaultdict(
+                    lambda: {"count": 0, "reviewed": 0, "violations": 0}
+                ),
+            }
+        )
         for t in tasks:
             agg = user_agg[t.user_id]
             agg["total_tasks"] += 1
@@ -139,12 +134,14 @@ def get_team_insight(
                 )
             )
 
-        ch_agg: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
-            "total_tasks": 0,
-            "total_reviewed": 0,
-            "total_violations": 0,
-            "unique_users": set(),
-        })
+        ch_agg: Dict[str, Dict[str, Any]] = defaultdict(
+            lambda: {
+                "total_tasks": 0,
+                "total_reviewed": 0,
+                "total_violations": 0,
+                "unique_users": set(),
+            }
+        )
         for t in tasks:
             ca = ch_agg[t.task_channel]
             ca["total_tasks"] += 1
@@ -155,9 +152,7 @@ def get_team_insight(
         channel_stats: List[ChannelStats] = []
         for ch, ca in ch_agg.items():
             avg = (
-                (ca["total_reviewed"] / ca["total_tasks"])
-                if ca["total_tasks"]
-                else 0.0
+                (ca["total_reviewed"] / ca["total_tasks"]) if ca["total_tasks"] else 0.0
             )
             channel_stats.append(
                 ChannelStats(
@@ -236,12 +231,14 @@ def get_user_detailed_stats(
             .all()
         )
 
-        ch_agg: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
-            "task_count": 0,
-            "total_reviewed": 0,
-            "total_violations": 0,
-            "total_duration": 0,
-        })
+        ch_agg: Dict[str, Dict[str, Any]] = defaultdict(
+            lambda: {
+                "task_count": 0,
+                "total_reviewed": 0,
+                "total_violations": 0,
+                "total_duration": 0,
+            }
+        )
         for t in tasks:
             ca = ch_agg[t.task_channel]
             ca["task_count"] += 1
@@ -266,9 +263,7 @@ def get_user_detailed_stats(
                     else 0.0
                 ),
             },
-            channel_stats=[
-                {"channel": ch, **ca} for ch, ca in ch_agg.items()
-            ],
+            channel_stats=[{"channel": ch, **ca} for ch, ca in ch_agg.items()],
             recent_shifts=[TaskOut.model_validate(t) for t in tasks[:10]],
         )
 

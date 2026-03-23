@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """User role definitions shared across the AHDUNYI server."""
+
 from enum import Enum
 
 

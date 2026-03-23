@@ -71,8 +71,8 @@
                     <div class="role-info">
                       <div class="role-name">
                         <strong>{{ item.display_name }}</strong>
-                        <a-tag v-if="item.is_system" size="mini" color="orange">系统</a-tag>
-                        <a-tag v-if="!item.is_active" size="mini" color="red">禁用</a-tag>
+                        <a-tag v-if="item.is_system" size="small" color="orange">系统</a-tag>
+                        <a-tag v-if="!item.is_active" size="small" color="red">禁用</a-tag>
                       </div>
                       <div class="role-code">{{ item.name }}</div>
                     </div>
@@ -193,7 +193,7 @@
                 <a-checkbox
                   :model-value="isCategorySelected(category.category)"
                   :indeterminate="isCategoryIndeterminate(category.category)"
-                  @change="(checked) => toggleCategory(category.category, checked)"
+                  @change="(checked: boolean) => toggleCategory(category.category, checked)"
                   :disabled="selectedRole.is_system"
                 >
                   全选
@@ -208,14 +208,14 @@
                 >
                   <a-checkbox
                     :model-value="isPermissionSelected(permission.id)"
-                    @change="(checked) => togglePermission(permission.id, checked)"
+                    @change="(checked: boolean) => togglePermission(permission.id, checked)"
                     :disabled="selectedRole.is_system || !permission.is_active"
                   >
                     <div class="permission-info">
                       <div class="permission-name">
                         {{ permission.name }}
-                        <a-tag v-if="!permission.is_active" size="mini" color="red">禁用</a-tag>
-                        <a-tag v-if="permission.is_system" size="mini" color="orange">系统</a-tag>
+                        <a-tag v-if="!permission.is_active" size="small" color="red">禁用</a-tag>
+                        <a-tag v-if="permission.is_system" size="small" color="orange">系统</a-tag>
                       </div>
                       <div class="permission-code">{{ permission.code }}</div>
                       <div class="permission-description" v-if="permission.description">
@@ -516,7 +516,8 @@ const permissionCategories = computed(() => {
     if (!categories[permission.category]) {
       categories[permission.category] = []
     }
-    categories[permission.category].push(permission)
+    // TypeScript knows categories[permission.category] exists after the check above
+    categories[permission.category]!.push(permission)
   })
   
   return Object.entries(categories).map(([category, permissions]) => ({
@@ -652,8 +653,10 @@ const handleSavePermissions = async () => {
       const updatedPermissions = permissions.value.filter(p => 
         selectedPermissions.value.has(p.id)
       )
-      roles.value[roleIndex].permissions = updatedPermissions
-      roles.value[roleIndex].permission_count = updatedPermissions.length
+      // TypeScript knows roles.value[roleIndex] exists because roleIndex !== -1
+      const role = roles.value[roleIndex]!
+      role.permissions = updatedPermissions
+      role.permission_count = updatedPermissions.length
     }
     
     Message.success('权限保存成功')

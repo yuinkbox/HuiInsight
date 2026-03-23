@@ -14,6 +14,7 @@ Design philosophy
 Author : AHDUNYI
 Version: 9.0.0
 """
+
 from __future__ import annotations
 
 from typing import Dict, List

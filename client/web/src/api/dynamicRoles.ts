@@ -8,7 +8,7 @@
  * Version: 9.1.0
  */
 
-import { http } from '@/utils/http'
+import api from '@/api'
 
 // ============================================================================
 // Types
@@ -107,7 +107,7 @@ export interface PermissionCategory {
  * @returns List of roles
  */
 export const getDynamicRoles = (includeInactive: boolean = false) => {
-  return http.get<Role[]>('/dynamic-roles/roles', {
+  return api.get('/dynamic-roles/roles', {
     params: { include_inactive: includeInactive }
   })
 }
@@ -119,7 +119,7 @@ export const getDynamicRoles = (includeInactive: boolean = false) => {
  * @returns Role details
  */
 export const getRole = (roleId: number) => {
-  return http.get<Role>(`/dynamic-roles/roles/${roleId}`)
+  return api.get(`/dynamic-roles/roles/${roleId}`)
 }
 
 /**
@@ -129,7 +129,7 @@ export const getRole = (roleId: number) => {
  * @returns Created role
  */
 export const createRole = (data: RoleCreate) => {
-  return http.post<Role>('/dynamic-roles/roles', data)
+  return api.post('/dynamic-roles/roles', data)
 }
 
 /**
@@ -140,7 +140,7 @@ export const createRole = (data: RoleCreate) => {
  * @returns Updated role
  */
 export const updateRole = (roleId: number, data: RoleUpdate) => {
-  return http.put<Role>(`/dynamic-roles/roles/${roleId}`, data)
+  return api.put(`/dynamic-roles/roles/${roleId}`, data)
 }
 
 /**
@@ -149,7 +149,7 @@ export const updateRole = (roleId: number, data: RoleUpdate) => {
  * @param roleId - Role ID
  */
 export const deleteRole = (roleId: number) => {
-  return http.delete(`/dynamic-roles/roles/${roleId}`)
+  return api.delete(`/dynamic-roles/roles/${roleId}`)
 }
 
 /**
@@ -159,7 +159,7 @@ export const deleteRole = (roleId: number) => {
  * @returns List of permissions
  */
 export const getPermissions = (includeInactive: boolean = false) => {
-  return http.get<Permission[]>('/dynamic-roles/permissions', {
+  return api.get('/dynamic-roles/permissions', {
     params: { include_inactive: includeInactive }
   })
 }
@@ -171,7 +171,7 @@ export const getPermissions = (includeInactive: boolean = false) => {
  * @returns Permission details
  */
 export const getPermission = (permissionId: number) => {
-  return http.get<Permission>(`/dynamic-roles/permissions/${permissionId}`)
+  return api.get(`/dynamic-roles/permissions/${permissionId}`)
 }
 
 /**
@@ -181,7 +181,7 @@ export const getPermission = (permissionId: number) => {
  * @returns Created permission
  */
 export const createPermission = (data: PermissionCreate) => {
-  return http.post<Permission>('/dynamic-roles/permissions', data)
+  return api.post('/dynamic-roles/permissions', data)
 }
 
 /**
@@ -192,7 +192,7 @@ export const createPermission = (data: PermissionCreate) => {
  * @returns Updated permission
  */
 export const updatePermission = (permissionId: number, data: PermissionUpdate) => {
-  return http.put<Permission>(`/dynamic-roles/permissions/${permissionId}`, data)
+  return api.put(`/dynamic-roles/permissions/${permissionId}`, data)
 }
 
 /**
@@ -201,7 +201,7 @@ export const updatePermission = (permissionId: number, data: PermissionUpdate) =
  * @param permissionId - Permission ID
  */
 export const deletePermission = (permissionId: number) => {
-  return http.delete(`/dynamic-roles/permissions/${permissionId}`)
+  return api.delete(`/dynamic-roles/permissions/${permissionId}`)
 }
 
 /**
@@ -212,7 +212,7 @@ export const deletePermission = (permissionId: number) => {
  * @returns Updated role
  */
 export const updateRolePermissions = (roleId: number, permissionIds: number[]) => {
-  return http.put<Role>('/dynamic-roles/role-permissions', {
+  return api.put('/dynamic-roles/role-permissions', {
     role_id: roleId,
     permission_ids: permissionIds
   })
@@ -225,7 +225,7 @@ export const updateRolePermissions = (roleId: number, permissionIds: number[]) =
  * @returns List of permissions
  */
 export const getRolePermissions = (roleId: number) => {
-  return http.get<Permission[]>(`/dynamic-roles/roles/${roleId}/permissions`)
+  return api.get(`/dynamic-roles/roles/${roleId}/permissions`)
 }
 
 /**
@@ -235,7 +235,7 @@ export const getRolePermissions = (roleId: number) => {
  * @returns Role catalogue
  */
 export const getRoleCatalogue = (includeInactive: boolean = false) => {
-  return http.get<RoleCatalogueItem[]>('/dynamic-roles/catalogue/roles', {
+  return api.get('/dynamic-roles/catalogue/roles', {
     params: { include_inactive: includeInactive }
   })
 }
@@ -247,7 +247,7 @@ export const getRoleCatalogue = (includeInactive: boolean = false) => {
  * @returns Permission catalogue
  */
 export const getPermissionCatalogue = (includeInactive: boolean = false) => {
-  return http.get<PermissionCategory[]>('/dynamic-roles/catalogue/permissions', {
+  return api.get('/dynamic-roles/catalogue/permissions', {
     params: { include_inactive: includeInactive }
   })
 }

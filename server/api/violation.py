@@ -6,6 +6,7 @@ and forwards it to a Feishu (Lark) group webhook as a rich-text card.
 Author : AHDUNYI
 Version: 1.0.0
 """
+
 from __future__ import annotations
 
 import logging
@@ -134,7 +135,10 @@ def report_violation(body: ViolationReport) -> ReportResponse:
         resp_data = resp.json()
         logger.info(
             "Feishu webhook response: %s (room=%s, user=%s, action=%s)",
-            resp_data, body.room_id, body.user_id, body.action,
+            resp_data,
+            body.room_id,
+            body.user_id,
+            body.action,
         )
 
         if resp_data.get("code") == 0 or resp_data.get("StatusCode") == 0:

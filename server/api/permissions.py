@@ -12,18 +12,19 @@ to re-hydrate the Pinia permission store without requiring a full re-login.
 Author : AHDUNYI
 Version: 9.0.0
 """
+
 import os
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from jose import JWTError, jwt
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from server.core.database import get_db
 from server.db.models import User
-from server.db.models_extended import DynamicRole, Permission
+from server.db.models_extended import DynamicRole
 
 _SECRET_KEY: str = os.environ.get(
     "JWT_SECRET_KEY", "CHANGE_ME_IN_PRODUCTION_USE_LONG_RANDOM_STRING"
@@ -114,13 +115,12 @@ def get_my_permissions(
     role = db.query(DynamicRole).filter(DynamicRole.id == current_user.role_id).first()
     if not role:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User role not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail="User role not found."
         )
-    
+
     # Get permission codes
     permission_codes = [perm.code for perm in role.permissions if perm.is_active]
-    
+
     return PermissionsResponse(
         role=role.name,
         permissions=permission_codes,
@@ -148,8 +148,8 @@ def get_all_roles(
         :class:`AllRolesResponse` with a list of role descriptors.
     """
     # Get all active roles
-    roles = db.query(DynamicRole).filter(DynamicRole.is_active == True).all()
-    
+    roles = db.query(DynamicRole).filter(DynamicRole.is_active.is_(True)).all()
+
     role_descriptors = [
         {
             "value": role.name,
@@ -159,5 +159,5 @@ def get_all_roles(
         }
         for role in roles
     ]
-    
+
     return AllRolesResponse(roles=role_descriptors)

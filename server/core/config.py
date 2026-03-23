@@ -8,6 +8,7 @@ supporting development, production, and test environments.
 Author : AHDUNYI
 Version: 9.1.0
 """
+
 import os
 from pathlib import Path
 from typing import Literal
@@ -21,11 +22,11 @@ Environment = Literal["development", "production", "test"]
 
 class DatabaseConfig(BaseModel):
     """Database configuration."""
-    
+
     url: str = Field(
         ...,
         description="Database connection URL",
-        examples=["mysql+pymysql://user:pass@localhost:3306/dbname?charset=utf8mb4"]
+        examples=["mysql+pymysql://user:pass@localhost:3306/dbname?charset=utf8mb4"],
     )
     pool_size: int = Field(10, description="Connection pool size")
     max_overflow: int = Field(20, description="Maximum overflow connections")
@@ -35,19 +36,19 @@ class DatabaseConfig(BaseModel):
 
 class AuthConfig(BaseModel):
     """Authentication configuration."""
-    
+
     jwt_secret_key: str = Field(
-        ...,
-        description="JWT secret key (minimum 32 characters)",
-        min_length=32
+        ..., description="JWT secret key (minimum 32 characters)", min_length=32
     )
     jwt_algorithm: str = Field("HS256", description="JWT algorithm")
-    access_token_expire_minutes: int = Field(30, description="Access token expiry in minutes")
+    access_token_expire_minutes: int = Field(
+        30, description="Access token expiry in minutes"
+    )
 
 
 class ServerConfig(BaseModel):
     """Server configuration."""
-    
+
     host: str = Field("0.0.0.0", description="Server host address")
     port: int = Field(8000, description="Server port")
     reload: bool = Field(False, description="Enable auto-reload for development")
@@ -55,18 +56,18 @@ class ServerConfig(BaseModel):
 
 class AppConfig(BaseModel):
     """Application configuration."""
-    
+
     # Environment
     environment: Environment = Field("development", description="Current environment")
     debug: bool = Field(False, description="Debug mode")
     app_name: str = Field("AHDUNYI Terminal PRO", description="Application name")
     app_version: str = Field("9.1.0", description="Application version")
-    
+
     # Components
     database: DatabaseConfig
     auth: AuthConfig
     server: ServerConfig
-    
+
     # Features
     enable_cors: bool = Field(True, description="Enable CORS middleware")
     enable_docs: bool = Field(True, description="Enable API documentation")
@@ -84,7 +85,7 @@ def load_environment() -> Environment:
 
 def load_env_file(environment: Environment) -> bool:
     """Load environment variables from appropriate .env file.
-    
+
     Returns:
         True if environment file was loaded, False otherwise.
     """
@@ -93,13 +94,13 @@ def load_env_file(environment: Environment) -> bool:
         Path(__file__).parent.parent / ".env",
         Path(__file__).parent.parent / ".env.example",
     ]
-    
+
     for env_file in env_files:
         if env_file.exists():
             load_dotenv(dotenv_path=env_file, override=True)
             print(f"📁 Loaded environment file: {env_file.name}")
             return True
-    
+
     print(f"⚠ Warning: No .env file found for environment '{environment}'")
     return False
 
@@ -108,39 +109,43 @@ def create_config() -> AppConfig:
     """Create application configuration from environment variables."""
     # Determine environment
     environment = load_environment()
-    
+
     # Load environment file
     load_env_file(environment)
-    
+
     # Determine debug mode
-    debug = environment == "development" or os.environ.get("DEBUG", "false").lower() == "true"
-    
+    debug = (
+        environment == "development"
+        or os.environ.get("DEBUG", "false").lower() == "true"
+    )
+
     # Database configuration
     database_config = DatabaseConfig(
         url=os.environ.get(
             "DATABASE_URL",
-            "mysql+pymysql://ahdunyi_superyu:changeme@127.0.0.1:3306/ahdunyi_pro_db?charset=utf8mb4"
+            "mysql+pymysql://ahdunyi_superyu:changeme@127.0.0.1:3306/ahdunyi_pro_db?charset=utf8mb4",
         ),
         echo=debug,
     )
-    
+
     # Auth configuration
     auth_config = AuthConfig(
         jwt_secret_key=os.environ.get(
-            "JWT_SECRET_KEY",
-            "development-jwt-secret-key-change-in-production"
+            "JWT_SECRET_KEY", "development-jwt-secret-key-change-in-production"
         ),
         jwt_algorithm=os.environ.get("JWT_ALGORITHM", "HS256"),
-        access_token_expire_minutes=int(os.environ.get("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
+        access_token_expire_minutes=int(
+            os.environ.get("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+        ),
     )
-    
+
     # Server configuration
     server_config = ServerConfig(
         host=os.environ.get("SERVER_HOST", "0.0.0.0"),
         port=int(os.environ.get("SERVER_PORT", "8000")),
         reload=debug,
     )
-    
+
     # Create app config
     config = AppConfig(
         environment=environment,
@@ -154,10 +159,10 @@ def create_config() -> AppConfig:
         enable_docs=debug,  # Only enable docs in development
         enable_redoc=debug,  # Only enable redoc in development
     )
-    
+
     # Log configuration (safely)
     _log_config(config)
-    
+
     return config
 
 
@@ -180,12 +185,12 @@ def _safe_db_url(db_url: str) -> str:
     """Return a safe version of database URL (without password)."""
     if "@" not in db_url:
         return db_url
-    
+
     # Split at @ and take everything after it
     parts = db_url.split("@")
     if len(parts) == 2:
         return f"***@{parts[1]}"
-    
+
     return "***"
 
 

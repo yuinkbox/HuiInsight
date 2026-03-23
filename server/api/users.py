@@ -17,6 +17,7 @@ DELETE /api/users/{user_id}               -- Delete user
 Author : AHDUNYI
 Version: 9.1.0
 """
+
 from __future__ import annotations
 
 from typing import Optional
@@ -27,18 +28,13 @@ from sqlalchemy.orm import Session
 
 from server.api.permissions import _get_current_user
 from server.constants.permissions import Permission
+from server.constants.roles import UserRole
 from server.core.database import get_db
 from server.db.models import User
 from server.db.models_extended import DynamicRole
-from server.schemas import (
-    ActiveUsersResponse,
-    OkResponse,
-    UserCreate,
-    UserOut,
-    UserPasswordReset,
-    UserRoleUpdate,
-    UserUpdate,
-)
+from server.schemas import (ActiveUsersResponse, OkResponse, UserCreate,
+                            UserOut, UserPasswordReset, UserRoleUpdate,
+                            UserUpdate)
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -51,13 +47,12 @@ def _require_permission(current_user: User, perm: str, db: Session) -> None:
     role = db.query(DynamicRole).filter(DynamicRole.id == current_user.role_id).first()
     if not role:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User role not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail="User role not found."
         )
-    
+
     # Get active permission codes for the role
     permission_codes = {perm.code for perm in role.permissions if perm.is_active}
-    
+
     if perm not in permission_codes:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -83,7 +78,9 @@ def list_active_users(
             filter_role=role or "",
         )
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to query users: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to query users: {exc}"
+        ) from exc
 
 
 @router.get("/all", response_model=ActiveUsersResponse)
@@ -110,7 +107,9 @@ def list_all_users(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to query users: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to query users: {exc}"
+        ) from exc
 
 
 @router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
@@ -122,7 +121,9 @@ def create_user(
     """Create a new user account. Requires action:update_role."""
     _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     if db.query(User).filter(User.username == body.username).first():
-        raise HTTPException(status_code=409, detail=f"Username '{body.username}' already exists.")
+        raise HTTPException(
+            status_code=409, detail=f"Username '{body.username}' already exists."
+        )
     try:
         new_user = User(
             username=body.username,
@@ -141,7 +142,9 @@ def create_user(
         raise
     except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create user: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create user: {exc}"
+        ) from exc
 
 
 @router.get("/{user_id}", response_model=UserOut)
@@ -169,7 +172,11 @@ def update_user(
     target = db.query(User).filter(User.id == user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="User not found.")
-    if target.id == current_user.id and body.role and body.role != current_user.role.value:
+    if (
+        target.id == current_user.id
+        and body.role
+        and body.role != current_user.role.value
+    ):
         raise HTTPException(status_code=400, detail="Cannot change your own role.")
     try:
         if body.full_name is not None:
@@ -187,7 +194,9 @@ def update_user(
         raise
     except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to update user: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update user: {exc}"
+        ) from exc
 
 
 @router.put("/{user_id}/role", response_model=OkResponse)
@@ -208,12 +217,16 @@ def update_user_role(
     try:
         target.role = body.role  # type: ignore[assignment]
         db.commit()
-        return OkResponse(message=f"User {target.username} role updated to '{body.role}'.")
+        return OkResponse(
+            message=f"User {target.username} role updated to '{body.role}'."
+        )
     except HTTPException:
         raise
     except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to update role: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update role: {exc}"
+        ) from exc
 
 
 @router.put("/{user_id}/status", response_model=OkResponse)
@@ -225,7 +238,9 @@ def toggle_user_status(
     """Toggle a user active/inactive status. Requires action:update_role."""
     _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     if user_id == current_user.id:
-        raise HTTPException(status_code=400, detail="Cannot change your own active status.")
+        raise HTTPException(
+            status_code=400, detail="Cannot change your own active status."
+        )
     target = db.query(User).filter(User.id == user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -236,7 +251,9 @@ def toggle_user_status(
         return OkResponse(message=f"User {target.username} {action}.")
     except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to toggle status: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to toggle status: {exc}"
+        ) from exc
 
 
 @router.post("/{user_id}/reset-password", response_model=OkResponse)
@@ -257,7 +274,9 @@ def reset_user_password(
         return OkResponse(message=f"Password for '{target.username}' has been reset.")
     except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to reset password: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to reset password: {exc}"
+        ) from exc
 
 
 @router.delete("/{user_id}", response_model=OkResponse)
@@ -279,4 +298,6 @@ def delete_user(
         return OkResponse(message=f"User '{target.username}' permanently deleted.")
     except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to delete user: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to delete user: {exc}"
+        ) from exc

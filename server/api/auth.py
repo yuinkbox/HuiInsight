@@ -10,6 +10,7 @@ POST /api/auth/change-password -- Change current user's password.
 Author : AHDUNYI
 Version: 9.0.0
 """
+
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
@@ -20,7 +21,8 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from server.constants.permissions import get_permissions_for_role, get_role_meta
+from server.constants.permissions import (get_permissions_for_role,
+                                          get_role_meta)
 from server.core.config import config
 from server.core.database import get_db
 from server.db.models import User
@@ -51,6 +53,7 @@ class ChangePasswordRequest(BaseModel):
 
 class AuthUserOut(BaseModel):
     """精简版用户信息，仅用于登录响应 Token 中。完整版请使用 schemas.UserOut。"""
+
     username: str
     full_name: str
     role: str
@@ -109,9 +112,7 @@ def _verify_password(plain: str, hashed: str) -> bool:
     # Fallback: call bcrypt directly, bypassing passlib wrapper
     try:
         plain_bytes = plain.encode("utf-8")
-        hash_bytes = (
-            hashed.encode("utf-8") if isinstance(hashed, str) else hashed
-        )
+        hash_bytes = hashed.encode("utf-8") if isinstance(hashed, str) else hashed
         return _bcrypt_lib.checkpw(plain_bytes, hash_bytes)
     except Exception:
         return False
@@ -163,11 +164,13 @@ def login(
 
     role_value: str = user.role.value
 
-    token = _create_access_token({
-        "sub": user.username,
-        "role": role_value,
-        "is_superuser": user.is_superuser,
-    })
+    token = _create_access_token(
+        {
+            "sub": user.username,
+            "role": role_value,
+            "is_superuser": user.is_superuser,
+        }
+    )
 
     meta = get_role_meta(role_value)
 

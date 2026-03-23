@@ -8,6 +8,7 @@ such that each user's historical task count for that channel is minimised.
 Author : AHDUNYI
 Version: 9.0.0
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -18,12 +19,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from server.db.models import ShiftTask, User
-from server.schemas import (
-    DispatchRequest,
-    DispatchResponse,
-    DispatchSummary,
-    TaskAssignment,
-)
+from server.schemas import (DispatchRequest, DispatchResponse, DispatchSummary,
+                            TaskAssignment)
 
 
 def _get_weekly_channel_counts(
@@ -41,9 +38,9 @@ def _get_weekly_channel_counts(
     Returns:
         Mapping of user_id to assignment count.
     """
-    cutoff = (
-        datetime.now(timezone(timedelta(hours=8))) - timedelta(days=7)
-    ).strftime("%Y-%m-%d")
+    cutoff = (datetime.now(timezone(timedelta(hours=8))) - timedelta(days=7)).strftime(
+        "%Y-%m-%d"
+    )
     rows = (
         db.query(ShiftTask.user_id, func.count(ShiftTask.id))
         .filter(

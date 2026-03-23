@@ -12,6 +12,7 @@ POST  /api/dispatch/auto            -- Auto-dispatch tasks for a shift
 Author : AHDUNYI
 Version: 9.0.0
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -23,15 +24,9 @@ from server.api.permissions import _get_current_user
 from server.constants.permissions import Permission, get_permissions_for_role
 from server.core.database import get_db
 from server.db.models import ShiftTask, User
-from server.schemas import (
-    DispatchRequest,
-    DispatchResponse,
-    OkResponse,
-    TaskOut,
-    TaskProgressUpdate,
-    UserTaskResponse,
-    WeeklyStats,
-)
+from server.schemas import (DispatchRequest, DispatchResponse, OkResponse,
+                            TaskOut, TaskProgressUpdate, UserTaskResponse,
+                            WeeklyStats)
 from server.services.dispatch import dispatch_tasks
 
 # 统一使用北京时间 (UTC+8) 避免跨日期 Bug

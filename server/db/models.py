@@ -11,24 +11,18 @@ Tables
 Author : AHDUNYI
 Version: 9.0.0
 """
+
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import (
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-    func,
-)
+from sqlalchemy import (Boolean, DateTime, ForeignKey, Index, Integer, String,
+                        Text, func)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from server.core.database import Base
+from server.db.models_extended import DynamicRole
 
 
 class User(Base):
@@ -43,36 +37,31 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     # unique 交由上方 Index 管理，避免 MySQL 产生重复索引
     username: Mapped[str] = mapped_column(String(64), nullable=False)
-    full_name: Mapped[str] = mapped_column(String(128), nullable=False, server_default="")
+    full_name: Mapped[str] = mapped_column(
+        String(128), nullable=False, server_default=""
+    )
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_superuser: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
+    is_superuser: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="0"
+    )
     role_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("dynamic_roles.id"),
-        nullable=False,
-        index=True
+        Integer, ForeignKey("dynamic_roles.id"), nullable=False, index=True
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="1")
-    email: Mapped[Optional[str]] = mapped_column(
-        String(128), nullable=True
-    )
+    email: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=False), nullable=True, onupdate=func.now()
     )
-    
+
     # Relationships
-    role: Mapped["DynamicRole"] = relationship(
-        "DynamicRole",
-        lazy="joined"
-    )
+    role: Mapped["DynamicRole"] = relationship("DynamicRole", lazy="joined")
 
     def __repr__(self) -> str:
         return (
-            f"<User id={self.id} username={self.username!r}"
-            f" role_id={self.role_id}>"
+            f"<User id={self.id} username={self.username!r}" f" role_id={self.role_id}>"
         )
 
 
@@ -91,10 +80,18 @@ class ShiftTask(Base):
     shift_date: Mapped[str] = mapped_column(String(10), nullable=False)
     shift_type: Mapped[str] = mapped_column(String(16), nullable=False)
     task_channel: Mapped[str] = mapped_column(String(16), nullable=False)
-    is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
-    reviewed_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    violation_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    work_duration: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    is_completed: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="0"
+    )
+    reviewed_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
+    violation_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
+    work_duration: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=False, server_default=func.now()
     )

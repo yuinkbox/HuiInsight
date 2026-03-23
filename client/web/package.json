@@ -13,6 +13,8 @@
     "preview:development": "vite preview --mode development",
     "preview:production": "vite preview --mode production",
     "preview:test": "vite preview --mode test",
+    "type-check": "vue-tsc --noEmit",
+    "type-check:watch": "vue-tsc --noEmit --watch",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
   },

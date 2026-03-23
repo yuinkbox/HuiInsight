@@ -11,10 +11,11 @@ Naming convention:
 Author : AHDUNYI
 Version: 9.1.0
 """
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -24,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # ---------------------------------------------------------------------------
 class OkResponse(BaseModel):
     """Generic success envelope."""
+
     success: bool = True
     message: str = "ok"
 
@@ -49,16 +51,21 @@ class UserOut(BaseModel):
 
 class UserRoleUpdate(BaseModel):
     # Role ID for dynamic role system
-    role_id: int = Field(
-        ..., description="Role ID from dynamic_roles table"
-    )
+    role_id: int = Field(..., description="Role ID from dynamic_roles table")
 
 
 class UserCreate(BaseModel):
     """Request body for creating a new user."""
-    username: str = Field(..., min_length=2, max_length=64, description="Login username")
-    full_name: str = Field(..., min_length=1, max_length=128, description="Display name")
-    password: str = Field(..., min_length=6, max_length=128, description="Initial password")
+
+    username: str = Field(
+        ..., min_length=2, max_length=64, description="Login username"
+    )
+    full_name: str = Field(
+        ..., min_length=1, max_length=128, description="Display name"
+    )
+    password: str = Field(
+        ..., min_length=6, max_length=128, description="Initial password"
+    )
     email: Optional[str] = Field(None, max_length=128, description="Email address")
     role_id: int = Field(..., description="Role ID from dynamic_roles table")
     is_active: bool = Field(True, description="Whether user is active on creation")
@@ -66,6 +73,7 @@ class UserCreate(BaseModel):
 
 class UserUpdate(BaseModel):
     """Request body for updating user profile fields."""
+
     full_name: Optional[str] = Field(None, min_length=1, max_length=128)
     email: Optional[str] = Field(None, max_length=128)
     role_id: Optional[int] = Field(None, description="Role ID from dynamic_roles table")
@@ -74,7 +82,10 @@ class UserUpdate(BaseModel):
 
 class UserPasswordReset(BaseModel):
     """Request body for resetting a user's password."""
-    new_password: str = Field(..., min_length=6, max_length=128, description="New password")
+
+    new_password: str = Field(
+        ..., min_length=6, max_length=128, description="New password"
+    )
 
 
 class ActiveUsersResponse(BaseModel):

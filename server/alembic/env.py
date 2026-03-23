@@ -5,6 +5,7 @@ Alembic migration environment.
 Database URL is read from server/.env (DATABASE_URL),
 falling back to the engine already configured in server.core.database.
 """
+
 from __future__ import annotations
 
 import sys
@@ -12,8 +13,7 @@ from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import pool
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, pool
 
 # ---------------------------------------------------------------------------
 # Make sure the repo root is on sys.path so that "server.*" imports work
@@ -23,10 +23,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-# Import project engine + Base (triggers model registration)
-from server.core.database import DATABASE_URL, Base  # noqa: E402
 import server.db.models  # noqa: E402, F401  -- registers all ORM classes
 import server.db.models_extended  # noqa: E402, F401  -- registers extended ORM classes
+# Import project engine + Base (triggers model registration)
+from server.core.database import DATABASE_URL, Base  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Alembic Config

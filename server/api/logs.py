@@ -10,6 +10,7 @@ GET  /api/log/list    -- Paginated log list for shadow-audit dashboard
 Author : AHDUNYI
 Version: 9.0.0
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -18,11 +19,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from server.core.database import get_db
-from server.db.models import ActionLog, User
-from server.schemas import ActionLogCreate, ActionLogListResponse, ActionLogOut, OkResponse
 from server.api.permissions import _get_current_user
 from server.constants.permissions import Permission, get_permissions_for_role
+from server.core.database import get_db
+from server.db.models import ActionLog, User
+from server.schemas import (ActionLogCreate, ActionLogListResponse,
+                            ActionLogOut, OkResponse)
 
 router = APIRouter(prefix="/api/log", tags=["logs"])
 
@@ -49,7 +51,11 @@ def write_action_log(
     try:
         ts: datetime
         if body.timestamp:
-            ts = body.timestamp if isinstance(body.timestamp, datetime) else body.timestamp
+            ts = (
+                body.timestamp
+                if isinstance(body.timestamp, datetime)
+                else body.timestamp
+            )
         else:
             ts = datetime.now(timezone.utc)
 
