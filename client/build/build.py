@@ -1,21 +1,26 @@
 # -*- coding: utf-8 -*-
 """
-AHDUNYI Terminal PRO - one-click build script.
+AHDUNYI Terminal PRO - one-click build script with multi-environment support.
 
 Steps:
-  1. Build Vue frontend (npm run build inside web_client/).
+  1. Build Vue frontend with appropriate environment (npm run build:production).
   2. Clean previous PyInstaller artifacts.
   3. Check Python environment.
   4. Run PyInstaller with build/AHDUNYI.spec.
   5. Report output EXE path and size.
 
+Supports multiple environments:
+  - development: For local development and testing
+  - production: For official release builds
+
 GBK-safe: zero emoji, all print() output is pure ASCII/CJK text,
 subprocess uses errors='replace'.
 
 Author : AHDUNYI
-Version: 9.0.0
+Version: 9.1.0
 """
 
+import argparse
 import locale
 import os
 import shutil
@@ -32,6 +37,30 @@ SPEC_FILE = ROOT / "client" / "build" / "AHDUNYI.spec"
 
 def _sep() -> None:
     print("-" * 60)
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Build AHDUNYI Terminal PRO for different environments"
+    )
+    parser.add_argument(
+        "--env",
+        choices=["development", "production"],
+        default="production",
+        help="Build environment (default: production)",
+    )
+    parser.add_argument(
+        "--skip-frontend",
+        action="store_true",
+        help="Skip frontend build (use existing dist)",
+    )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="Clean build artifacts before building",
+    )
+    return parser.parse_args()
 
 
 def _run(cmd: list, cwd: Path, label: str, timeout: int = 600) -> bool:
@@ -69,9 +98,9 @@ def _run(cmd: list, cwd: Path, label: str, timeout: int = 600) -> bool:
         return False
 
 
-def step_build_frontend() -> bool:
+def step_build_frontend(environment: str) -> bool:
     print()
-    print("[STEP 1] Building Vue frontend")
+    print(f"[STEP 1] Building Vue frontend for {environment} environment")
     _sep()
     if not WEB_CLIENT.exists():
         print("[ERR] web_client/ not found: " + str(WEB_CLIENT))
@@ -83,13 +112,18 @@ def step_build_frontend() -> bool:
     print("[OK]  npm: " + npm)
     if not _run([npm, "install"], WEB_CLIENT, "npm install"):
         return False
-    if not _run([npm, "run", "build"], WEB_CLIENT, "npm run build"):
+    # Determine npm build command based on environment
+    if environment == "production":
+        build_cmd = [npm, "run", "build:production"]
+    else:
+        build_cmd = [npm, "run", "build:development"]
+    if not _run(build_cmd, WEB_CLIENT, f"npm run build:{environment}"):
         return False
     index = WEB_CLIENT / "dist" / "index.html"
     if not index.exists():
         print("[ERR] dist/index.html missing after build")
         return False
-    print("[OK]  dist ready: " + str(index.parent))
+    print(f"[OK]  dist ready for {environment}: " + str(index.parent))
     return True
 
 
@@ -177,13 +211,26 @@ def step_report() -> None:
 
 
 def main() -> int:
+    """Main build entry point."""
+    # Parse command line arguments
+    args = parse_args()
+    
     print("=" * 60)
-    print("AHDUNYI Terminal PRO  -  automated build  v9.0.0")
+    print(f"AHDUNYI Terminal PRO - Build Script ({args.env.upper()} Environment)")
     print("=" * 60)
+    
+    # Set environment variable for build
+    os.environ["ENVIRONMENT"] = args.env
 
-    if not step_build_frontend():
-        return 1
-    step_clean()
+    if not args.skip_frontend:
+        if not step_build_frontend(args.env):
+            return 1
+    else:
+        print("[INFO] Skipping frontend build as requested")
+    
+    if args.clean:
+        step_clean()
+    
     if not step_check_env():
         return 1
     if not step_pyinstaller():

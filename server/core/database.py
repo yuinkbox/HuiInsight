@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Database engine and session factory.
+Database engine and session factory with multi-environment support.
 
 Configuration
 -------------
-Set ``DATABASE_URL`` in ``server/.env``::
-
-    DATABASE_URL="mysql+pymysql://user:pass@host:3306/ahdunyi_pro_db?charset=utf8mb4"
+Uses centralized configuration from server.core.config.
 
 Usage
 -----
@@ -18,30 +16,22 @@ In FastAPI dependency injection::
     def example(db: Session = Depends(get_db)):
         ...
 """
-import os
-from pathlib import Path
 from typing import Generator
 
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-# Load .env from server/ directory (one level up from this file)
-_ENV_FILE = Path(__file__).parent.parent / ".env"
-load_dotenv(dotenv_path=_ENV_FILE, override=False)
+from server.core.config import config
 
-DATABASE_URL: str = os.environ.get(
-    "DATABASE_URL",
-    "mysql+pymysql://ahdunyi_superyu:changeme@127.0.0.1:3306/ahdunyi_pro_db?charset=utf8mb4",
-)
+DATABASE_URL: str = config.database.url
 
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,       # detect stale connections
-    pool_recycle=1800,        # recycle every 30 min (avoid MySQL 8h timeout)
-    pool_size=10,
-    max_overflow=20,
-    echo=False,               # set True for SQL debug output
+    pool_recycle=config.database.pool_recycle,
+    pool_size=config.database.pool_size,
+    max_overflow=config.database.max_overflow,
+    echo=config.database.echo,
 )
 
 SessionLocal: sessionmaker[Session] = sessionmaker(

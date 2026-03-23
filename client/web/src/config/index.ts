@@ -51,9 +51,17 @@ const loadConfig = (): AppConfig => {
   // 确定当前环境
   const environment = (env.VITE_ENV || 'development') as Environment
   
-  // 固定使用后端地址（避免环境变量干扰）
-  const getApiBaseUrl = () => {
-    return 'http://106.15.32.246:8000'
+  // 根据环境选择API基础地址
+  const getApiBaseUrl = (): string => {
+    switch (environment) {
+      case 'production':
+        return env.VITE_API_BASE_URL_PRODUCTION || 'http://106.15.32.246:8000'
+      case 'test':
+        return env.VITE_API_BASE_URL_TEST || 'http://localhost:8000'
+      case 'development':
+      default:
+        return env.VITE_API_BASE_URL_DEVELOPMENT || 'http://localhost:8000'
+    }
   }
   
   return {
@@ -62,13 +70,13 @@ const loadConfig = (): AppConfig => {
     api: {
       baseUrl: getApiBaseUrl(),
       timeout: parseInt(env.VITE_API_TIMEOUT || '10000', 10),
-      prodUrl: env.VITE_PROD_API_URL || 'http://106.15.32.246:8000',
-      testUrl: env.VITE_TEST_API_URL || 'http://106.15.32.246:8000'
+      prodUrl: env.VITE_API_BASE_URL_PRODUCTION || 'http://106.15.32.246:8000',
+      testUrl: env.VITE_API_BASE_URL_TEST || 'http://localhost:8000'
     },
     
     app: {
       title: env.VITE_APP_TITLE || 'HuiInsight 徽鉴',
-      version: env.VITE_APP_VERSION || '2.0.0',
+      version: env.VITE_APP_VERSION || '9.1.0',
       copyright: env.VITE_APP_COPYRIGHT || '© 2026 HuiInsight. The Infrastructure of Risk Control.'
     },
     

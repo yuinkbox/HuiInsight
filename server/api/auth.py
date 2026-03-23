@@ -10,7 +10,6 @@ POST /api/auth/change-password -- Change current user's password.
 Author : AHDUNYI
 Version: 9.0.0
 """
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
@@ -22,15 +21,14 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from server.constants.permissions import get_permissions_for_role, get_role_meta
+from server.core.config import config
 from server.core.database import get_db
 from server.db.models import User
 from server.schemas import UserOut
 
-_SECRET_KEY: str = os.environ.get(
-    "JWT_SECRET_KEY", "CHANGE_ME_IN_PRODUCTION_USE_LONG_RANDOM_STRING"
-)
-_ALGORITHM: str = "HS256"
-_ACCESS_TOKEN_EXPIRE_HOURS: int = 24
+_SECRET_KEY: str = config.auth.jwt_secret_key
+_ALGORITHM: str = config.auth.jwt_algorithm
+_ACCESS_TOKEN_EXPIRE_MINUTES: int = config.auth.access_token_expire_minutes
 
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -82,11 +80,11 @@ class TokenResponse(BaseModel):
 # --------------------------------------------------------------------------
 def _create_access_token(
     data: Dict[str, Any],
-    expires_hours: int = _ACCESS_TOKEN_EXPIRE_HOURS,
+    expires_minutes: int = _ACCESS_TOKEN_EXPIRE_MINUTES,
 ) -> str:
     """Create a signed JWT with an expiry claim."""
     payload = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(hours=expires_hours)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
     payload["exp"] = expire
     return jwt.encode(payload, _SECRET_KEY, algorithm=_ALGORITHM)
 
