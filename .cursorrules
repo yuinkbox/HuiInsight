@@ -5,3 +5,8 @@ Standard: 代码必须符合 PEP 8 规范，所有函数必须有类型标注（
 Architecture: 采用“控制逻辑与 UI 分离”的架构。Python 后端通过本地接口（如 QWebEngineView 或 Flask-SocketIO）驱动 web_client。
 
 Refactor Goal: 消除全局变量，模块化 utils，增强错误捕获（Logging 代替 Print），解决 Windows 下的 GBK/UTF-8 编码冲突。
+
+Workspace Hygiene Rules:
+1) 所有临时 Python 脚本（排查/修复用，如 fix_*.py、check_*.py）必须统一放在 scripts/temp/。
+2) 所有交互日志与临时说明文本（如 MESSAGE_*、QUICK_*、FINAL_*、RESPONSE_*）必须统一放在 docs/ai_conversations/。
+3) 严禁在项目根目录（/）直接创建一次性脚本或一次性文本文件。

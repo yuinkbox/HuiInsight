@@ -44,6 +44,8 @@ export interface AppBridge {
   getSystemStatus(): Promise<string>
   /** Return a JSON string with the logged-in user token payload. */
   getTokenInfo(): Promise<string>
+  /** Desktop-only login request through Python bridge (bypasses browser CORS). */
+  desktopLogin(username: string, password: string): Promise<string>
   /** Forward a JS log message to Python logging. */
   logFromJS(message: string): void
   /** Toggle window always-on-top (desktop only). */

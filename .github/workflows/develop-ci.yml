@@ -20,6 +20,12 @@ jobs:
         with:
           python-version: '3.12'
       
+      - name: Workspace hygiene check
+        run: |
+          echo "🧼 Checking workspace hygiene rules..."
+          python scripts/check_workspace_hygiene.py
+          echo "✅ Workspace hygiene check passed!"
+
       - name: Python Code Quality Check
         run: |
           echo "🔍 Running Python code quality checks..."

@@ -126,6 +126,10 @@ class EnvAwareConfigManager(ConfigManager):
     
     def __init__(self, config_path: Optional[Path] = None):
         super().__init__(config_path)
+
+        # ConfigManager does not create `self.settings` in __init__.
+        # Initialize from defaults / config.json first, then apply env overrides.
+        self.settings = self.load()
         
         # Load environment
         self.environment = load_environment()

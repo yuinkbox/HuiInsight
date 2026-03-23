@@ -1,0 +1,82 @@
+name: Test Environment Deploy (Tencent Cloud)
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'server/**'
+      - 'shared/**'
+      - '.github/workflows/test-deploy.yml'
+
+jobs:
+  deploy-to-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Lint server code
+        run: |
+          pip install flake8
+          flake8 server/ shared/ --max-line-length=120 --ignore=E501,W503 --exclude=server/alembic/versions/
+      
+      - name: Deploy to Tencent Cloud via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.TENCENT_CLOUD_HOST }}
+          username: ${{ secrets.TENCENT_CLOUD_USER }}
+          key: ${{ secrets.TENCENT_CLOUD_SSH_KEY }}
+          script: |
+            echo "🚀 Deploying to Tencent Cloud Test Environment..."
+            cd /app/AHDUNYI_Terminal_PRO
+            
+            # 切换到develop分支
+            echo "📥 Pulling latest develop branch code..."
+            git fetch origin
+            git checkout develop
+            git pull origin develop
+            
+            # 复制测试环境配置文件
+            echo "📁 Setting up test environment configuration..."
+            if [ -f ".env.test" ]; then
+              cp .env.test server/.env
+              echo "✅ Copied .env.test to server/.env"
+            else
+              echo "⚠ Warning: .env.test not found, using default configuration"
+            fi
+            
+            # 创建测试环境虚拟环境（如果不存在）
+            if [ ! -d "server/venv" ]; then
+              echo "🐍 Creating Python virtual environment..."
+              python3 -m venv server/venv
+            fi
+            
+            # 安装依赖
+            echo "📦 Installing Python dependencies..."
+            server/venv/bin/pip install -r server/requirements.txt
+            
+            # 执行数据库迁移
+            echo "🗄️ Running database migrations..."
+            cd server
+            export ENVIRONMENT=test
+            venv/bin/python -m alembic upgrade head
+            
+            # 初始化测试数据（如果需要）
+            echo "📊 Initializing test data..."
+            venv/bin/python -m server.db.init_db
+            
+            # 重启服务
+            echo "🔄 Restarting backend service..."
+            sudo systemctl daemon-reload
+            sudo systemctl restart ahdunyi-test-api
+            
+            # 检查服务状态
+            echo "🔍 Checking service status..."
+            sleep 3
+            sudo systemctl status ahdunyi-test-api --no-pager
+            
+            echo "✅ Test environment deployment completed: $(date)"

@@ -1,0 +1,29 @@
+[Unit]
+Description=AHDUNYI Terminal PRO Test API Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/.openclaw/workspace/AHDUNYI_Terminal_PRO/server
+Environment="ENVIRONMENT=test"
+Environment="PYTHONPATH=/root/.openclaw/workspace/AHDUNYI_Terminal_PRO"
+Environment="PATH=/root/.openclaw/workspace/AHDUNYI_Terminal_PRO/server/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/root/.openclaw/workspace/AHDUNYI_Terminal_PRO/server/venv/bin/uvicorn server.main:app --host 0.0.0.0 --port 8002
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=ahdunyi-test-api
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/root/.openclaw/workspace/AHDUNYI_Terminal_PRO/server/logs
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

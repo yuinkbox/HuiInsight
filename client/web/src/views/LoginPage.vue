@@ -254,11 +254,23 @@ async function handleLogin() {
       apiStatus.value = { type: 'warning', title: '账户禁用', content: '请联系管理员激活账户' }
     } else if (!error?.response) {
       Message.error('无法连接到后端服务')
-      apiStatus.value = { type: 'error', title: '连接失败', content: `请确保后端正在运行 (${apiBaseUrl})` }
+      apiStatus.value = { type: 'error', title: '网络连接失败', content: `无法连接后端 (${apiBaseUrl})，请检查网络或服务状态` }
       backendConnected.value = false
+    } else if (status >= 500) {
+      Message.error(`测试服服务异常 (${status})`)
+      apiStatus.value = {
+        type: 'error',
+        title: `服务端异常 (${status})`,
+        content: `${detail || '后端返回 5xx 错误'}，当前目标：${apiBaseUrl}`,
+      }
+      backendConnected.value = true
     } else {
       Message.error('登录失败，请稍后重试')
-      apiStatus.value = { type: 'error', title: '服务器错误', content: detail || '未知错误' }
+      apiStatus.value = {
+        type: 'error',
+        title: `请求失败 (${status || 'unknown'})`,
+        content: `${detail || '未知错误'}，当前目标：${apiBaseUrl}`,
+      }
     }
   } finally {
     loginLoading.value = false

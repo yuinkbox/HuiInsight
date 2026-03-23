@@ -14,8 +14,6 @@ export interface AppConfig {
   api: {
     baseUrl: string
     timeout: number
-    prodUrl: string
-    testUrl: string
   }
   
   // 应用配置
@@ -51,17 +49,9 @@ const loadConfig = (): AppConfig => {
   // 确定当前环境
   const environment = (env.VITE_ENV || 'development') as Environment
   
-  // 根据环境选择API基础地址
+  // 统一读取单一API地址变量
   const getApiBaseUrl = (): string => {
-    switch (environment) {
-      case 'production':
-        return env.VITE_API_BASE_URL_PRODUCTION || 'http://106.15.32.246:8000'
-      case 'test':
-        return env.VITE_API_BASE_URL_TEST || 'http://localhost:8000'
-      case 'development':
-      default:
-        return env.VITE_API_BASE_URL_DEVELOPMENT || 'http://localhost:8000'
-    }
+    return env.VITE_API_BASE_URL || 'http://localhost:8000'
   }
   
   return {
@@ -69,9 +59,7 @@ const loadConfig = (): AppConfig => {
     
     api: {
       baseUrl: getApiBaseUrl(),
-      timeout: parseInt(env.VITE_API_TIMEOUT || '10000', 10),
-      prodUrl: env.VITE_API_BASE_URL_PRODUCTION || 'http://106.15.32.246:8000',
-      testUrl: env.VITE_API_BASE_URL_TEST || 'http://localhost:8000'
+      timeout: parseInt(env.VITE_API_TIMEOUT || '10000', 10)
     },
     
     app: {

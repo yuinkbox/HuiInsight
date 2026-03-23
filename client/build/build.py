@@ -46,7 +46,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--env",
-        choices=["development", "production"],
+        choices=["development", "production", "test"],
         default="production",
         help="Build environment (default: production)",
     )
@@ -115,6 +115,8 @@ def step_build_frontend(environment: str) -> bool:
     # Determine npm build command based on environment
     if environment == "production":
         build_cmd = [npm, "run", "build:production"]
+    elif environment == "test":
+        build_cmd = [npm, "run", "build:test"]
     else:
         build_cmd = [npm, "run", "build:development"]
     if not _run(build_cmd, WEB_CLIENT, f"npm run build:{environment}"):

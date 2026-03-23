@@ -1,0 +1,48 @@
+[Unit]
+Description=AHDUNYI Terminal PRO API Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory={PROJECT_PATH}/server
+Environment="ENVIRONMENT={ENVIRONMENT}"
+Environment="PYTHONPATH={PROJECT_PATH}"
+Environment="PATH={PROJECT_PATH}/server/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart={PROJECT_PATH}/server/venv/bin/uvicorn server.main:app --host 0.0.0.0 --port {PORT}
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=ahdunyi-api
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths={PROJECT_PATH}/server/logs
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
+
+# ============================================================================
+# 使用说明：
+# 1. 替换以下变量：
+#    {PROJECT_PATH} - 项目根目录路径（如：/app/AHDUNYI_Terminal_PRO）
+#    {ENVIRONMENT}  - 环境名称（如：production, test, development）
+#    {PORT}         - 服务端口（如：8000, 8001, 8002）
+#
+# 2. 部署命令示例：
+#    sed -e "s|{PROJECT_PATH}|/app/AHDUNYI_Terminal_PRO|g" \
+#        -e "s|{ENVIRONMENT}|production|g" \
+#        -e "s|{PORT}|8000|g" \
+#        ahdunyi-api.service.template > /etc/systemd/system/ahdunyi-api.service
+#
+# 3. 启用服务：
+#    sudo systemctl daemon-reload
+#    sudo systemctl enable ahdunyi-api
+#    sudo systemctl start ahdunyi-api
+# ============================================================================

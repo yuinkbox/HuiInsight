@@ -14,9 +14,10 @@ Version: 9.0.0
 """
 
 import json
-from typing import Optional
+from typing import Optional, Any
 import logging
 
+import requests
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,62 @@ class AppBridge(QObject):
     def getTokenInfo(self) -> str:
         """Return the current login token payload as a JSON string."""
         return json.dumps(self._token_info, ensure_ascii=False)
+
+    @pyqtSlot(str, str, result=str)
+    def desktopLogin(self, username: str, password: str) -> str:
+        """Perform desktop-side login request and return JSON result."""
+        try:
+            win = self.parent()
+            server_url = None
+            if win and hasattr(win, "_settings"):
+                server_url = getattr(getattr(win, "_settings"), "server", None)
+                server_url = getattr(server_url, "url", None)
+
+            if not server_url:
+                from client.desktop.config.enhanced_config import get_server_url
+                server_url = get_server_url()
+
+            login_url = f"{str(server_url).rstrip('/')}/api/auth/login"
+            response = requests.post(
+                login_url,
+                json={"username": username, "password": password},
+                timeout=10,
+                headers={"Content-Type": "application/json", "Accept": "application/json"},
+            )
+
+            try:
+                data: Any = response.json()
+            except Exception:
+                data = {"detail": response.text or "Unknown response"}
+
+            if 200 <= response.status_code < 300:
+                return json.dumps(
+                    {"ok": True, "status": response.status_code, "data": data},
+                    ensure_ascii=False,
+                )
+
+            detail = data.get("detail") if isinstance(data, dict) else str(data)
+            return json.dumps(
+                {
+                    "ok": False,
+                    "status": response.status_code,
+                    "detail": detail or "Login failed",
+                    "message": "Server returned non-success status",
+                },
+                ensure_ascii=False,
+            )
+
+        except Exception as exc:
+            logger.error("Bridge desktopLogin failed: %s", exc)
+            return json.dumps(
+                {
+                    "ok": False,
+                    "status": 0,
+                    "detail": str(exc),
+                    "message": "Desktop login request failed",
+                },
+                ensure_ascii=False,
+            )
 
     @pyqtSlot(str)
     def logFromJS(self, message: str) -> None:

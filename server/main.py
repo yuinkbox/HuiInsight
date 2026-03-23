@@ -7,9 +7,13 @@ Version: 9.1.0
 """
 
 from contextlib import asynccontextmanager
+import logging
+import traceback
+import uuid
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from server.api.auth import router as auth_router
 from server.api.dynamic_roles import router as dynamic_roles_router
@@ -21,6 +25,8 @@ from server.api.users import router as users_router
 from server.api.violation import router as violation_router
 from server.core.config import config
 from server.core.database import Base, engine
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -49,6 +55,31 @@ app = FastAPI(
     docs_url="/docs" if config.enable_docs else None,
     redoc_url="/redoc" if config.enable_redoc else None,
 )
+
+
+@app.middleware("http")
+async def global_exception_middleware(request: Request, call_next):
+    """Catch all unhandled exceptions and return structured JSON."""
+    trace_id = uuid.uuid4().hex
+    try:
+        return await call_next(request)
+    except Exception:  # pylint: disable=broad-except
+        logger.error(
+            "Unhandled exception | trace_id=%s | path=%s | method=%s\n%s",
+            trace_id,
+            request.url.path,
+            request.method,
+            traceback.format_exc(),
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "code": 500,
+                "message": "服务器内部错误，请联系管理员",
+                "trace_id": trace_id,
+            },
+        )
+
 
 # CORS middleware
 if config.enable_cors:

@@ -53,6 +53,22 @@ _http.interceptors.response.use(
 
 export const authAPI = {
   async login(username: string, password: string): Promise<any> {
+    if (isDesktopMode()) {
+      const bridge = await getBridge()
+      if (bridge?.desktopLogin) {
+        const raw = await bridge.desktopLogin(username, password)
+        const payload = JSON.parse(raw)
+        if (payload?.ok) {
+          return payload.data
+        }
+
+        const status = Number(payload?.status || 0)
+        const detail = payload?.detail || payload?.message || '登录失败'
+        const error: any = new Error(detail)
+        error.response = { status, data: { detail } }
+        throw error
+      }
+    }
     return _http.post('/api/auth/login', { username, password })
   },
 

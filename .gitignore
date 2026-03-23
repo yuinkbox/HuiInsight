@@ -53,6 +53,13 @@ fix_flake8.py
 fix_w391.py
 fix_build_encoding.py
 
+# Temporary archive folders
+_archive_temp_*/
+
+# Temporary diagnostics artifacts
+scripts/temp/
+docs/ai_conversations/
+
 # OS
 .DS_Store
 Thumbs.db
