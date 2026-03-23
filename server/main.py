@@ -82,6 +82,17 @@ def root():
     }
 
 
+@app.get("/health")
+def health_check():
+    """Health check endpoint."""
+    return {
+        "status": "ok",
+        "version": config.app_version,
+        "environment": config.environment,
+        "service": config.app_name,
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
 
