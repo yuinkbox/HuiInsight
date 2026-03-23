@@ -19,16 +19,15 @@ from typing import Optional
 from sqlalchemy import (
     Boolean,
     DateTime,
-    Enum as SAEnum,
+    ForeignKey,
     Index,
     Integer,
     String,
     Text,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from server.constants.roles import UserRole
 from server.core.database import Base
 
 
@@ -47,9 +46,11 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(128), nullable=False, server_default="")
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
-    role: Mapped[UserRole] = mapped_column(
-        SAEnum(UserRole, values_callable=lambda e: [m.value for m in e]),
+    role_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("dynamic_roles.id"),
         nullable=False,
+        index=True
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="1")
     email: Mapped[Optional[str]] = mapped_column(
@@ -61,11 +62,17 @@ class User(Base):
     updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=False), nullable=True, onupdate=func.now()
     )
+    
+    # Relationships
+    role: Mapped["DynamicRole"] = relationship(
+        "DynamicRole",
+        lazy="joined"
+    )
 
     def __repr__(self) -> str:
         return (
             f"<User id={self.id} username={self.username!r}"
-            f" role={self.role.value}>"
+            f" role_id={self.role_id}>"
         )
 
 

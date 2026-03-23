@@ -24,7 +24,7 @@ from typing import Optional
 # Monorepo root: client/desktop/ -> client/ -> repo_root
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from client.desktop.config.settings import ConfigManager, AppSettings
+from client.desktop.config.env_config import config_manager, settings
 from client.desktop.utils.file_helper import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -158,16 +158,16 @@ def main() -> int:
     """Application entry point. Returns integer exit code."""
     print("AHDUNYI Terminal PRO  -  starting...")
 
-    config_path = sys.argv[1] if len(sys.argv) > 1 else None
-    settings: AppSettings = ConfigManager(config_path).load()
+    # Configuration already loaded by config_manager
+    app_settings = settings
 
     setup_logging(
-        log_dir=Path(settings.paths.logs_directory),
-        log_file=settings.logging.file,
-        level=settings.logging.level,
-        enable_console=settings.debug.enable_console,
+        log_dir=Path(app_settings.paths.logs_directory),
+        log_file=app_settings.logging.file,
+        level=app_settings.logging.level,
+        enable_console=app_settings.debug.enable_console,
     )
-    logger.info("Settings loaded: server=%s", settings.server.url)
+    logger.info("Settings loaded: server=%s", app_settings.server.url)
 
     missing = _check_dependencies()
     if missing:
@@ -177,7 +177,7 @@ def main() -> int:
         print("Run: pip install " + " ".join(missing))
         return 1
 
-    return _run_gui(settings)
+    return _run_gui(app_settings)
 
 
 if __name__ == "__main__":

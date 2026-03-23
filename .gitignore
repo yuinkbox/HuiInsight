@@ -29,8 +29,21 @@ logs/
 *.pyz
 client/build/_pyinstaller/
 
-# Server environment variables (contains DB credentials - NEVER commit)
-server/.env
+# Environment variables (contain sensitive credentials - NEVER commit)
+.env
+.env.production
+.env.local
+.env.*.local
+
+# Environment templates (safe to commit)
+!.env.example
+!.env.production.template
+!.env.development
+
+# Frontend environment files (safe to commit)
+client/web/.env.development
+client/web/.env.production
+client/web/.env.test
 
 # Temp / legacy scripts
 m1.py

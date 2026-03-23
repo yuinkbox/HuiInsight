@@ -1,22 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-AHDUNYI Server — FastAPI application entry point.
-
-Startup
--------
-    uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
+AHDUNYI Terminal PRO - Backend API Server with multi-environment support
 
 Author : AHDUNYI
-Version: 9.0.0
+Version: 9.1.0
 """
-from __future__ import annotations
+from contextlib import asynccontextmanager
 
-import logging
-import traceback
-
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from server.api.auth import router as auth_router
 from server.api.logs import router as logs_router
@@ -25,49 +17,49 @@ from server.api.tasks import router as tasks_router
 from server.api.team import router as team_router
 from server.api.users import router as users_router
 from server.api.violation import router as violation_router
+from server.api.dynamic_roles import router as dynamic_roles_router
+from server.core.config import config
+from server.core.database import engine, Base
 
-logger = logging.getLogger("ahdunyi")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup/shutdown events."""
+    # Startup
+    print(f"🚀 Starting {config.app_name} Backend...")
+    print(f"📊 Environment: {config.environment.upper()}")
+    print(f"🔧 Debug Mode: {config.debug}")
+    
+    # Create tables if they don't exist
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables ready")
+    
+    yield
+    
+    # Shutdown
+    print(f"👋 Shutting down {config.app_name} Backend...")
+
 
 app = FastAPI(
-    title="AHDUNYI Terminal API",
-    version="9.0.0",
-    description="风控巡查终端后端服务",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    title=config.app_name,
+    version=config.app_version,
+    description=f"Backend API for {config.app_name} - {config.environment.upper()} Environment",
+    lifespan=lifespan,
+    docs_url="/docs" if config.enable_docs else None,
+    redoc_url="/redoc" if config.enable_redoc else None,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.exception_handler(Exception)
-async def _global_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
-    logger.error(
-        "Unhandled exception on %s %s: %s",
-        request.method,
-        request.url.path,
-        traceback.format_exc(),
-    )
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "success": False,
-            "detail": "Internal server error.",
-        },
+# CORS middleware
+if config.enable_cors:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # In production, restrict to specific origins
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
-
+# Include routers
 app.include_router(auth_router)
 app.include_router(permissions_router)
 app.include_router(users_router)
@@ -75,15 +67,26 @@ app.include_router(tasks_router)
 app.include_router(team_router)
 app.include_router(logs_router)
 app.include_router(violation_router)
+app.include_router(dynamic_roles_router)
 
 
-@app.get("/health", tags=["system"])
-def health() -> dict:
-    """Liveness probe."""
-    return {"status": "ok", "version": "9.0.0"}
-
-
-@app.get("/", tags=["system"])
-def root() -> dict:
+@app.get("/")
+def root():
     """Root endpoint."""
-    return {"message": "AHDUNYI Terminal API is running.", "docs": "/docs"}
+    return {
+        "message": config.app_name,
+        "version": config.app_version,
+        "environment": config.environment,
+        "status": "running",
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(
+        "server.main:app",
+        host=config.server.host,
+        port=config.server.port,
+        reload=config.server.reload,
+    )
