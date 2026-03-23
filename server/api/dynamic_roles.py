@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from server.api.auth import get_current_user
+from server.api.permissions import _get_current_user
 from server.core.database import get_db
 from server.db.models import User
 from server.db.models_extended import DynamicRole, Permission, RolePermission
@@ -174,7 +174,7 @@ def _validate_permission_ids(
 @router.get("/roles", response_model=List[RoleSchema])
 def get_all_roles(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
     include_inactive: bool = False,
 ) -> List[RoleSchema]:
     """Get all dynamic roles."""
@@ -192,7 +192,7 @@ def get_all_roles(
 def get_role(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> RoleSchema:
     """Get a specific role by ID."""
     _check_admin_permission(current_user)
@@ -203,7 +203,7 @@ def get_role(
 def create_role(
     role_data: RoleCreateSchema,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> RoleSchema:
     """Create a new dynamic role."""
     _check_admin_permission(current_user)
@@ -249,7 +249,7 @@ def update_role(
     role_id: int,
     role_data: RoleUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> RoleSchema:
     """Update an existing role."""
     _check_admin_permission(current_user)
@@ -290,7 +290,7 @@ def update_role(
 def delete_role(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> None:
     """Delete a role (soft delete by marking as inactive)."""
     _check_admin_permission(current_user)
@@ -328,7 +328,7 @@ def delete_role(
 @router.get("/permissions", response_model=List[PermissionSchema])
 def get_all_permissions(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
     include_inactive: bool = False,
 ) -> List[PermissionSchema]:
     """Get all permissions."""
@@ -346,7 +346,7 @@ def get_all_permissions(
 def get_permission(
     permission_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> PermissionSchema:
     """Get a specific permission by ID."""
     _check_admin_permission(current_user)
@@ -359,7 +359,7 @@ def get_permission(
 def create_permission(
     permission_data: PermissionCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> PermissionSchema:
     """Create a new permission."""
     _check_admin_permission(current_user)
@@ -396,7 +396,7 @@ def update_permission(
     permission_id: int,
     permission_data: PermissionUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> PermissionSchema:
     """Update an existing permission."""
     _check_admin_permission(current_user)
@@ -430,7 +430,7 @@ def update_permission(
 def delete_permission(
     permission_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> None:
     """Delete a permission (soft delete by marking as inactive)."""
     _check_admin_permission(current_user)
@@ -471,7 +471,7 @@ def delete_permission(
 def update_role_permissions(
     update_data: RolePermissionUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> RoleSchema:
     """Update permissions for a specific role."""
     _check_admin_permission(current_user)
@@ -501,7 +501,7 @@ def update_role_permissions(
 def get_role_permissions(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(_get_current_user),
 ) -> List[PermissionSchema]:
     """Get all permissions for a specific role."""
     _check_admin_permission(current_user)
