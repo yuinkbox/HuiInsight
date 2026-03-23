@@ -392,6 +392,12 @@
               <a-option value="shift_leader">组长</a-option>
               <a-option value="auditor">审核员</a-option>
             </a-select>
+            <a-button type="primary" size="small" @click="showDynamicRolesConfig">
+              <template #icon>
+                <icon-settings />
+              </template>
+              动态角色配置
+            </a-button>
           </a-space>
         </template>
         
@@ -734,6 +740,9 @@
         </a-spin>
       </div>
     </a-drawer>
+    
+    <!-- 动态角色配置模态框 -->
+    <DynamicRolesConfig ref="dynamicRolesConfigRef" />
   </div>
 </template>
 
@@ -747,6 +756,7 @@ import {
   getShiftTypeLabel
 } from '@/api/rbac'
 import { usePermissionStore } from '@/stores/permission'
+import DynamicRolesConfig from '@/components/DynamicRolesConfig.vue'
 
 // ==================== 响应式数据 ====================
 
@@ -778,6 +788,9 @@ const currentUserId = ref<number | null>(null)
 const userStatsVisible = ref(false)
 const selectedUser = ref<any>(null)
 const userStats = ref<any>(null)
+
+// 动态角色配置
+const dynamicRolesConfigRef = ref<InstanceType<typeof DynamicRolesConfig> | null>(null)
 
 // ==================== 计算属性 ====================
 
@@ -1023,6 +1036,13 @@ const handleUpdateUserRole = async (userId: number, newRole: string) => {
   } catch (error) {
     console.error('❌ 更新用户角色失败:', error)
     Message.error('更新角色失败，请检查权限')
+  }
+}
+
+// 显示动态角色配置
+const showDynamicRolesConfig = () => {
+  if (dynamicRolesConfigRef.value) {
+    dynamicRolesConfigRef.value.show()
   }
 }
 

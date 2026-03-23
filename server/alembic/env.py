@@ -26,6 +26,7 @@ if str(REPO_ROOT) not in sys.path:
 # Import project engine + Base (triggers model registration)
 from server.core.database import DATABASE_URL, Base  # noqa: E402
 import server.db.models  # noqa: E402, F401  -- registers all ORM classes
+import server.db.models_extended  # noqa: E402, F401  -- registers extended ORM classes
 
 # ---------------------------------------------------------------------------
 # Alembic Config

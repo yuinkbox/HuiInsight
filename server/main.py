@@ -25,6 +25,7 @@ from server.api.tasks import router as tasks_router
 from server.api.team import router as team_router
 from server.api.users import router as users_router
 from server.api.violation import router as violation_router
+from server.api.dynamic_roles import router as dynamic_roles_router
 
 logger = logging.getLogger("ahdunyi")
 logging.basicConfig(
@@ -75,6 +76,7 @@ app.include_router(tasks_router)
 app.include_router(team_router)
 app.include_router(logs_router)
 app.include_router(violation_router)
+app.include_router(dynamic_roles_router)
 
 
 @app.get("/health", tags=["system"])

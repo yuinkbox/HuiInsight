@@ -23,11 +23,7 @@ from sqlalchemy.orm import Session
 
 from server.core.database import get_db
 from server.db.models import User
-from server.constants.permissions import (
-    get_permissions_for_role,
-    get_role_meta,
-    ROLE_META,
-)
+from server.db.models_extended import DynamicRole, Permission
 
 _SECRET_KEY: str = os.environ.get(
     "JWT_SECRET_KEY", "CHANGE_ME_IN_PRODUCTION_USE_LONG_RANDOM_STRING"
@@ -100,6 +96,7 @@ def _get_current_user(
 @router.get("/permissions", response_model=PermissionsResponse)
 def get_my_permissions(
     current_user: User = Depends(_get_current_user),
+    db: Session = Depends(get_db),
 ) -> PermissionsResponse:
     """Return the permission list for the authenticated user.
 
@@ -108,40 +105,59 @@ def get_my_permissions(
 
     Args:
         current_user: Resolved from the Bearer JWT by dependency injection.
+        db: Database session.
 
     Returns:
         :class:`PermissionsResponse` with role, permissions, role_meta.
     """
-    role_value = current_user.role.value
-    meta = get_role_meta(role_value)
+    # Get user's role with permissions loaded
+    role = db.query(DynamicRole).filter(DynamicRole.id == current_user.role_id).first()
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User role not found."
+        )
+    
+    # Get permission codes
+    permission_codes = [perm.code for perm in role.permissions if perm.is_active]
+    
     return PermissionsResponse(
-        role=role_value,
-        permissions=get_permissions_for_role(role_value),
+        role=role.name,
+        permissions=permission_codes,
         role_meta=RoleMeta(
-            label=meta["label"],
-            color=meta["color"],
-            dashboard_view=meta["dashboard_view"],
+            label=role.display_name,
+            color=role.color,
+            dashboard_view=role.dashboard_view,
         ),
     )
 
 
 @router.get("/roles", response_model=AllRolesResponse)
-def get_all_roles() -> AllRolesResponse:
+def get_all_roles(
+    db: Session = Depends(get_db),
+) -> AllRolesResponse:
     """Return the full role catalogue with UI metadata.
 
     Used by admin interfaces to build dynamic role-selection dropdowns
     without any hardcoded role lists in the frontend.
 
+    Args:
+        db: Database session.
+
     Returns:
         :class:`AllRolesResponse` with a list of role descriptors.
     """
-    roles = [
+    # Get all active roles
+    roles = db.query(DynamicRole).filter(DynamicRole.is_active == True).all()
+    
+    role_descriptors = [
         {
-            "value": role_value,
-            "label": meta["label"],
-            "color": meta["color"],
-            "dashboard_view": meta["dashboard_view"],
+            "value": role.name,
+            "label": role.display_name,
+            "color": role.color,
+            "dashboard_view": role.dashboard_view,
         }
-        for role_value, meta in ROLE_META.items()
+        for role in roles
     ]
-    return AllRolesResponse(roles=roles)
+    
+    return AllRolesResponse(roles=role_descriptors)

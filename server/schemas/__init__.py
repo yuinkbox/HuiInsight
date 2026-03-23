@@ -38,7 +38,9 @@ class UserOut(BaseModel):
     username: str
     full_name: str
     email: Optional[str] = ""
-    role: str
+    role_id: int
+    role_name: str
+    role_display_name: str
     is_active: bool
     is_superuser: bool
     created_at: datetime
@@ -46,9 +48,9 @@ class UserOut(BaseModel):
 
 
 class UserRoleUpdate(BaseModel):
-    # Literal 枚举：Pydantic 在入口层拦截非法角色值，无需 API 层手动校验
-    role: Literal["manager", "team_leader", "qa_specialist", "admin_support", "auditor"] = Field(
-        ..., description="New role value, must match server/constants/roles.py"
+    # Role ID for dynamic role system
+    role_id: int = Field(
+        ..., description="Role ID from dynamic_roles table"
     )
 
 
@@ -58,9 +60,7 @@ class UserCreate(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=128, description="Display name")
     password: str = Field(..., min_length=6, max_length=128, description="Initial password")
     email: Optional[str] = Field(None, max_length=128, description="Email address")
-    role: Literal["manager", "team_leader", "qa_specialist", "admin_support", "auditor"] = Field(
-        ..., description="User role"
-    )
+    role_id: int = Field(..., description="Role ID from dynamic_roles table")
     is_active: bool = Field(True, description="Whether user is active on creation")
 
 
@@ -68,7 +68,7 @@ class UserUpdate(BaseModel):
     """Request body for updating user profile fields."""
     full_name: Optional[str] = Field(None, min_length=1, max_length=128)
     email: Optional[str] = Field(None, max_length=128)
-    role: Optional[Literal["manager", "team_leader", "qa_specialist", "admin_support", "auditor"]] = None
+    role_id: Optional[int] = Field(None, description="Role ID from dynamic_roles table")
     is_active: Optional[bool] = None
 
 

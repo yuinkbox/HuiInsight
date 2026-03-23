@@ -26,10 +26,10 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from server.api.permissions import _get_current_user
-from server.constants.permissions import Permission, get_permissions_for_role
-from server.constants.roles import UserRole
+from server.constants.permissions import Permission
 from server.core.database import get_db
 from server.db.models import User
+from server.db.models_extended import DynamicRole
 from server.schemas import (
     ActiveUsersResponse,
     OkResponse,
@@ -45,9 +45,20 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def _require_permission(current_user: User, perm: str) -> None:
+def _require_permission(current_user: User, perm: str, db: Session) -> None:
     """Raise 403 if current_user does not hold perm."""
-    if perm not in get_permissions_for_role(current_user.role.value):
+    # Get user's role with permissions
+    role = db.query(DynamicRole).filter(DynamicRole.id == current_user.role_id).first()
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User role not found."
+        )
+    
+    # Get active permission codes for the role
+    permission_codes = {perm.code for perm in role.permissions if perm.is_active}
+    
+    if perm not in permission_codes:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Permission denied: '{perm}' required.",
@@ -83,7 +94,7 @@ def list_all_users(
     current_user: User = Depends(_get_current_user),
 ) -> ActiveUsersResponse:
     """Return ALL users including inactive. Manager only."""
-    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE)
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     try:
         q = db.query(User)
         if role:
@@ -109,7 +120,7 @@ def create_user(
     current_user: User = Depends(_get_current_user),
 ) -> UserOut:
     """Create a new user account. Requires action:update_role."""
-    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE)
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     if db.query(User).filter(User.username == body.username).first():
         raise HTTPException(status_code=409, detail=f"Username '{body.username}' already exists.")
     try:
@@ -154,7 +165,7 @@ def update_user(
     current_user: User = Depends(_get_current_user),
 ) -> UserOut:
     """Update user profile fields and/or role. Requires action:update_role."""
-    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE)
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     target = db.query(User).filter(User.id == user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -187,7 +198,7 @@ def update_user_role(
     current_user: User = Depends(_get_current_user),
 ) -> OkResponse:
     """Update a user role only. Requires action:update_role."""
-    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE)
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     target = db.query(User).filter(User.id == user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -212,7 +223,7 @@ def toggle_user_status(
     current_user: User = Depends(_get_current_user),
 ) -> OkResponse:
     """Toggle a user active/inactive status. Requires action:update_role."""
-    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE)
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot change your own active status.")
     target = db.query(User).filter(User.id == user_id).first()
@@ -236,7 +247,7 @@ def reset_user_password(
     current_user: User = Depends(_get_current_user),
 ) -> OkResponse:
     """Reset a user password. Requires action:update_role."""
-    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE)
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     target = db.query(User).filter(User.id == user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -256,7 +267,7 @@ def delete_user(
     current_user: User = Depends(_get_current_user),
 ) -> OkResponse:
     """Permanently delete a user. Requires action:update_role."""
-    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE)
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot delete your own account.")
     target = db.query(User).filter(User.id == user_id).first()
