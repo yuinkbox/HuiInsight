@@ -13,7 +13,7 @@ Steps
 3. Seed default accounts for every role if they do not exist.
 
 Author : AHDUNYI
-Version: 9.1.0
+Version: 9.2.0
 """
 
 from __future__ import annotations
@@ -25,20 +25,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-try:
-    from passlib.context import CryptContext
-except ImportError:
-    print('[ERROR] passlib is not installed.  Run: pip install "passlib[bcrypt]"')
-    sys.exit(1)
-
+import bcrypt as _bcrypt  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 from server.constants.roles import UserRole  # noqa: E402
 from server.core.database import Base, SessionLocal, engine  # noqa: E402
 from server.db.models import User  # noqa: E402, F401
 from server.db.models_extended import DynamicRole  # noqa: E402
-
-_pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # (username, full_name, password, role_name, is_superuser)
 _SEED_USERS = [
@@ -53,6 +46,11 @@ _SEED_USERS = [
     ("auditor_004", "审核员004", "ahdunyi2026", UserRole.AUDITOR.value, False),
     ("auditor_005", "审核员005", "ahdunyi2026", UserRole.AUDITOR.value, False),
 ]
+
+
+def _hash_password(password: str) -> str:
+    """Hash a plaintext password using bcrypt directly."""
+    return _bcrypt.hashpw(password.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
 
 
 def create_tables() -> None:
@@ -83,7 +81,7 @@ def seed_users(db: Session) -> None:
         user = User(
             username=username,
             full_name=full_name,
-            hashed_password=_pwd_ctx.hash(password),
+            hashed_password=_hash_password(password),
             role_id=dynamic_role.id,
             is_superuser=is_superuser,
             is_active=True,
@@ -97,7 +95,7 @@ def seed_users(db: Session) -> None:
 def main() -> None:
     """Entry point: create tables then seed data."""
     print("=" * 52)
-    print(" AHDUNYI Terminal PRO -- DB Init v9.1.0")
+    print(" AHDUNYI Terminal PRO -- DB Init v9.2.0")
     print("=" * 52)
 
     print("\n[STEP 1] Synchronising table structure...")

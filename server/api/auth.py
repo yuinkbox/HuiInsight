@@ -8,7 +8,7 @@ POST /api/auth/login           -- Username/password login, returns JWT.
 POST /api/auth/change-password -- Change current user's password.
 
 Author : AHDUNYI
-Version: 9.0.0
+Version: 9.2.0
 """
 
 from datetime import datetime, timedelta, timezone
@@ -17,7 +17,6 @@ from typing import Any, Dict, List
 import bcrypt as _bcrypt_lib
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import jwt
-from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -30,8 +29,6 @@ from server.schemas import UserOut
 _SECRET_KEY: str = config.auth.jwt_secret_key
 _ALGORITHM: str = config.auth.jwt_algorithm
 _ACCESS_TOKEN_EXPIRE_MINUTES: int = config.auth.access_token_expire_minutes
-
-_pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -72,7 +69,7 @@ class RoleMeta(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
-    user: AuthUserOut
+    user: UserOut
     permissions: List[str]
     role_meta: RoleMeta
 
@@ -92,10 +89,7 @@ def _create_access_token(
 
 
 def _verify_password(plain: str, hashed: str) -> bool:
-    """Verify plain password against bcrypt hash.
-
-    Uses passlib first; falls back to raw bcrypt on compatibility errors
-    (passlib 1.7.4 + bcrypt 4.x known issue).
+    """Verify plain password against bcrypt hash using bcrypt directly.
 
     Args:
         plain:  The plaintext password supplied by the user.
@@ -105,16 +99,18 @@ def _verify_password(plain: str, hashed: str) -> bool:
         True if the password matches, False otherwise.
     """
     try:
-        return _pwd_ctx.verify(plain, hashed)
-    except Exception:
-        pass
-    # Fallback: call bcrypt directly, bypassing passlib wrapper
-    try:
         plain_bytes = plain.encode("utf-8")
         hash_bytes = hashed.encode("utf-8") if isinstance(hashed, str) else hashed
         return _bcrypt_lib.checkpw(plain_bytes, hash_bytes)
     except Exception:
         return False
+
+
+def _hash_password(password: str) -> str:
+    """Hash a plaintext password using bcrypt directly."""
+    return _bcrypt_lib.hashpw(password.encode("utf-8"), _bcrypt_lib.gensalt()).decode(
+        "utf-8"
+    )
 
 
 def _get_user_or_401(db: Session, username: str) -> User:
@@ -161,7 +157,8 @@ def login(
             detail="Incorrect username or password.",
         )
 
-    role_value: str = user.role.value
+    # user.role is a DynamicRole relationship object
+    role_value: str = user.role.name
 
     token = _create_access_token(
         {
@@ -198,7 +195,7 @@ def change_password(
         db:   Injected database session.
 
     Returns:
-        ``{"message": "Password updated successfully."}``
+        ``{"message": "Password updated successfully."}
 
     Raises:
         HTTPException 401: Wrong old password or inactive account.
@@ -218,7 +215,7 @@ def change_password(
             detail="Old password is incorrect.",
         )
 
-    user.hashed_password = _pwd_ctx.hash(body.new_password)
+    user.hashed_password = _hash_password(body.new_password)
     db.commit()
 
     return {"message": "Password updated successfully."}

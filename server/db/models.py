@@ -63,6 +63,16 @@ class User(Base):
             f"<User id={self.id} username={self.username!r}" f" role_id={self.role_id}>"
         )
 
+    @property
+    def role_name(self) -> str:
+        """Return the role name string from the related DynamicRole."""
+        return self.role.name if self.role else ""
+
+    @property
+    def role_display_name(self) -> str:
+        """Return the role display name from the related DynamicRole."""
+        return self.role.display_name if self.role else ""
+
 
 class ShiftTask(Base):
     """Audit task assignment for a single shift."""
