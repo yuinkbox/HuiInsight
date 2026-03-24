@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 AHDUNYI Terminal PRO - Backend API Server with multi-environment support
 
@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from server.api.auth import router as auth_router
+from server.api.client_version import router as client_version_router
 from server.api.dynamic_roles import router as dynamic_roles_router
 from server.api.logs import router as logs_router
 from server.api.permissions import router as permissions_router
@@ -93,6 +94,7 @@ if config.enable_cors:
 
 # Include routers
 app.include_router(auth_router)
+app.include_router(client_version_router)
 app.include_router(permissions_router)
 app.include_router(users_router)
 app.include_router(tasks_router)

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 QWebChannel bridge - exposes Python state to the Vue frontend.
 
@@ -39,6 +39,10 @@ class AppBridge(QObject):
     systemStatusChanged = pyqtSignal(str, name="systemStatusChanged")
     tokenInfoChanged    = pyqtSignal(str, name="tokenInfoChanged")
     violationSubmitted  = pyqtSignal(str, name="violationSubmitted")
+    # OTA update signals
+    updateAvailable     = pyqtSignal(str, name="updateAvailable")
+    updateProgress      = pyqtSignal(int, name="updateProgress")
+    updateReady         = pyqtSignal(str, name="updateReady")
 
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -242,3 +246,32 @@ class AppBridge(QObject):
         self._monitor_running = running
         self.systemStatusChanged.emit(self.getSystemStatus())
         logger.debug("Bridge: monitorRunning -> %s", running)
+
+    # ------------------------------------------------------------------
+    # OTA update notifiers (called by UpdateChecker)
+    # ------------------------------------------------------------------
+
+    def notify_update_available(self, version: str, changelog: str, download_url: str, force: bool) -> None:
+        import json as _json
+        payload = _json.dumps({'version': version, 'changelog': changelog, 'download_url': download_url, 'force': force})
+        self.updateAvailable.emit(payload)
+
+    def notify_update_progress(self, percent: int) -> None:
+        self.updateProgress.emit(percent)
+
+    def notify_update_ready(self, installer_path: str) -> None:
+        self.updateReady.emit(installer_path)
+
+    @pyqtSlot(str)
+    def startInstallUpdate(self, installer_path: str) -> None:
+        from client.desktop.app.core.updater import UpdateChecker
+        win = self.parent()
+        if win and hasattr(win, '_update_checker') and win._update_checker:
+            win._update_checker.install_and_restart()
+        else:
+            import subprocess
+            from PyQt6.QtCore import QTimer
+            from PyQt6.QtWidgets import QApplication
+            subprocess.Popen([installer_path, '/VERYSILENT', '/NORESTART', '/CLOSEAPPLICATIONS'])
+            QTimer.singleShot(1500, QApplication.quit)
+

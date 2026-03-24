@@ -1,5 +1,6 @@
 {
   "display_name": "AHDUNYI Terminal PRO",
+  "version": "1.0.0",
   "server": {
     "url": "http://203.10.99.58:8002"
   },

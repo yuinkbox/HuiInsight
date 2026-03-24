@@ -88,6 +88,7 @@ class AppSettings:
     """Top-level application configuration."""
 
     display_name: str = "AHDUNYI Terminal PRO"
+    version: str = "1.0.0"
     server: ServerConfig = field(default_factory=ServerConfig)
     gui: GuiConfig = field(default_factory=GuiConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)

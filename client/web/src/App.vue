@@ -8,13 +8,15 @@
       <a-message-provider />
       <a-notification-provider />
       <a-modal-provider />
+
+      <!-- OTA 更新通知（仅桌面端有效） -->
+      <UpdateNotifier />
     </div>
   </a-config-provider>
 </template>
 
 <script setup lang="ts">
-// App.vue 现在是纯路由容器
-// 所有页面逻辑都在各自的页面组件中
+import UpdateNotifier from '@/components/UpdateNotifier.vue'
 </script>
 
 <style>

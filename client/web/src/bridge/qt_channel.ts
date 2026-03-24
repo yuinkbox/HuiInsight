@@ -1,4 +1,4 @@
-/**
+﻿/**
  * QWebChannel bridge client for desktop (PyQt6) mode.
  *
  * Initialises the Qt WebChannel and exposes a typed wrapper around
@@ -62,12 +62,17 @@ export interface AppBridge {
   startMonitor(): void
   /** Stop the RoomMonitor - call on workflow end. */
   stopMonitor(): void
+  /** Launch the downloaded installer and exit (desktop only). */
+  startInstallUpdate(installerPath: string): void
   // Signals
   roomIdChanged:       { connect: (cb: (id: string) => void) => void }
   roomInfoChanged:     { connect: (cb: (info: string) => void) => void }
   systemStatusChanged: { connect: (cb: (status: string) => void) => void }
   tokenInfoChanged:    { connect: (cb: (info: string) => void) => void }
   violationSubmitted:  { connect: (cb: (payload: string) => void) => void }
+  updateAvailable:     { connect: (cb: (payload: string) => void) => void }
+  updateProgress:      { connect: (cb: (percent: number) => void) => void }
+  updateReady:         { connect: (cb: (installerPath: string) => void) => void }
 }
 
 // ---------------------------------------------------------------------------

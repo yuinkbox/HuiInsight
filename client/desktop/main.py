@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 AHDUNYI Terminal PRO - unified application entry point.
 
@@ -87,6 +87,78 @@ def _start_room_monitor(settings: AppSettings, bridge) -> Optional[object]:
         return None
 
 
+
+def _start_update_checker(settings: AppSettings, bridge, main_win) -> None:
+    """Start OTA UpdateChecker in background thread.
+
+    Args:
+        settings: Application settings (contains server.url and version).
+        bridge: AppBridge instance to emit signals to Vue frontend.
+        main_win: MainWindow instance to store checker reference.
+    """
+    try:
+        from client.desktop.app.core.updater import UpdateChecker
+        version_url = settings.server.url.rstrip("/") + "/api/client/version"
+        current_version = getattr(settings, "version", "1.0.0")
+
+        def _on_available(version: str, changelog: str, dl_url: str, force: bool) -> None:
+            bridge.notify_update_available(version, changelog, dl_url, force)
+
+        def _on_progress(pct: int) -> None:
+            bridge.notify_update_progress(pct)
+
+        def _on_ready(path: str) -> None:
+            bridge.notify_update_ready(path)
+
+        checker = UpdateChecker(
+            current_version=current_version,
+            version_url=version_url,
+            on_update_available=_on_available,
+            on_progress=_on_progress,
+            on_ready=_on_ready,
+            delay_seconds=8.0,
+        )
+        main_win._update_checker = checker
+        checker.start()
+        logger.info("UpdateChecker started (current=%s, url=%s)", current_version, version_url)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.warning("UpdateChecker startup failed: %s", exc)
+
+def _start_update_checker(settings, bridge, main_win) -> None:
+    """Start OTA UpdateChecker in background thread."""
+    try:
+        from client.desktop.app.core.updater import UpdateChecker
+        version_url = settings.server.url.rstrip('/') + '/api/client/version'
+        current_version = getattr(settings, 'version', '1.0.0')
+
+        def _on_available(version, changelog, dl_url, force):
+            bridge.notify_update_available(version, changelog, dl_url, force)
+
+        def _on_progress(pct):
+            bridge.notify_update_progress(pct)
+
+        def _on_ready(path):
+            bridge.notify_update_ready(path)
+
+        checker = UpdateChecker(
+            current_version=current_version,
+            version_url=version_url,
+            on_update_available=_on_available,
+            on_progress=_on_progress,
+            on_ready=_on_ready,
+            delay_seconds=8.0,
+        )
+        main_win._update_checker = checker
+        checker.start()
+        import logging as _log
+        _log.getLogger(__name__).info(
+            'UpdateChecker started (current=%s, url=%s)', current_version, version_url
+        )
+    except Exception as exc:
+        import logging as _log
+        _log.getLogger(__name__).warning('UpdateChecker startup failed: %s', exc)
+
+
 def _run_gui(settings: AppSettings) -> int:
     """Create QApplication and run the main event loop.
 
@@ -136,6 +208,9 @@ def _run_gui(settings: AppSettings) -> int:
 
         main_win.show()
         logger.info("MainWindow displayed.")
+
+        # Start OTA update checker in background (non-blocking)
+        _start_update_checker(settings, main_win.bridge, main_win)
 
     except Exception as exc:  # pylint: disable=broad-except
         logger.error("Failed to open MainWindow: %s", exc, exc_info=True)
