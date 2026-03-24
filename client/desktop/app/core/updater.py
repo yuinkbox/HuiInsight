@@ -6,7 +6,7 @@ Runs in a background thread after app startup.
 Checks server for newer client version, downloads installer,
 and notifies the Vue frontend via AppBridge signals.
 
-Author : AHDUNYI
+Author : xvyu
 Version: 1.0.0
 """
 
@@ -88,13 +88,13 @@ class UpdateChecker(threading.Thread):
         if latest_v > current:
             logger.info(
                 "UpdateChecker: new version %s available (current=%s, force=%s)",
-                latest, self.current_version, force_update,
+                latest,
+                self.current_version,
+                force_update,
             )
             self.on_update_available(latest, changelog, download_url, force_update)
         else:
-            logger.info(
-                "UpdateChecker: already up to date (%s)", self.current_version
-            )
+            logger.info("UpdateChecker: already up to date (%s)", self.current_version)
 
     def start_download(self, download_url: str) -> None:
         """Start downloading the installer in background.
@@ -170,7 +170,11 @@ class UpdateChecker(threading.Thread):
         logger.info("Launching installer: %s", self._installer_path)
         subprocess.Popen(
             [self._installer_path, "/VERYSILENT", "/NORESTART", "/CLOSEAPPLICATIONS"],
-            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
+            creationflags=(
+                subprocess.CREATE_NO_WINDOW
+                if hasattr(subprocess, "CREATE_NO_WINDOW")
+                else 0
+            ),
         )
         # Delay slightly to let installer start, then quit
         QTimer.singleShot(1500, QApplication.quit)

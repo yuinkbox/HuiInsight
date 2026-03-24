@@ -8,8 +8,8 @@ Provides endpoints for administrators to:
 3. Configure role-permission relationships
 4. Get role and permission catalogues
 
-Author : AHDUNYI
-Version: 9.1.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from typing import List, Optional

@@ -9,8 +9,8 @@ PATCH /api/task/{task_id}/progress  -- Update task progress metrics
 POST  /api/task/{task_id}/complete  -- Mark task as completed
 POST  /api/dispatch/auto            -- Auto-dispatch tasks for a shift
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

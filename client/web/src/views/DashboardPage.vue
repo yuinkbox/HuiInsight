@@ -17,18 +17,18 @@
       </div>
     </template>
     <template v-else>
-      <SupervisorView v-if="permissionStore.dashboardView === 'supervisor'" />
-      <ShiftLeaderView v-else-if="permissionStore.dashboardView === 'leader'" />
-      <AuditorView v-else />
+      <SupervisorPage v-if="permissionStore.dashboardView === 'supervisor'" />
+      <ShiftLeaderPage v-else-if="permissionStore.dashboardView === 'leader'" />
+      <AuditorPage v-else />
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { usePermissionStore } from '@/stores/permission'
-import AuditorView    from './dashboard/AuditorView.vue'
-import ShiftLeaderView from './dashboard/ShiftLeaderView.vue'
-import SupervisorView  from './dashboard/SupervisorView.vue'
+import AuditorPage    from './dashboard/AuditorPage.vue'
+import ShiftLeaderPage from './dashboard/ShiftLeaderPage.vue'
+import SupervisorPage  from './dashboard/SupervisorPage.vue'
 
 const permissionStore = usePermissionStore()
 </script>

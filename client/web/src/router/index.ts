@@ -156,7 +156,7 @@ const router = createRouter({
 // ---------------------------------------------------------------------------
 router.beforeEach(async (to, from, next) => {
   if (to.meta.title) {
-    document.title = `${to.meta.title} - HuiInsight 徽鉴`
+    document.title = `${to.meta.title} - 徽鉴 HuiInsight`
   }
 
   // -- 离开直播监测时：强制同步工作流进度到后端，确保概览数据最新 --------

@@ -3,7 +3,7 @@
 Violation report API — receives violation data from the desktop client
 and forwards it to a Feishu (Lark) group webhook as a rich-text card.
 
-Author : AHDUNYI
+Author : xvyu
 Version: 1.0.0
 """
 

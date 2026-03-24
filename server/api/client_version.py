@@ -7,7 +7,7 @@ Endpoints
 GET  /api/client/version        -- Get latest client version info (public, no auth).
 POST /api/client/version        -- Update version info (admin only).
 
-Author : AHDUNYI
+Author : xvyu
 Version: 1.0.0
 """
 

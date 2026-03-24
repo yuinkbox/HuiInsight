@@ -12,8 +12,8 @@ Steps
 2. Create all tables (idempotent -- safe to re-run).
 3. Seed default accounts for every role if they do not exist.
 
-Author : AHDUNYI
-Version: 9.2.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

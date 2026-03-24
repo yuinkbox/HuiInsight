@@ -1,7 +1,7 @@
 {
-  "name": "web-client",
+  "name": "hui-insight",
   "version": "1.0.0",
-  "description": "商业级 Web 前端项目 - Vue 3 + Arco Design",
+  "description": "徽鉴 HuiInsight - 商业级 Web 前端项目 - Vue 3 + Arco Design",
   "type": "module",
   "scripts": {
     "dev": "vite",

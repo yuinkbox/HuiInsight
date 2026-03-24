@@ -7,8 +7,8 @@ Endpoints
 POST /api/auth/login           -- Username/password login, returns JWT.
 POST /api/auth/change-password -- Change current user's password.
 
-Author : AHDUNYI
-Version: 9.2.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from datetime import datetime, timedelta, timezone

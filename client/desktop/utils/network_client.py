@@ -7,8 +7,8 @@ Thin wrapper around ``requests.Session`` with:
 - Automatic Bearer-token injection.
 - Structured error handling that always raises ``NetworkError``.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from typing import Any, Dict, Optional
@@ -116,9 +116,7 @@ class NetworkClient:
     ) -> Any:
         url = f"{self._base_url}{path}"
         try:
-            resp = self._session.request(
-                method, url, timeout=self._timeout, **kwargs
-            )
+            resp = self._session.request(method, url, timeout=self._timeout, **kwargs)
             resp.raise_for_status()
             return resp.json()
         except requests.exceptions.ConnectionError as exc:
@@ -144,10 +142,12 @@ class NetworkClient:
     @staticmethod
     def _build_session(retries: int) -> requests.Session:
         session = requests.Session()
-        session.headers.update({
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        })
+        session.headers.update(
+            {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+        )
         retry_cfg = Retry(
             total=retries,
             backoff_factor=0.5,
@@ -163,6 +163,7 @@ class NetworkClient:
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
+
 
 def create_network_client(
     base_url: str,

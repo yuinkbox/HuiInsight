@@ -174,7 +174,11 @@ class EnhancedConfigManager:
             return Path(self._config_path)
 
         if hasattr(sys, "_MEIPASS"):
-            exe_dir = Path(sys.executable).parent if hasattr(sys, "executable") else Path.cwd()
+            exe_dir = (
+                Path(sys.executable).parent
+                if hasattr(sys, "executable")
+                else Path.cwd()
+            )
             candidate = exe_dir / "config.json"
             if candidate.exists():
                 return candidate
@@ -195,7 +199,9 @@ class EnhancedConfigManager:
             logger.warning("加载配置文件失败 %s: %s", path, exc)
             return None
 
-    def _apply_config_file(self, settings: EnhancedAppSettings, data: Dict[str, Any]) -> None:
+    def _apply_config_file(
+        self, settings: EnhancedAppSettings, data: Dict[str, Any]
+    ) -> None:
         """将 JSON 数据映射到 dataclass。"""
         if "display_name" in data:
             settings.display_name = str(data["display_name"])
@@ -241,17 +247,27 @@ class EnhancedConfigManager:
             if "target_process" in room:
                 settings.room_monitor.target_process = str(room["target_process"])
             if "heartbeat_interval" in room:
-                settings.room_monitor.heartbeat_interval = float(room["heartbeat_interval"])
+                settings.room_monitor.heartbeat_interval = float(
+                    room["heartbeat_interval"]
+                )
             if "max_search_depth" in room:
                 settings.room_monitor.max_search_depth = int(room["max_search_depth"])
             if "memory_probe_enabled" in room:
-                settings.room_monitor.memory_probe_enabled = bool(room["memory_probe_enabled"])
+                settings.room_monitor.memory_probe_enabled = bool(
+                    room["memory_probe_enabled"]
+                )
             if "memory_merge_mode" in room:
-                settings.room_monitor.memory_merge_mode = str(room["memory_merge_mode"]).lower()
+                settings.room_monitor.memory_merge_mode = str(
+                    room["memory_merge_mode"]
+                ).lower()
             if "memory_max_region_bytes" in room:
-                settings.room_monitor.memory_max_region_bytes = int(room["memory_max_region_bytes"])
+                settings.room_monitor.memory_max_region_bytes = int(
+                    room["memory_max_region_bytes"]
+                )
             if "memory_max_total_bytes" in room:
-                settings.room_monitor.memory_max_total_bytes = int(room["memory_max_total_bytes"])
+                settings.room_monitor.memory_max_total_bytes = int(
+                    room["memory_max_total_bytes"]
+                )
 
     def _apply_environment_variables(self, settings: EnhancedAppSettings) -> None:
         """应用环境变量覆盖。"""
@@ -264,7 +280,11 @@ class EnhancedConfigManager:
                 logger.warning("无效的超时值: %s", timeout)
         if env := os.environ.get("ENVIRONMENT"):
             env = env.lower()
-            if env in {Environment.DEVELOPMENT, Environment.TEST, Environment.PRODUCTION}:
+            if env in {
+                Environment.DEVELOPMENT,
+                Environment.TEST,
+                Environment.PRODUCTION,
+            }:
                 settings.environment = env
 
     def _validate_config(self, settings: EnhancedAppSettings) -> None:
@@ -295,7 +315,9 @@ class EnhancedConfigManager:
                 "memory_max_total_bytes": 12582912,
             },
         }
-        path.write_text(json.dumps(template, indent=2, ensure_ascii=False), encoding="utf-8")
+        path.write_text(
+            json.dumps(template, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
 
 
 _config_manager = EnhancedConfigManager()

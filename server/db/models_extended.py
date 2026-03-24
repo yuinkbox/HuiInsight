@@ -8,8 +8,8 @@ Tables
 - permissions        : All available permission points
 - role_permissions   : Many-to-many relationship between roles and permissions
 
-Author : AHDUNYI
-Version: 9.1.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

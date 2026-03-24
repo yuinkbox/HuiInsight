@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 AHDUNYI Terminal PRO - one-click build script with multi-environment support.
 
@@ -16,8 +16,8 @@ Supports multiple environments:
 GBK-safe: zero emoji, all print() output is pure ASCII/CJK text,
 subprocess uses errors='replace'.
 
-Author : AHDUNYI
-Version: 9.1.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import argparse

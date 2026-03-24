@@ -11,8 +11,8 @@ Design philosophy
 * To add a new feature: add a ``Permission`` constant and assign it to
   the relevant roles in the matrix.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 AHDUNYI Terminal PRO - unified application entry point.
 
@@ -12,8 +12,8 @@ Startup sequence
    b. Start RoomMonitor, wire callbacks to AppBridge.
 5. On GUI exit: stop RoomMonitor, flush logs.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import sys
@@ -43,9 +43,9 @@ def _try_import(module: str) -> bool:
 def _check_dependencies() -> list:
     """Return a list of missing package display-names."""
     required = [
-        ("psutil",          ["psutil"]),
-        ("uiautomation",    ["uiautomation"]),
-        ("PyQt6",           ["PyQt6.QtWidgets"]),
+        ("psutil", ["psutil"]),
+        ("uiautomation", ["uiautomation"]),
+        ("PyQt6", ["PyQt6.QtWidgets"]),
         ("PyQt6-WebEngine", ["PyQt6.QtWebEngineWidgets"]),
     ]
     missing = []
@@ -68,7 +68,9 @@ def _start_room_monitor(settings: AppSettings, bridge) -> Optional[object]:
     try:
         from client.desktop.app.core.room_monitor import create_room_monitor
 
-        def _on_room_change(room_id: Optional[str], user_id: Optional[str] = None) -> None:
+        def _on_room_change(
+            room_id: Optional[str], user_id: Optional[str] = None
+        ) -> None:
             bridge.update_room_info(room_id, user_id)
 
         monitor = create_room_monitor(
@@ -87,7 +89,6 @@ def _start_room_monitor(settings: AppSettings, bridge) -> Optional[object]:
         return None
 
 
-
 def _start_update_checker(settings: AppSettings, bridge, main_win) -> None:
     """Start OTA UpdateChecker in background thread.
 
@@ -98,10 +99,13 @@ def _start_update_checker(settings: AppSettings, bridge, main_win) -> None:
     """
     try:
         from client.desktop.app.core.updater import UpdateChecker
+
         version_url = settings.server.url.rstrip("/") + "/api/client/version"
         current_version = getattr(settings, "version", "1.0.0")
 
-        def _on_available(version: str, changelog: str, dl_url: str, force: bool) -> None:
+        def _on_available(
+            version: str, changelog: str, dl_url: str, force: bool
+        ) -> None:
             bridge.notify_update_available(version, changelog, dl_url, force)
 
         def _on_progress(pct: int) -> None:
@@ -120,16 +124,20 @@ def _start_update_checker(settings: AppSettings, bridge, main_win) -> None:
         )
         main_win._update_checker = checker
         checker.start()
-        logger.info("UpdateChecker started (current=%s, url=%s)", current_version, version_url)
+        logger.info(
+            "UpdateChecker started (current=%s, url=%s)", current_version, version_url
+        )
     except Exception as exc:  # pylint: disable=broad-except
         logger.warning("UpdateChecker startup failed: %s", exc)
+
 
 def _start_update_checker(settings, bridge, main_win) -> None:
     """Start OTA UpdateChecker in background thread."""
     try:
         from client.desktop.app.core.updater import UpdateChecker
-        version_url = settings.server.url.rstrip('/') + '/api/client/version'
-        current_version = getattr(settings, 'version', '1.0.0')
+
+        version_url = settings.server.url.rstrip("/") + "/api/client/version"
+        current_version = getattr(settings, "version", "1.0.0")
 
         def _on_available(version, changelog, dl_url, force):
             bridge.notify_update_available(version, changelog, dl_url, force)
@@ -151,12 +159,14 @@ def _start_update_checker(settings, bridge, main_win) -> None:
         main_win._update_checker = checker
         checker.start()
         import logging as _log
+
         _log.getLogger(__name__).info(
-            'UpdateChecker started (current=%s, url=%s)', current_version, version_url
+            "UpdateChecker started (current=%s, url=%s)", current_version, version_url
         )
     except Exception as exc:
         import logging as _log
-        _log.getLogger(__name__).warning('UpdateChecker startup failed: %s', exc)
+
+        _log.getLogger(__name__).warning("UpdateChecker startup failed: %s", exc)
 
 
 def _run_gui(settings: AppSettings) -> int:
@@ -174,14 +184,14 @@ def _run_gui(settings: AppSettings) -> int:
 
     # Global dark palette
     pal = QPalette()
-    pal.setColor(QPalette.ColorRole.Window,          QColor("#0d0f1a"))
-    pal.setColor(QPalette.ColorRole.WindowText,      QColor("#e2e8f0"))
-    pal.setColor(QPalette.ColorRole.Base,            QColor("#13162b"))
-    pal.setColor(QPalette.ColorRole.AlternateBase,   QColor("#1a1f3a"))
-    pal.setColor(QPalette.ColorRole.Text,            QColor("#e2e8f0"))
-    pal.setColor(QPalette.ColorRole.Button,          QColor("#13162b"))
-    pal.setColor(QPalette.ColorRole.ButtonText,      QColor("#e2e8f0"))
-    pal.setColor(QPalette.ColorRole.Highlight,       QColor("#4f8ef7"))
+    pal.setColor(QPalette.ColorRole.Window, QColor("#0d0f1a"))
+    pal.setColor(QPalette.ColorRole.WindowText, QColor("#e2e8f0"))
+    pal.setColor(QPalette.ColorRole.Base, QColor("#13162b"))
+    pal.setColor(QPalette.ColorRole.AlternateBase, QColor("#1a1f3a"))
+    pal.setColor(QPalette.ColorRole.Text, QColor("#e2e8f0"))
+    pal.setColor(QPalette.ColorRole.Button, QColor("#13162b"))
+    pal.setColor(QPalette.ColorRole.ButtonText, QColor("#e2e8f0"))
+    pal.setColor(QPalette.ColorRole.Highlight, QColor("#4f8ef7"))
     pal.setColor(QPalette.ColorRole.HighlightedText, QColor("#ffffff"))
     app.setPalette(pal)
 
@@ -264,15 +274,18 @@ if __name__ == "__main__":
     except Exception as exc:  # pylint: disable=broad-except
         print("[FATAL] " + str(exc))
         import traceback
+
         traceback.print_exc()
         try:
             from PyQt6.QtWidgets import QApplication, QMessageBox
+
             _a = QApplication.instance() or QApplication([])
             QMessageBox.critical(
-                None, "Fatal Error",
+                None,
+                "Fatal Error",
                 "AHDUNYI Terminal PRO encountered a fatal error:\n\n"
                 + str(exc)
-                + "\n\nPlease check the log file."
+                + "\n\nPlease check the log file.",
             )
         except Exception:  # pylint: disable=broad-except
             pass

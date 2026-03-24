@@ -5,8 +5,8 @@ Configuration management for multi-environment support.
 This module provides centralized configuration management for the backend,
 supporting development, production, and test environments.
 
-Author : AHDUNYI
-Version: 9.1.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import os
@@ -60,8 +60,8 @@ class AppConfig(BaseModel):
     # Environment
     environment: Environment = Field("development", description="Current environment")
     debug: bool = Field(False, description="Debug mode")
-    app_name: str = Field("AHDUNYI Terminal PRO", description="Application name")
-    app_version: str = Field("9.1.0", description="Application version")
+    app_name: str = Field("徽鉴 HuiInsight", description="Application name")
+    app_version: str = Field("1.0.0", description="Application version")
 
     # Components
     database: DatabaseConfig

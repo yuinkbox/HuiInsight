@@ -7,8 +7,8 @@ Endpoints
 POST /api/log/action  -- Write one action log entry (called per key-press)
 GET  /api/log/list    -- Paginated log list for shadow-audit dashboard
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

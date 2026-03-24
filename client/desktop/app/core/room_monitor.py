@@ -2,8 +2,8 @@
 """
 RoomMonitor - UI Automation + 可选内存扫描（房间/用户 ID）
 
-Author : AHDUNYI
-Version: 10.4.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import re
@@ -16,6 +16,7 @@ import psutil
 
 try:
     import uiautomation as auto
+
     WINDOWS_AVAILABLE = True
 except ImportError:
     auto = None
@@ -37,7 +38,9 @@ class IDExtractor(ABC):
     """Abstract interface for extracting room/user IDs."""
 
     @abstractmethod
-    def extract(self, collected_ids: List[Tuple[int, str]]) -> Tuple[Optional[str], Optional[str]]:
+    def extract(
+        self, collected_ids: List[Tuple[int, str]]
+    ) -> Tuple[Optional[str], Optional[str]]:
         """Extract (room_id, user_id) from UI 文本（depth, control_name）。"""
         pass
 
@@ -91,7 +94,9 @@ class DefaultIDExtractor(IDExtractor):
         self._sticky_room_id = None
         logger.debug("DefaultIDExtractor reset")
 
-    def extract(self, collected_ids: List[Tuple[int, str]]) -> Tuple[Optional[str], Optional[str]]:
+    def extract(
+        self, collected_ids: List[Tuple[int, str]]
+    ) -> Tuple[Optional[str], Optional[str]]:
         # 本轮未扫到任何相关控件时，清空已知房间，避免退出直播间后还显示旧ID
         if not collected_ids:
             self._sticky_room_id = None
@@ -267,7 +272,9 @@ class RoomMonitor(threading.Thread):
         self.callback = callback
         self.heartbeat_interval = heartbeat_interval
         self.max_depth = max_depth
-        self.target_process_name = (target_process or self.DEFAULT_TARGET_PROCESS).lower()
+        self.target_process_name = (
+            target_process or self.DEFAULT_TARGET_PROCESS
+        ).lower()
 
         self._extractor = extractor or DefaultIDExtractor()
         self._scanner = UIScanner(self.target_process_name, max_depth)
@@ -378,7 +385,9 @@ class RoomMonitor(threading.Thread):
         with self._lock:
             self._handle_info_change(room_id, user_id)
 
-    def _handle_info_change(self, new_room: Optional[str], new_user: Optional[str]) -> None:
+    def _handle_info_change(
+        self, new_room: Optional[str], new_user: Optional[str]
+    ) -> None:
         changed = False
 
         if new_room != self._current_room_id:

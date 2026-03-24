@@ -8,8 +8,8 @@ Naming convention:
   *Out     — response model (never exposes hashed_password)
   *Response — top-level response envelope
 
-Author : AHDUNYI
-Version: 9.1.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

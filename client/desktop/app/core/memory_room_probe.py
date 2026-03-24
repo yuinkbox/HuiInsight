@@ -6,8 +6,8 @@ This module provides a fallback stub when ReadProcessMemory-based
 scanning is not available or not needed.  The real implementation
 would scan the target process memory for room/user ID strings.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

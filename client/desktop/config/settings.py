@@ -5,8 +5,8 @@ Application settings loader.
 Supports JSON config file + environment-variable overrides.
 All path resolution is PyInstaller _MEIPASS-aware.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import json
@@ -35,6 +35,7 @@ def _resource_root() -> Path:
 # ---------------------------------------------------------------------------
 # Sub-config dataclasses
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ServerConfig:
@@ -117,6 +118,7 @@ class AppSettings:
 # Loader
 # ---------------------------------------------------------------------------
 
+
 class ConfigManager:
     """Load, parse, and validate application settings.
 
@@ -196,13 +198,21 @@ class ConfigManager:
         if "max_search_depth" in rm:
             settings.room_monitor.max_search_depth = int(rm["max_search_depth"])
         if "memory_probe_enabled" in rm:
-            settings.room_monitor.memory_probe_enabled = bool(rm["memory_probe_enabled"])
+            settings.room_monitor.memory_probe_enabled = bool(
+                rm["memory_probe_enabled"]
+            )
         if "memory_merge_mode" in rm:
-            settings.room_monitor.memory_merge_mode = str(rm["memory_merge_mode"]).lower()
+            settings.room_monitor.memory_merge_mode = str(
+                rm["memory_merge_mode"]
+            ).lower()
         if "memory_max_region_bytes" in rm:
-            settings.room_monitor.memory_max_region_bytes = int(rm["memory_max_region_bytes"])
+            settings.room_monitor.memory_max_region_bytes = int(
+                rm["memory_max_region_bytes"]
+            )
         if "memory_max_total_bytes" in rm:
-            settings.room_monitor.memory_max_total_bytes = int(rm["memory_max_total_bytes"])
+            settings.room_monitor.memory_max_total_bytes = int(
+                rm["memory_max_total_bytes"]
+            )
 
         feat = data.get("features", {})
         if "auto_start_monitor" in feat:
@@ -224,6 +234,7 @@ class ConfigManager:
 # ---------------------------------------------------------------------------
 # Convenience
 # ---------------------------------------------------------------------------
+
 
 def get_settings(config_path: Optional[str] = None) -> AppSettings:
     """Module-level convenience wrapper around ConfigManager."""

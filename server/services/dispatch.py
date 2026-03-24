@@ -5,8 +5,8 @@ Task dispatch service -- "Least Assigned First" algorithm.
 Given a list of user_ids and required channels, assigns channels to users
 such that each user's historical task count for that channel is minimised.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

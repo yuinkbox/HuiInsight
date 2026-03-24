@@ -7,8 +7,8 @@ Endpoints
 GET /api/team/insight              -- Aggregated team performance stats
 GET /api/team/user/{user_id}/stats -- Detailed stats for a single user
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

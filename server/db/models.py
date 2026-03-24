@@ -8,8 +8,8 @@ Tables
 - shift_tasks : Audit task assignments per shift
 - action_logs : Full audit trail of every auditor action
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 from __future__ import annotations

@@ -7,8 +7,8 @@ A self-contained PyQt6 widget that:
   2. Fires an HTTP login request in a background QThread.
   3. Emits ``login_success(dict)`` on success so the caller can proceed.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import logging
@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Background login thread
 # ---------------------------------------------------------------------------
+
 
 class _LoginThread(QThread):
     """Perform the HTTP login call off the main thread.
@@ -83,6 +84,7 @@ class _LoginThread(QThread):
 # Login window
 # ---------------------------------------------------------------------------
 
+
 class LoginWindow(QWidget):
     """Standalone login widget.
 
@@ -97,16 +99,16 @@ class LoginWindow(QWidget):
     login_success: pyqtSignal = pyqtSignal(dict)
 
     # Colour palette
-    _C_BG      = "#0d0f1a"
-    _C_CARD    = "#13162b"
-    _C_ACCENT  = "#4f8ef7"
+    _C_BG = "#0d0f1a"
+    _C_CARD = "#13162b"
+    _C_ACCENT = "#4f8ef7"
     _C_ACCENT2 = "#6ba3ff"
-    _C_TEXT    = "#e2e8f0"
-    _C_MUTED   = "#64748b"
-    _C_BORDER  = "#1e2440"
-    _C_ERROR   = "#f87171"
-    _C_OK      = "#4ade80"
-    _C_INPUT   = "#1a1f3a"
+    _C_TEXT = "#e2e8f0"
+    _C_MUTED = "#64748b"
+    _C_BORDER = "#1e2440"
+    _C_ERROR = "#f87171"
+    _C_OK = "#4ade80"
+    _C_INPUT = "#1a1f3a"
 
     def __init__(self, server_url: str, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -123,12 +125,10 @@ class LoginWindow(QWidget):
     def _build_window(self) -> None:
         self.setWindowTitle("AHDUNYI Terminal PRO  -  Login")
         self.setFixedSize(440, 540)
-        self.setWindowFlags(
-            Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint
-        )
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
         screen = QApplication.primaryScreen().geometry()
         self.move(
-            (screen.width()  - self.width())  // 2,
+            (screen.width() - self.width()) // 2,
             (screen.height() - self.height()) // 2,
         )
 
@@ -336,7 +336,5 @@ class LoginWindow(QWidget):
 
     def _show_status(self, msg: str, colour: str) -> None:
         self._status.setText(msg)
-        self._status.setStyleSheet(
-            f"font-size: 13px; color: {colour}; padding: 4px;"
-        )
+        self._status.setStyleSheet(f"font-size: 13px; color: {colour}; padding: 4px;")
         self._status.show()

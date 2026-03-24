@@ -5,8 +5,8 @@ File and path utilities.
 Provides PyInstaller _MEIPASS-aware path resolution, log-directory
 creation, and safe file-read helpers used across the application.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import sys
@@ -76,7 +76,7 @@ def setup_logging(
     handlers: list = [
         logging.FileHandler(
             log_dir / log_file,
-            encoding="utf-8",   # explicit UTF-8 - prevents GBK UnicodeEncodeError
+            encoding="utf-8",  # explicit UTF-8 - prevents GBK UnicodeEncodeError
         )
     ]
     if enable_console:

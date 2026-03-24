@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Main application window - PyQt6 WebEngine container.
 
@@ -6,8 +6,8 @@ Loads the compiled Vue frontend from client/web/dist/index.html.
 Vue handles all authentication via its LoginPage component.
 No token injection from Python — Vue manages login/logout entirely.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import logging
@@ -94,15 +94,14 @@ class _ExitConfirmDialog(QDialog):
         self.setWindowTitle("退出确认")
         self.setModal(True)
         self.setFixedSize(340, 152)
-        self.setWindowFlags(
-            Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint
-        )
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setStyleSheet(self._STYLE)
         self._build_ui()
         self._center_on_parent()
 
     def _build_ui(self):
         from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton
+
         root = QVBoxLayout(self)
         root.setContentsMargins(24, 20, 24, 18)
         root.setSpacing(0)
@@ -163,10 +162,9 @@ class _ExitConfirmDialog(QDialog):
             )
 
 
-
 class MainWindow(QMainWindow):
     """Primary application window hosting the Vue WebEngine frontend.
-    
+
     Vue handles all authentication and routing. Python just provides:
     - WebEngine container
     - QWebChannel bridge for room monitoring

@@ -30,16 +30,12 @@ def upgrade() -> None:
         )
 
     if "password_hash" in columns:
-        op.execute(
-            sa.text(
-                """
+        op.execute(sa.text("""
                 UPDATE users
                 SET hashed_password = password_hash
                 WHERE (hashed_password IS NULL OR hashed_password = '')
                   AND password_hash IS NOT NULL
-                """
-            )
-        )
+                """))
 
 
 def downgrade() -> None:

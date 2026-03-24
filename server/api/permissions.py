@@ -9,8 +9,8 @@ GET /api/auth/permissions  -- Return current user's permission list + role meta.
 This endpoint is called by the frontend after a token refresh or page reload
 to re-hydrate the Pinia permission store without requiring a full re-login.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import os

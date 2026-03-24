@@ -63,9 +63,9 @@ const loadConfig = (): AppConfig => {
     },
     
     app: {
-      title: env.VITE_APP_TITLE || 'HuiInsight 徽鉴',
-      version: env.VITE_APP_VERSION || '9.1.0',
-      copyright: env.VITE_APP_COPYRIGHT || '© 2026 HuiInsight. The Infrastructure of Risk Control.'
+      title: env.VITE_APP_TITLE || '徽鉴 HuiInsight',
+      version: env.VITE_APP_VERSION || '1.0.0',
+      copyright: env.VITE_APP_COPYRIGHT || '© 2026 AHDUNYI. All Rights Reserved.'
     },
     
     features: {

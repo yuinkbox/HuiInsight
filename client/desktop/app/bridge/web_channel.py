@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 QWebChannel bridge - exposes Python state to the Vue frontend.
 
@@ -9,8 +9,8 @@ Protocol
 * Python emits roomIdChanged(str)    -> JS listener updates UI.
 * Python emits systemStatusChanged(str) -> JS listener updates UI.
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import json
@@ -34,15 +34,15 @@ class AppBridge(QObject):
     """
 
     # Signals emitted to JavaScript
-    roomIdChanged       = pyqtSignal(str, name="roomIdChanged")
-    roomInfoChanged     = pyqtSignal(str, name="roomInfoChanged")
+    roomIdChanged = pyqtSignal(str, name="roomIdChanged")
+    roomInfoChanged = pyqtSignal(str, name="roomInfoChanged")
     systemStatusChanged = pyqtSignal(str, name="systemStatusChanged")
-    tokenInfoChanged    = pyqtSignal(str, name="tokenInfoChanged")
-    violationSubmitted  = pyqtSignal(str, name="violationSubmitted")
+    tokenInfoChanged = pyqtSignal(str, name="tokenInfoChanged")
+    violationSubmitted = pyqtSignal(str, name="violationSubmitted")
     # OTA update signals
-    updateAvailable     = pyqtSignal(str, name="updateAvailable")
-    updateProgress      = pyqtSignal(int, name="updateProgress")
-    updateReady         = pyqtSignal(str, name="updateReady")
+    updateAvailable = pyqtSignal(str, name="updateAvailable")
+    updateProgress = pyqtSignal(int, name="updateProgress")
+    updateReady = pyqtSignal(str, name="updateReady")
 
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -63,10 +63,13 @@ class AppBridge(QObject):
     @pyqtSlot(result=str)
     def getRoomInfo(self) -> str:
         """Return JSON with both room_id and user_id."""
-        return json.dumps({
-            "room_id": self._room_id or "",
-            "user_id": self._user_id or "",
-        }, ensure_ascii=False)
+        return json.dumps(
+            {
+                "room_id": self._room_id or "",
+                "user_id": self._user_id or "",
+            },
+            ensure_ascii=False,
+        )
 
     @pyqtSlot(result=str)
     def getSystemStatus(self) -> str:
@@ -95,6 +98,7 @@ class AppBridge(QObject):
 
             if not server_url:
                 from client.desktop.config.enhanced_config import get_server_url
+
                 server_url = get_server_url()
 
             login_url = f"{str(server_url).rstrip('/')}/api/auth/login"
@@ -102,7 +106,10 @@ class AppBridge(QObject):
                 login_url,
                 json={"username": username, "password": password},
                 timeout=10,
-                headers={"Content-Type": "application/json", "Accept": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
             )
 
             try:
@@ -207,17 +214,18 @@ class AppBridge(QObject):
         self.roomIdChanged.emit(room_id or "")
         logger.debug("Bridge: roomIdChanged -> %s", room_id)
 
-    def update_room_info(
-        self, room_id: Optional[str], user_id: Optional[str]
-    ) -> None:
+    def update_room_info(self, room_id: Optional[str], user_id: Optional[str]) -> None:
         """Update both room_id and user_id, notify JavaScript."""
         self._room_id = room_id
         self._user_id = user_id
         self.roomIdChanged.emit(room_id or "")
-        info = json.dumps({
-            "room_id": room_id or "",
-            "user_id": user_id or "",
-        }, ensure_ascii=False)
+        info = json.dumps(
+            {
+                "room_id": room_id or "",
+                "user_id": user_id or "",
+            },
+            ensure_ascii=False,
+        )
         self.roomInfoChanged.emit(info)
         logger.debug("Bridge: roomInfoChanged -> room=%s user=%s", room_id, user_id)
 
@@ -228,9 +236,7 @@ class AppBridge(QObject):
             token_info: Decoded JWT payload dict from the login response.
         """
         self._token_info = token_info
-        self.tokenInfoChanged.emit(
-            json.dumps(token_info, ensure_ascii=False)
-        )
+        self.tokenInfoChanged.emit(json.dumps(token_info, ensure_ascii=False))
         logger.debug(
             "Bridge: tokenInfoChanged -> user=%s role=%s",
             token_info.get("username"),
@@ -251,9 +257,19 @@ class AppBridge(QObject):
     # OTA update notifiers (called by UpdateChecker)
     # ------------------------------------------------------------------
 
-    def notify_update_available(self, version: str, changelog: str, download_url: str, force: bool) -> None:
+    def notify_update_available(
+        self, version: str, changelog: str, download_url: str, force: bool
+    ) -> None:
         import json as _json
-        payload = _json.dumps({'version': version, 'changelog': changelog, 'download_url': download_url, 'force': force})
+
+        payload = _json.dumps(
+            {
+                "version": version,
+                "changelog": changelog,
+                "download_url": download_url,
+                "force": force,
+            }
+        )
         self.updateAvailable.emit(payload)
 
     def notify_update_progress(self, percent: int) -> None:
@@ -265,13 +281,16 @@ class AppBridge(QObject):
     @pyqtSlot(str)
     def startInstallUpdate(self, installer_path: str) -> None:
         from client.desktop.app.core.updater import UpdateChecker
+
         win = self.parent()
-        if win and hasattr(win, '_update_checker') and win._update_checker:
+        if win and hasattr(win, "_update_checker") and win._update_checker:
             win._update_checker.install_and_restart()
         else:
             import subprocess
             from PyQt6.QtCore import QTimer
             from PyQt6.QtWidgets import QApplication
-            subprocess.Popen([installer_path, '/VERYSILENT', '/NORESTART', '/CLOSEAPPLICATIONS'])
-            QTimer.singleShot(1500, QApplication.quit)
 
+            subprocess.Popen(
+                [installer_path, "/VERYSILENT", "/NORESTART", "/CLOSEAPPLICATIONS"]
+            )
+            QTimer.singleShot(1500, QApplication.quit)
