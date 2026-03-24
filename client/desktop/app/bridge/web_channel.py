@@ -172,6 +172,22 @@ class AppBridge(QObject):
             win.close_violation_popup()
             logger.info("Bridge: closeViolationPopup")
 
+    @pyqtSlot()
+    def startMonitor(self) -> None:
+        """Start (or restart) the RoomMonitor from JavaScript (workflow start)."""
+        win = self.parent()
+        if win and hasattr(win, "restart_room_monitor"):
+            win.restart_room_monitor()
+            logger.info("Bridge: startMonitor requested")
+
+    @pyqtSlot()
+    def stopMonitor(self) -> None:
+        """Stop the RoomMonitor from JavaScript (workflow end)."""
+        win = self.parent()
+        if win and hasattr(win, "stop_room_monitor"):
+            win.stop_room_monitor()
+            logger.info("Bridge: stopMonitor requested")
+
     @pyqtSlot(str)
     def notifyViolationSubmitted(self, payload_json: str) -> None:
         """Forward violation submit from the popup WebView to the main window."""

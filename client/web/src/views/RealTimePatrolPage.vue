@@ -1044,14 +1044,15 @@ const isHandlingViolation = computed({ get: () => workflowStore.isHandlingViolat
 const isSuspended         = computed({ get: () => workflowStore.isSuspended,         set: v => { workflowStore.isSuspended = v } })
 const lastActionTime      = computed({ get: () => workflowStore.lastActionTime,      set: v => { workflowStore.lastActionTime = v } })
 
+// actionLog 来自 Store，路由切换不丢失
+const actionLog           = computed({ get: () => workflowStore.actionLog, set: v => { workflowStore.actionLog = v } })
+
 const startingWorkflow    = ref(false)
 const isCoolingDown       = ref(false)
 const afkTimer            = ref<ReturnType<typeof setInterval> | null>(null)
 const todayTask           = ref<any>(null)
 
 let workTimer: ReturnType<typeof setInterval> | null = null
-
-const actionLog = ref<Array<{ id: number; timestamp: string; action: string; details: string }>>([])
 
 const statusText = computed(() => workflowStore.statusText)
 const statusDesc = computed(() => ({
@@ -1110,8 +1111,7 @@ const stopAFKDetection = () => {
 }
 
 const addLog = async (action: string, details: string) => {
-  actionLog.value.unshift({ id: Date.now(), timestamp: getCurrentTime(), action, details })
-  if (actionLog.value.length > 50) actionLog.value = actionLog.value.slice(0, 50)
+  workflowStore.addActionLog({ id: Date.now(), timestamp: getCurrentTime(), action, details })
   updateLastActionTime()
   await rbacApi.logAction(action, details)
 }
@@ -1159,6 +1159,17 @@ const startWorkflow = async () => {
     workflowStore.lastActionTime = Date.now()
     startTimer()
     startAFKDetection()
+    if (isDesktopMode()) {
+      getBridge().then(b => b?.startMonitor?.())
+    }
+    // restart RoomMonitor on workflow start
+    if (isDesktopMode()) {
+      getBridge().then(b => b?.startMonitor?.())
+    }
+    // restart RoomMonitor on workflow start
+    if (isDesktopMode()) {
+      getBridge().then(b => b?.startMonitor?.())
+    }
     await addLog('开始巡查', '接入工作流，开始计时')
     Message.success('工作流已接入，开始计时')
     enterMiniMode()
@@ -1187,7 +1198,10 @@ const stopWorkflow = () => {
       workflowStore.isSuspended = false
       workflowStore.isHandlingViolation = false
       workflowStore.clearPersist()
-      localStorage.removeItem('blind_checker_log')
+      // 停止 RoomMonitor
+      if (isDesktopMode()) {
+        getBridge().then(b => b?.stopMonitor())
+      }
       currentRoomId.value = ''
       currentUserId.value = ''
       Message.success('工作流已结束')
@@ -1261,43 +1275,40 @@ onMounted(async () => {
   // 如果 Store 中已有激活状态（isWorking），直接复用，不清零
   // 如果 Store 无活跃工作流，再尝试从 localStorage 恢复（页面刷新场景）
   // 如果都没有，则强制重置为干净状态（新登录场景）
+  // 软件刚启动：如果 Store 无活跃工作流，尝试从 localStorage 恢复
+  // 注意：这里不调用 restart_room_monitor，等用户手动点击「接入工作流」再启动
   const hasActiveWorkflow = workflowStore.isWorking || workflowStore.restore()
 
   if (!hasActiveWorkflow) {
-    // 新登录或无工作流：强制重置
+    // 新登录或无工作流：强制清除 localStorage 中的幽灵工作流状态
+    localStorage.removeItem('workflow_state')
     workflowStore.reset()
     currentRoomId.value = ''
     currentUserId.value = ''
-    actionLog.value = []
-    localStorage.removeItem('blind_checker_log')
   } else {
     // 有活跃工作流：恢复计时器
     if (workflowStore.workStatus === 'patrolling' && !workflowStore.isSuspended) {
       startTimer()
       startAFKDetection()
     }
-    // 恢复操作日志（优先从后端拉取，降级到 localStorage）
-    const savedLog = localStorage.getItem('blind_checker_log')
-    if (savedLog) { try { actionLog.value = JSON.parse(savedLog) } catch { /* ignore */ } }
-    // 异步从后端拉取历史日志（不阻塞启动）
-    rbacApi.getMyActionLogs({ page_size: 100 }).then(res => {
-      if (res.items && res.items.length) {
-        const backendLogs = res.items.map(i => ({
-          id: i.id,
-          timestamp: new Date(i.timestamp).toLocaleTimeString('zh-CN', { hour12: false }),
-          action: i.action,
-          details: i.details,
-        }))
-        const existingIds = new Set(actionLog.value.map((l: any) => l.id))
-        const merged = [
-          ...actionLog.value,
-          ...backendLogs.filter((l: any) => !existingIds.has(l.id)),
-        ]
-        merged.sort((a: any, b: any) => b.id - a.id)
-        actionLog.value = merged.slice(0, 100)
-        localStorage.setItem('blind_checker_log', JSON.stringify(actionLog.value))
-      }
-    }).catch(() => { /* 静默失败，使用 localStorage 数据 */ })
+    // 始终恢复操作日志（Store -> localStorage -> 后端）
+    workflowStore.restoreActionLog()
+    if (workflowStore.actionLog.length === 0) {
+      // Store 和 localStorage 都没有，从后端拉取
+      rbacApi.getMyActionLogs({ page_size: 100 }).then(res => {
+        if (res.items && res.items.length) {
+          const backendLogs = res.items.map(i => ({
+            id: i.id,
+            timestamp: new Date(i.timestamp).toLocaleTimeString('zh-CN', { hour12: false }),
+            action: i.action,
+            details: i.details,
+          }))
+          backendLogs.forEach(l => workflowStore.addActionLog(l))
+          // re-sort after bulk insert
+          workflowStore.actionLog.sort((a, b) => b.id - a.id)
+        }
+      }).catch(() => {})
+    }
   }
 
   await loadTasks()
@@ -1329,7 +1340,6 @@ onMounted(async () => {
   setInterval(() => {
     if (!isWorking.value) return
     workflowStore.persist()
-    localStorage.setItem('blind_checker_log', JSON.stringify(actionLog.value))
   }, 5000)
 })
 

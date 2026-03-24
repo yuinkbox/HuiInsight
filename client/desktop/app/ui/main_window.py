@@ -350,6 +350,44 @@ class MainWindow(QMainWindow):
             self._violation_dialog.close()
             self._violation_dialog = None
 
+    def restart_room_monitor(self) -> None:
+        """Stop any running RoomMonitor and start a fresh one."""
+        self.stop_room_monitor()
+        try:
+            from client.desktop.app.core.room_monitor import create_room_monitor
+            from typing import Optional as _Opt
+
+            def _on_room_change(room_id: _Opt[str], user_id: _Opt[str] = None) -> None:
+                self._bridge.update_room_info(room_id, user_id)
+
+            monitor = create_room_monitor(
+                callback=_on_room_change,
+                target_process=self._settings.room_monitor.target_process,
+                heartbeat_interval=self._settings.room_monitor.heartbeat_interval,
+                max_depth=self._settings.room_monitor.max_search_depth,
+            )
+            if monitor:
+                monitor.start()
+                self._active_monitor = monitor
+                self._bridge.update_monitor_status(True)
+                logger.info("RoomMonitor restarted.")
+        except Exception as exc:
+            logger.error("restart_room_monitor failed: %s", exc)
+
+    def stop_room_monitor(self) -> None:
+        """Stop the running RoomMonitor and clear room info."""
+        monitor = getattr(self, "_active_monitor", None)
+        if monitor is not None:
+            try:
+                monitor.stop()
+                logger.info("RoomMonitor stopped.")
+            except Exception as exc:
+                logger.error("stop_room_monitor failed: %s", exc)
+            finally:
+                self._active_monitor = None
+        self._bridge.update_monitor_status(False)
+        self._bridge.update_room_info(None, None)
+
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
         dialog = _ExitConfirmDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
