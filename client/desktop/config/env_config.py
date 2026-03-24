@@ -23,11 +23,38 @@ from .settings import AppSettings, ConfigManager
 
 
 def load_environment() -> str:
-    """Load environment from OS environment variable."""
-    env = os.environ.get("ENVIRONMENT", "development").lower()
+    """Load environment from OS environment variable or .env file."""
+    # First check OS environment variable
+    env = os.environ.get("ENVIRONMENT", "").lower()
+    
+    # If not set, try to load from .env file
+    if not env:
+        from dotenv import load_dotenv
+        # Try to load any .env file
+        env_files = [
+            Path(__file__).parent.parent.parent.parent / ".env",
+            Path(__file__).parent.parent.parent.parent / ".env.test",
+            Path(__file__).parent.parent.parent.parent / ".env.development",
+            Path(__file__).parent.parent.parent.parent / ".env.production",
+        ]
+        
+        for env_file in env_files:
+            if env_file.exists():
+                # Load without overriding existing env vars
+                load_dotenv(dotenv_path=env_file, override=False)
+                env = os.environ.get("ENVIRONMENT", "").lower()
+                if env:
+                    print(f"📁 Loaded environment from file: {env_file.name}")
+                    break
+    
+    # Default to development if still not set
+    if not env:
+        env = "development"
+    
     if env not in ["development", "production", "test"]:
         print(f"⚠ Warning: Unknown environment '{env}', defaulting to 'development'")
         env = "development"
+    
     return env
 
 
@@ -125,19 +152,17 @@ class EnvAwareConfigManager(ConfigManager):
     """Environment-aware configuration manager."""
     
     def __init__(self, config_path: Optional[Path] = None):
-        super().__init__(config_path)
+        path_str = str(config_path) if config_path is not None else None
+        super().__init__(path_str)
 
-        # ConfigManager does not create `self.settings` in __init__.
-        # Initialize from defaults / config.json first, then apply env overrides.
-        self.settings = self.load()
-        
         # Load environment
         self.environment = load_environment()
-        
-        # Load environment file
+
+        # Load environment file (populates os.environ before load())
         load_env_file(self.environment)
-        
-        # Apply environment overrides
+
+        # ConfigManager.load(): config.json + ConfigManager._apply_env
+        self.settings = self.load()
         self.settings = apply_environment_overrides(self.settings)
         
         # Log configuration

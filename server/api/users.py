@@ -32,9 +32,15 @@ from server.constants.roles import UserRole
 from server.core.database import get_db
 from server.db.models import User
 from server.db.models_extended import DynamicRole
-from server.schemas import (ActiveUsersResponse, OkResponse, UserCreate,
-                            UserOut, UserPasswordReset, UserRoleUpdate,
-                            UserUpdate)
+from server.schemas import (
+    ActiveUsersResponse,
+    OkResponse,
+    UserCreate,
+    UserOut,
+    UserPasswordReset,
+    UserRoleUpdate,
+    UserUpdate,
+)
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 

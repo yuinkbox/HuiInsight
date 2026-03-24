@@ -9,15 +9,17 @@
         <a-spin size="large">
           <div class="loading-content">
             <icon-loading />
-            <div class="loading-text">正在加载权限信息...</div>
+            <div class="loading-text">
+              正在加载权限信息...
+            </div>
           </div>
         </a-spin>
       </div>
     </template>
     <template v-else>
-      <SupervisorView   v-if="permissionStore.dashboardView === 'supervisor'" />
-      <ShiftLeaderView  v-else-if="permissionStore.dashboardView === 'leader'" />
-      <AuditorView      v-else />
+      <SupervisorView v-if="permissionStore.dashboardView === 'supervisor'" />
+      <ShiftLeaderView v-else-if="permissionStore.dashboardView === 'leader'" />
+      <AuditorView v-else />
     </template>
   </div>
 </template>

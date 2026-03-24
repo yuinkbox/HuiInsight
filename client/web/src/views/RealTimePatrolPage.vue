@@ -1,16 +1,20 @@
 <template>
   <div :class="['realtime-page', { 'mini-active': isMiniMode }]">
-
     <!-- ===== 迷你浮窗模式 ===== -->
     <template v-if="isMiniMode">
       <div class="mini-panel">
-
         <!-- 顶栏：状态 + 控制 -->
         <div class="mini-header">
           <div class="mini-status-row">
-            <span class="mini-dot" :class="`dot-${workStatus}`"></span>
+            <span
+              class="mini-dot"
+              :class="`dot-${workStatus}`"
+            />
             <span class="mini-status-text">{{ statusText }}</span>
-            <span class="mini-task-chip" v-if="todayTask">
+            <span
+              v-if="todayTask"
+              class="mini-task-chip"
+            >
               {{ getTaskChannelLabel(todayTask.task_channel) }}
             </span>
           </div>
@@ -18,93 +22,167 @@
             <button
               class="mini-icon-btn"
               :class="{ 'active-pin': isAlwaysOnTop }"
-              @click="toggleAlwaysOnTop"
               :title="isAlwaysOnTop ? '取消置顶' : '窗口置顶'"
-            ><icon-pushpin /></button>
-            <button class="mini-icon-btn" @click="exitMiniMode" title="还原窗口">
+              @click="toggleAlwaysOnTop"
+            >
+              <icon-pushpin />
+            </button>
+            <button
+              class="mini-icon-btn"
+              title="还原窗口"
+              @click="exitMiniMode"
+            >
               <icon-expand />
             </button>
           </div>
         </div>
 
         <!-- 房间号 + 用户ID -->
-        <div v-if="currentRoomId || currentUserId" class="mini-ids-row">
-          <div v-if="currentRoomId" class="mini-room-card" @click="copyRoomId">
-            <icon-live-broadcast :size="12" class="mini-room-icon" />
+        <div
+          v-if="currentRoomId || currentUserId"
+          class="mini-ids-row"
+        >
+          <div
+            v-if="currentRoomId"
+            class="mini-room-card"
+            @click="copyRoomId"
+          >
+            <icon-live-broadcast
+              :size="12"
+              class="mini-room-icon"
+            />
             <span class="mini-room-label">房间</span>
             <span class="mini-room-id">#{{ currentRoomId }}</span>
           </div>
-          <div v-if="currentUserId" class="mini-room-card mini-user-card" @click="copyUserId">
-            <icon-user :size="12" class="mini-room-icon" />
+          <div
+            v-if="currentUserId"
+            class="mini-room-card mini-user-card"
+            @click="copyUserId"
+          >
+            <icon-user
+              :size="12"
+              class="mini-room-icon"
+            />
             <span class="mini-room-label">主播</span>
             <span class="mini-room-id">#{{ currentUserId }}</span>
           </div>
         </div>
-        <div v-else class="mini-room-empty">
+        <div
+          v-else
+          class="mini-room-empty"
+        >
           <icon-desktop :size="12" />
           <span>未检测到直播间</span>
         </div>
 
         <!-- 计时器 -->
         <div class="mini-timer-wrap">
-          <div class="mini-timer">{{ formatTime(totalSeconds) }}</div>
-          <div class="mini-timer-label">当班计时</div>
+          <div class="mini-timer">
+            {{ formatTime(totalSeconds) }}
+          </div>
+          <div class="mini-timer-label">
+            当班计时
+          </div>
         </div>
 
         <!-- 计数行 -->
         <div class="mini-stats-row">
           <div class="mini-stat-box">
-            <div class="mini-stat-num">{{ reviewedCount }}</div>
-            <div class="mini-stat-label">已审场次</div>
+            <div class="mini-stat-num">
+              {{ reviewedCount }}
+            </div>
+            <div class="mini-stat-label">
+              已审场次
+            </div>
           </div>
-          <div class="mini-stat-sep"></div>
+          <div class="mini-stat-sep" />
           <div class="mini-stat-box">
-            <div class="mini-stat-num danger">{{ violationCount }}</div>
-            <div class="mini-stat-label">违规拦截</div>
+            <div class="mini-stat-num danger">
+              {{ violationCount }}
+            </div>
+            <div class="mini-stat-label">
+              违规拦截
+            </div>
           </div>
         </div>
 
         <!-- 操作按钮 -->
         <div class="mini-actions">
-          <a-button type="primary" long @click="switchRoom"
-            :disabled="!canSwitchRoom || isCoolingDown" class="mini-btn">
+          <a-button
+            type="primary"
+            long
+            :disabled="!canSwitchRoom || isCoolingDown"
+            class="mini-btn"
+            @click="switchRoom"
+          >
             <icon-swap />
             切房审查
             <span class="mini-shortcut">Alt+空格</span>
           </a-button>
 
-          <a-button v-if="!isHandlingViolation" type="primary" status="danger" long
-            @click="markViolation" :disabled="!canMarkViolation" class="mini-btn">
+          <a-button
+            v-if="!isHandlingViolation"
+            type="primary"
+            status="danger"
+            long
+            :disabled="!canMarkViolation"
+            class="mini-btn"
+            @click="markViolation"
+          >
             <icon-flag />违规处置<span class="mini-shortcut">Alt+1</span>
           </a-button>
-          <a-button v-else type="outline" status="success" long
-            @click="completeViolation" class="mini-btn">
+          <a-button
+            v-else
+            type="outline"
+            status="success"
+            long
+            class="mini-btn"
+            @click="completeViolation"
+          >
             <icon-check-circle />处置完成<span class="mini-shortcut">Alt+1</span>
           </a-button>
 
-          <a-button v-if="!isSuspended" type="outline" status="warning" long
-            @click="suspendWork" :disabled="!canSuspend" class="mini-btn">
+          <a-button
+            v-if="!isSuspended"
+            type="outline"
+            status="warning"
+            long
+            :disabled="!canSuspend"
+            class="mini-btn"
+            @click="suspendWork"
+          >
             <icon-pause-circle />挂起休整<span class="mini-shortcut">Alt+2</span>
           </a-button>
-          <a-button v-else type="primary" status="warning" long
-            @click="resumeWork" class="mini-btn">
+          <a-button
+            v-else
+            type="primary"
+            status="warning"
+            long
+            class="mini-btn"
+            @click="resumeWork"
+          >
             <icon-play-circle />恢复工作<span class="mini-shortcut">Alt+2</span>
           </a-button>
 
           <div class="mini-stop-row">
-            <a-button type="text" status="danger" long @click="stopWorkflow" class="mini-stop-btn">
+            <a-button
+              type="text"
+              status="danger"
+              long
+              class="mini-stop-btn"
+              @click="stopWorkflow"
+            >
               <icon-stop />结束工作流
             </a-button>
           </div>
         </div>
-
       </div>
     </template>
 
     <!-- ===== 正常模式 ===== -->
     <template v-else>
       <!-- 页头 -->
-    <div class="page-header">
+      <div class="page-header">
         <div class="header-left">
           <icon-eye :size="24" />
           <span class="page-title">直播监测</span>
@@ -120,59 +198,98 @@
               :class="['pin-toggle-btn', { 'pin-toggle-active': isAlwaysOnTop }]"
               @click="toggleAlwaysOnTop"
             >
-              <template #icon><icon-pushpin /></template>
+              <template #icon>
+                <icon-pushpin />
+              </template>
               {{ isAlwaysOnTop ? '已置顶' : '置顶' }}
             </a-button>
           </a-tooltip>
           <!-- 巡查中时显示"进入迷你浮窗"按钮 -->
           <a-button
             v-if="isWorking"
-            @click="enterMiniMode"
             class="mini-enter-btn"
+            @click="enterMiniMode"
           >
-            <template #icon><icon-shrink /></template>
+            <template #icon>
+              <icon-shrink />
+            </template>
             迷你浮窗
           </a-button>
-          <a-button @click="loadTasks" :loading="loading">
-            <template #icon><icon-refresh /></template>刷新
+          <a-button
+            :loading="loading"
+            @click="loadTasks"
+          >
+            <template #icon>
+              <icon-refresh />
+            </template>刷新
           </a-button>
           <a-button
             v-if="permissionStore.can('action:dispatch_task')"
             type="primary"
             @click="showDispatchModal"
           >
-            <template #icon><icon-send /></template>派发任务
+            <template #icon>
+              <icon-send />
+            </template>派发任务
           </a-button>
-      </a-space>
-    </div>
+        </a-space>
+      </div>
 
       <!-- 计件器 -->
       <div class="blind-checker">
         <!-- 当班任务信息条 -->
-        <div class="task-banner" v-if="todayTask && todayTask.task_channel">
+        <div
+          v-if="todayTask && todayTask.task_channel"
+          class="task-banner"
+        >
           <div class="task-info-bar">
             <div class="task-info-left">
-              <div class="task-dot"></div>
-              <icon-file-list :size="13" class="task-biz-icon" />
+              <div class="task-dot" />
+              <icon-file-list
+                :size="13"
+                class="task-biz-icon"
+              />
               <span class="task-label">今日当班业务</span>
-              <a-tag :color="channelColor(todayTask.task_channel)" size="medium" class="task-channel-tag">
+              <a-tag
+                :color="channelColor(todayTask.task_channel)"
+                size="medium"
+                class="task-channel-tag"
+              >
                 {{ getTaskChannelLabel(todayTask.task_channel) }}
               </a-tag>
-              <div class="task-divider"></div>
-              <span class="task-meta" v-if="todayTask.shift_type">
+              <div class="task-divider" />
+              <span
+                v-if="todayTask.shift_type"
+                class="task-meta"
+              >
                 <icon-clock-circle :size="13" />
                 {{ getShiftTypeLabel(todayTask.shift_type) }}
               </span>
-              <span class="task-meta" v-if="todayTask.is_completed">
-                <icon-check-circle :size="13" style="color:#00b42a" />
+              <span
+                v-if="todayTask.is_completed"
+                class="task-meta"
+              >
+                <icon-check-circle
+                  :size="13"
+                  style="color:#00b42a"
+                />
                 已完成
               </span>
-              <span class="task-meta" v-else>
-                <icon-loading :size="13" style="color:#1664ff" />
+              <span
+                v-else
+                class="task-meta"
+              >
+                <icon-loading
+                  :size="13"
+                  style="color:#1664ff"
+                />
                 进行中
               </span>
             </div>
-            <div class="task-info-right" v-if="todayTask.reviewed_count > 0 || todayTask.violation_count > 0">
+            <div
+              v-if="todayTask.reviewed_count > 0 || todayTask.violation_count > 0"
+              class="task-info-right"
+            >
               <span class="task-stat">已审 <strong>{{ todayTask.reviewed_count }}</strong> 场</span>
               <span class="task-stat-sep">·</span>
               <span class="task-stat">违规 <strong style="color:#f53f3f">{{ todayTask.violation_count }}</strong> 次</span>
@@ -182,126 +299,244 @@
 
         <!-- 主卡片：计时区 + 操作区 -->
         <div class="main-card">
-
           <!-- 上半区：状态 + 计时 + 计数 -->
           <div class="main-top">
             <div class="top-left">
               <!-- 状态行：状态徽标 + 房间号 -->
               <div class="status-row">
-                <div class="status-badge" :class="`status-${workStatus}`">
-                  <span class="status-dot-ring"></span>
+                <div
+                  class="status-badge"
+                  :class="`status-${workStatus}`"
+                >
+                  <span class="status-dot-ring" />
                   <span class="status-badge-text">{{ statusText }}</span>
                 </div>
                 <!-- 房间号 -->
-                <div class="room-id-display" v-if="currentRoomId" @click="copyRoomId" title="点击复制房间号">
-                  <icon-live-broadcast :size="14" class="room-icon" />
+                <div
+                  v-if="currentRoomId"
+                  class="room-id-display"
+                  title="点击复制房间号"
+                  @click="copyRoomId"
+                >
+                  <icon-live-broadcast
+                    :size="14"
+                    class="room-icon"
+                  />
                   <span class="room-label">房间</span>
                   <span class="room-number">#{{ currentRoomId }}</span>
-                  <icon-copy :size="12" class="room-copy" />
+                  <icon-copy
+                    :size="12"
+                    class="room-copy"
+                  />
                 </div>
                 <!-- 用户ID -->
-                <div class="room-id-display user-id-display" v-if="currentUserId" @click="copyUserId" title="点击复制用户ID">
-                  <icon-user :size="14" class="room-icon" />
+                <div
+                  v-if="currentUserId"
+                  class="room-id-display user-id-display"
+                  title="点击复制用户ID"
+                  @click="copyUserId"
+                >
+                  <icon-user
+                    :size="14"
+                    class="room-icon"
+                  />
                   <span class="room-label">主播</span>
                   <span class="room-number">#{{ currentUserId }}</span>
-                  <icon-copy :size="12" class="room-copy" />
+                  <icon-copy
+                    :size="12"
+                    class="room-copy"
+                  />
                 </div>
-                <div class="room-id-empty" v-if="!currentRoomId">
+                <div
+                  v-if="!currentRoomId"
+                  class="room-id-empty"
+                >
                   <icon-desktop :size="13" />
                   <span>未检测到直播间</span>
                 </div>
               </div>
               <!-- 大计时器 -->
-              <div class="big-timer">{{ formatTime(totalSeconds) }}</div>
-              <div class="timer-hint">{{ statusDesc }}</div>
+              <div class="big-timer">
+                {{ formatTime(totalSeconds) }}
+              </div>
+              <div class="timer-hint">
+                {{ statusDesc }}
+              </div>
             </div>
 
             <div class="top-right">
               <div class="count-box">
-                <div class="count-num">{{ reviewedCount }}</div>
-                <div class="count-lbl">已审场次</div>
-                <div class="count-hint">切房审查 +1</div>
+                <div class="count-num">
+                  {{ reviewedCount }}
+                </div>
+                <div class="count-lbl">
+                  已审场次
+                </div>
+                <div class="count-hint">
+                  切房审查 +1
+                </div>
               </div>
-              <div class="count-sep"></div>
+              <div class="count-sep" />
               <div class="count-box">
-                <div class="count-num danger">{{ violationCount }}</div>
-                <div class="count-lbl">违规拦截</div>
-                <div class="count-hint">违规处置 +1</div>
+                <div class="count-num danger">
+                  {{ violationCount }}
+                </div>
+                <div class="count-lbl">
+                  违规拦截
+                </div>
+                <div class="count-hint">
+                  违规处置 +1
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 分割线 -->
-          <div class="main-divider"></div>
+          <div class="main-divider" />
 
           <!-- 下半区：操作按钮 -->
           <div class="main-actions">
             <!-- 接入/结束 -->
             <div class="act-col act-col-workflow">
-              <a-button v-if="!isWorking" type="primary" size="large" long
-                @click="startWorkflow" :loading="startingWorkflow" class="act-btn act-btn-start">
+              <a-button
+                v-if="!isWorking"
+                type="primary"
+                size="large"
+                long
+                :loading="startingWorkflow"
+                class="act-btn act-btn-start"
+                @click="startWorkflow"
+              >
                 <icon-play-circle /> 接入工作流
               </a-button>
-              <a-button v-else type="outline" status="danger" size="large" long
-                @click="stopWorkflow" class="act-btn">
+              <a-button
+                v-else
+                type="outline"
+                status="danger"
+                size="large"
+                long
+                class="act-btn"
+                @click="stopWorkflow"
+              >
                 <icon-stop /> 结束工作流
               </a-button>
-              <div class="act-hint">接入后开始计时，结束时自动上报</div>
+              <div class="act-hint">
+                接入后开始计时，结束时自动上报
+              </div>
             </div>
 
             <!-- 切房 -->
             <div class="act-col">
-              <a-button type="primary" size="large" long @click="switchRoom"
-                :disabled="!canSwitchRoom || isCoolingDown" class="act-btn act-btn-switch">
+              <a-button
+                type="primary"
+                size="large"
+                long
+                :disabled="!canSwitchRoom || isCoolingDown"
+                class="act-btn act-btn-switch"
+                @click="switchRoom"
+              >
                 <icon-swap />
                 切房审查
                 <span class="act-shortcut">Alt+空格</span>
               </a-button>
               <div class="act-hint">
                 已审 +1
-                <span v-if="isCoolingDown" class="cooling-tag">冷却中</span>
+                <span
+                  v-if="isCoolingDown"
+                  class="cooling-tag"
+                >冷却中</span>
               </div>
             </div>
 
             <!-- 违规 -->
             <div class="act-col">
-              <a-button v-if="!isHandlingViolation" type="primary" status="danger" size="large" long
-                @click="markViolation" :disabled="!canMarkViolation" class="act-btn">
+              <a-button
+                v-if="!isHandlingViolation"
+                type="primary"
+                status="danger"
+                size="large"
+                long
+                :disabled="!canMarkViolation"
+                class="act-btn"
+                @click="markViolation"
+              >
                 <icon-flag />违规处置<span class="act-shortcut">Alt+1</span>
               </a-button>
-              <a-button v-else type="outline" status="success" size="large" long
-                @click="completeViolation" class="act-btn">
+              <a-button
+                v-else
+                type="outline"
+                status="success"
+                size="large"
+                long
+                class="act-btn"
+                @click="completeViolation"
+              >
                 <icon-check-circle />处置完成<span class="act-shortcut">Alt+1</span>
               </a-button>
-              <div class="act-hint">切为处置时违规 +1，完成后回到巡查</div>
+              <div class="act-hint">
+                切为处置时违规 +1，完成后回到巡查
+              </div>
             </div>
 
             <!-- 挂起 -->
             <div class="act-col">
-              <a-button v-if="!isSuspended" type="outline" status="warning" size="large" long
-                @click="suspendWork" :disabled="!canSuspend" class="act-btn">
+              <a-button
+                v-if="!isSuspended"
+                type="outline"
+                status="warning"
+                size="large"
+                long
+                :disabled="!canSuspend"
+                class="act-btn"
+                @click="suspendWork"
+              >
                 <icon-pause-circle />挂起休整<span class="act-shortcut">Alt+2</span>
               </a-button>
-              <a-button v-else type="primary" status="warning" size="large" long
-                @click="resumeWork" class="act-btn">
+              <a-button
+                v-else
+                type="primary"
+                status="warning"
+                size="large"
+                long
+                class="act-btn"
+                @click="resumeWork"
+              >
                 <icon-play-circle />恢复工作<span class="act-shortcut">Alt+2</span>
               </a-button>
-              <div class="act-hint">挂起时计时器暂停</div>
+              <div class="act-hint">
+                挂起时计时器暂停
+              </div>
             </div>
           </div>
 
           <!-- 操作时间轴日志 -->
-          <div class="timeline-section" v-if="actionLog.length">
+          <div
+            v-if="actionLog.length"
+            class="timeline-section"
+          >
             <div class="timeline-header">
               <icon-history :size="14" />
               <span>操作记录</span>
               <span class="timeline-count">{{ actionLog.length }} 条</span>
             </div>
             <div class="timeline-list">
-              <div v-for="item in actionLog" :key="item.id" class="timeline-item">
-                <span class="tl-dot" :class="`tl-dot-${getActionColor(item.action)}`"></span>
+              <div
+                v-for="item in actionLog"
+                :key="item.id"
+                class="timeline-item"
+              >
+                <span
+                  class="tl-dot"
+                  :class="`tl-dot-${getActionColor(item.action)}`"
+                />
                 <span class="tl-time">{{ item.timestamp }}</span>
-                <a-tag :color="getActionColor(item.action)" size="small" class="tl-action">{{ item.action }}</a-tag>
+                <a-tag
+                  :color="getActionColor(item.action)"
+                  size="small"
+                  class="tl-action"
+                >
+                  {{ item.action }}
+                </a-tag>
                 <span class="tl-detail">{{ item.details }}</span>
               </div>
             </div>
@@ -314,25 +549,37 @@
         <!-- 汇总数字条 -->
         <div class="summary-bar">
           <div class="summary-item">
-            <icon-file-list :size="16" class="summary-icon" />
+            <icon-file-list
+              :size="16"
+              class="summary-icon"
+            />
             <span class="summary-val">{{ stats.totalTasks }}</span>
             <span class="summary-lbl">今日任务</span>
           </div>
-          <div class="summary-sep"></div>
+          <div class="summary-sep" />
           <div class="summary-item">
-            <icon-check-circle :size="16" class="summary-icon blue" />
+            <icon-check-circle
+              :size="16"
+              class="summary-icon blue"
+            />
             <span class="summary-val blue">{{ stats.totalReviewed }}</span>
             <span class="summary-lbl">已审核</span>
           </div>
-          <div class="summary-sep"></div>
+          <div class="summary-sep" />
           <div class="summary-item">
-            <icon-exclamation-circle :size="16" class="summary-icon red" />
+            <icon-exclamation-circle
+              :size="16"
+              class="summary-icon red"
+            />
             <span class="summary-val red">{{ stats.totalViolations }}</span>
             <span class="summary-lbl">违规拦截</span>
           </div>
-          <div class="summary-sep"></div>
+          <div class="summary-sep" />
           <div class="summary-item">
-            <icon-clock-circle :size="16" class="summary-icon" />
+            <icon-clock-circle
+              :size="16"
+              class="summary-icon"
+            />
             <span class="summary-val">{{ Math.round(stats.totalDuration / 60) }}</span>
             <span class="summary-lbl">在岗分钟</span>
           </div>
@@ -346,35 +593,82 @@
               <span>今日任务列表</span>
             </div>
           </template>
-          <a-table :data="todayTasks" :loading="loading" :pagination="false" row-key="id" stripe size="small">
+          <a-table
+            :data="todayTasks"
+            :loading="loading"
+            :pagination="false"
+            row-key="id"
+            stripe
+            size="small"
+          >
             <template #columns>
-              <a-table-column title="审核通道" data-index="task_channel">
+              <a-table-column
+                title="审核通道"
+                data-index="task_channel"
+              >
                 <template #cell="{ record }">
-                  <a-tag :color="channelColor(record.task_channel)" size="small">{{ channelLabel(record.task_channel) }}</a-tag>
+                  <a-tag
+                    :color="channelColor(record.task_channel)"
+                    size="small"
+                  >
+                    {{ channelLabel(record.task_channel) }}
+                  </a-tag>
                 </template>
               </a-table-column>
-              <a-table-column title="班次" data-index="shift_type">
-                <template #cell="{ record }">{{ shiftLabel(record.shift_type) }}</template>
-              </a-table-column>
-              <a-table-column title="已审" data-index="reviewed_count" :width="70" />
-              <a-table-column title="违规" data-index="violation_count" :width="70" />
-              <a-table-column title="状态" :width="90">
+              <a-table-column
+                title="班次"
+                data-index="shift_type"
+              >
                 <template #cell="{ record }">
-                  <a-badge :status="record.is_completed ? 'success' : 'processing'"
-                    :text="record.is_completed ? '已完成' : '进行中'" />
+                  {{ shiftLabel(record.shift_type) }}
                 </template>
               </a-table-column>
-              <a-table-column title="" :width="80">
+              <a-table-column
+                title="已审"
+                data-index="reviewed_count"
+                :width="70"
+              />
+              <a-table-column
+                title="违规"
+                data-index="violation_count"
+                :width="70"
+              />
+              <a-table-column
+                title="状态"
+                :width="90"
+              >
                 <template #cell="{ record }">
-                  <a-button v-if="!record.is_completed" type="text" size="mini"
-                    @click="completeTask(record.id)">完成</a-button>
+                  <a-badge
+                    :status="record.is_completed ? 'success' : 'processing'"
+                    :text="record.is_completed ? '已完成' : '进行中'"
+                  />
+                </template>
+              </a-table-column>
+              <a-table-column
+                title=""
+                :width="80"
+              >
+                <template #cell="{ record }">
+                  <a-button
+                    v-if="!record.is_completed"
+                    type="text"
+                    size="mini"
+                    @click="completeTask(record.id)"
+                  >
+                    完成
+                  </a-button>
                 </template>
               </a-table-column>
             </template>
           </a-table>
-          <div v-if="!loading && todayTasks.length === 0" class="empty-state">
+          <div
+            v-if="!loading && todayTasks.length === 0"
+            class="empty-state"
+          >
             <a-empty description="今日暂无分配任务">
-              <template #image><icon-inbox :size="40" /></template>
+              <template #image>
+                <icon-inbox :size="40" />
+              </template>
             </a-empty>
           </div>
         </a-card>
@@ -382,18 +676,59 @@
     </template>
 
     <!-- 派发 / 违规弹窗：须挂在迷你与正常模式之外，否则迷你窗内未挂载无法显示 -->
-    <a-modal v-model:visible="dispatchModal.visible" title="智能任务派发" :width="600" @ok="submitDispatch" :ok-loading="dispatchModal.loading" ok-text="开始派发">
-      <a-form :model="dispatchForm" layout="vertical">
-        <a-form-item label="派发日期" required><a-input v-model="dispatchForm.shift_date" placeholder="YYYY-MM-DD" /></a-form-item>
-        <a-form-item label="班次" required>
-          <a-radio-group v-model="dispatchForm.shift_type" type="button">
-            <a-radio value="morning">早班</a-radio><a-radio value="afternoon">中班</a-radio><a-radio value="night">晚班</a-radio>
+    <a-modal
+      v-model:visible="dispatchModal.visible"
+      title="智能任务派发"
+      :width="600"
+      :ok-loading="dispatchModal.loading"
+      ok-text="开始派发"
+      @ok="submitDispatch"
+    >
+      <a-form
+        :model="dispatchForm"
+        layout="vertical"
+      >
+        <a-form-item
+          label="派发日期"
+          required
+        >
+          <a-input
+            v-model="dispatchForm.shift_date"
+            placeholder="YYYY-MM-DD"
+          />
+        </a-form-item>
+        <a-form-item
+          label="班次"
+          required
+        >
+          <a-radio-group
+            v-model="dispatchForm.shift_type"
+            type="button"
+          >
+            <a-radio value="morning">
+              早班
+            </a-radio><a-radio value="afternoon">
+              中班
+            </a-radio><a-radio value="night">
+              晚班
+            </a-radio>
           </a-radio-group>
         </a-form-item>
-        <a-form-item label="审核通道" required>
+        <a-form-item
+          label="审核通道"
+          required
+        >
           <a-checkbox-group v-model="dispatchForm.required_channels">
-            <a-checkbox value="image">图片审核</a-checkbox><a-checkbox value="chat">单聊审核</a-checkbox>
-            <a-checkbox value="video">视频审核</a-checkbox><a-checkbox value="live">直播巡查</a-checkbox>
+            <a-checkbox value="image">
+              图片审核
+            </a-checkbox><a-checkbox value="chat">
+              单聊审核
+            </a-checkbox>
+            <a-checkbox value="video">
+              视频审核
+            </a-checkbox><a-checkbox value="live">
+              直播巡查
+            </a-checkbox>
           </a-checkbox-group>
         </a-form-item>
       </a-form>
@@ -405,24 +740,40 @@
         v-model:visible="violationModal.visible"
         title="违规处置上报"
         :width="520"
-        @ok="submitViolation"
         :ok-loading="violationModal.loading"
         ok-text="确认处置"
         cancel-text="取消"
         :mask-closable="false"
+        @ok="submitViolation"
       >
-        <a-form :model="violationForm" layout="vertical">
+        <a-form
+          :model="violationForm"
+          layout="vertical"
+        >
           <a-form-item label="房间号">
-            <a-input v-model="violationForm.room_id" placeholder="自动识别或手动输入">
-              <template #prefix><icon-live-broadcast /></template>
+            <a-input
+              v-model="violationForm.room_id"
+              placeholder="自动识别或手动输入"
+            >
+              <template #prefix>
+                <icon-live-broadcast />
+              </template>
             </a-input>
           </a-form-item>
           <a-form-item label="违规主播ID">
-            <a-input v-model="violationForm.user_id" placeholder="自动识别或手动输入">
-              <template #prefix><icon-user /></template>
+            <a-input
+              v-model="violationForm.user_id"
+              placeholder="自动识别或手动输入"
+            >
+              <template #prefix>
+                <icon-user />
+              </template>
             </a-input>
           </a-form-item>
-          <a-form-item label="违规原因" required>
+          <a-form-item
+            label="违规原因"
+            required
+          >
             <a-textarea
               v-model="violationForm.reason"
               placeholder="请描述违规行为（如：涉黄、低俗、诱导未成年人等）"
@@ -431,8 +782,15 @@
               :auto-size="{ minRows: 3, maxRows: 5 }"
             />
           </a-form-item>
-          <a-form-item label="处罚动作" required>
-            <a-radio-group v-model="violationForm.action" type="button" size="large">
+          <a-form-item
+            label="处罚动作"
+            required
+          >
+            <a-radio-group
+              v-model="violationForm.action"
+              type="button"
+              size="large"
+            >
               <a-radio value="ban">
                 <icon-stop /> 封禁
               </a-radio>
@@ -696,7 +1054,6 @@ let workTimer: ReturnType<typeof setInterval> | null = null
 const actionLog = ref<Array<{ id: number; timestamp: string; action: string; details: string }>>([])
 
 const statusText = computed(() => workflowStore.statusText)
-const statusColor = computed(() => ({ offline: 'gray', patrolling: 'green', handling: 'red', suspended: 'yellow' })[workflowStore.workStatus])
 const statusDesc = computed(() => ({
   offline: '未接入工作流', patrolling: '正在巡查直播间', handling: '处理违规内容', suspended: '暂停计时，临时休整',
 })[workflowStore.workStatus])

@@ -1,19 +1,38 @@
 <template>
   <div class="violation-popup-page">
     <div class="violation-popup-inner">
-      <h1 class="violation-popup-title">违规处置上报</h1>
-      <a-form :model="form" layout="vertical" class="violation-popup-form">
+      <h1 class="violation-popup-title">
+        违规处置上报
+      </h1>
+      <a-form
+        :model="form"
+        layout="vertical"
+        class="violation-popup-form"
+      >
         <a-form-item label="房间号">
-          <a-input v-model="form.room_id" placeholder="自动识别或手动输入">
-            <template #prefix><icon-live-broadcast /></template>
+          <a-input
+            v-model="form.room_id"
+            placeholder="自动识别或手动输入"
+          >
+            <template #prefix>
+              <icon-live-broadcast />
+            </template>
           </a-input>
         </a-form-item>
         <a-form-item label="违规主播ID">
-          <a-input v-model="form.user_id" placeholder="自动识别或手动输入">
-            <template #prefix><icon-user /></template>
+          <a-input
+            v-model="form.user_id"
+            placeholder="自动识别或手动输入"
+          >
+            <template #prefix>
+              <icon-user />
+            </template>
           </a-input>
         </a-form-item>
-        <a-form-item label="违规原因" required>
+        <a-form-item
+          label="违规原因"
+          required
+        >
           <a-textarea
             v-model="form.reason"
             placeholder="请描述违规行为（如：涉黄、低俗、诱导未成年人等）"
@@ -22,8 +41,15 @@
             :auto-size="{ minRows: 3, maxRows: 6 }"
           />
         </a-form-item>
-        <a-form-item label="处罚动作" required>
-          <a-radio-group v-model="form.action" type="button" size="large">
+        <a-form-item
+          label="处罚动作"
+          required
+        >
+          <a-radio-group
+            v-model="form.action"
+            type="button"
+            size="large"
+          >
             <a-radio value="ban">
               <icon-stop /> 封禁
             </a-radio>
@@ -37,8 +63,15 @@
         </a-form-item>
       </a-form>
       <div class="violation-popup-actions">
-        <a-button @click="handleCancel">取消</a-button>
-        <a-button type="primary" status="danger" :loading="loading" @click="handleSubmit">
+        <a-button @click="handleCancel">
+          取消
+        </a-button>
+        <a-button
+          type="primary"
+          status="danger"
+          :loading="loading"
+          @click="handleSubmit"
+        >
           确认处置
         </a-button>
       </div>

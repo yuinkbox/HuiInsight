@@ -1,5 +1,8 @@
 <template>
-  <a-row :gutter="[16, 16]" class="component-grid">
+  <a-row
+    :gutter="[16, 16]"
+    class="component-grid"
+  >
     <a-col
       v-for="component in props.components"
       :key="component.id"
@@ -16,7 +19,10 @@
       >
         <template #cover>
           <div class="component-icon">
-            <component :is="component.icon" size="32" />
+            <component
+              :is="component.icon"
+              size="32"
+            />
           </div>
         </template>
 
@@ -26,7 +32,10 @@
               {{ component.description }}
             </div>
             <div class="component-tags">
-              <a-space :size="4" wrap>
+              <a-space
+                :size="4"
+                wrap
+              >
                 <a-tag
                   v-for="tag in component.tags"
                   :key="tag"
@@ -47,12 +56,24 @@
 
         <template #actions>
           <a-space :size="8">
-            <a-button type="text" size="small" @click.stop="handlePreview(component)">
-              <template #icon><icon-eye /></template>
+            <a-button
+              type="text"
+              size="small"
+              @click.stop="handlePreview(component)"
+            >
+              <template #icon>
+                <icon-eye />
+              </template>
               预览
             </a-button>
-            <a-button type="text" size="small" @click.stop="handleCopyCode(component)">
-              <template #icon><icon-copy /></template>
+            <a-button
+              type="text"
+              size="small"
+              @click.stop="handleCopyCode(component)"
+            >
+              <template #icon>
+                <icon-copy />
+              </template>
               复制
             </a-button>
           </a-space>

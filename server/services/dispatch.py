@@ -19,8 +19,12 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from server.db.models import ShiftTask, User
-from server.schemas import (DispatchRequest, DispatchResponse, DispatchSummary,
-                            TaskAssignment)
+from server.schemas import (
+    DispatchRequest,
+    DispatchResponse,
+    DispatchSummary,
+    TaskAssignment,
+)
 
 
 def _get_weekly_channel_counts(

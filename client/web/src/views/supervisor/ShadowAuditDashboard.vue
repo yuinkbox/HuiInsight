@@ -5,13 +5,27 @@
       <div class="header-left">
         <icon-eye :size="24" />
         <span class="page-title">统帅大屏 — 影子审计</span>
-        <a-badge status="processing" text="实时监控中" />
+        <a-badge
+          status="processing"
+          text="实时监控中"
+        />
       </div>
       <a-space>
-        <a-select v-model="filterUserId" style="width:160px" allow-clear placeholder="筛选审核员"
-          @change="loadLogs">
-          <a-option :value="0">全部人员</a-option>
-          <a-option v-for="u in activeUsers" :key="u.id" :value="u.id">
+        <a-select
+          v-model="filterUserId"
+          style="width:160px"
+          allow-clear
+          placeholder="筛选审核员"
+          @change="loadLogs"
+        >
+          <a-option :value="0">
+            全部人员
+          </a-option>
+          <a-option
+            v-for="u in activeUsers"
+            :key="u.id"
+            :value="u.id"
+          >
             {{ u.full_name }}
           </a-option>
         </a-select>
@@ -22,8 +36,14 @@
           allow-clear
           @press-enter="loadLogs"
         />
-        <a-button type="primary" @click="loadLogs" :loading="loading">
-          <template #icon><icon-search /></template>查询
+        <a-button
+          type="primary"
+          :loading="loading"
+          @click="loadLogs"
+        >
+          <template #icon>
+            <icon-search />
+          </template>查询
         </a-button>
         <a-button @click="toggleAutoRefresh">
           <template #icon>
@@ -36,34 +56,58 @@
     </div>
 
     <!-- 统计卡片 -->
-    <a-row :gutter="16" class="stat-row">
+    <a-row
+      :gutter="16"
+      class="stat-row"
+    >
       <a-col :span="6">
         <a-card class="stat-card">
-          <a-statistic title="总操作数" :value="total">
-            <template #prefix><icon-list /></template>
+          <a-statistic
+            title="总操作数"
+            :value="total"
+          >
+            <template #prefix>
+              <icon-list />
+            </template>
           </a-statistic>
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card class="stat-card">
-          <a-statistic title="活跃用户" :value="uniqueUsers"
-            :value-style="{ color: '#165dff' }">
-            <template #prefix><icon-user-group /></template>
+          <a-statistic
+            title="活跃用户"
+            :value="uniqueUsers"
+            :value-style="{ color: '#165dff' }"
+          >
+            <template #prefix>
+              <icon-user-group />
+            </template>
           </a-statistic>
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card class="stat-card">
-          <a-statistic title="平均操作时长(ms)" :value="avgDuration" :precision="0"
-            :value-style="{ color: '#ff7d00' }">
-            <template #prefix><icon-clock-circle /></template>
+          <a-statistic
+            title="平均操作时长(ms)"
+            :value="avgDuration"
+            :precision="0"
+            :value-style="{ color: '#ff7d00' }"
+          >
+            <template #prefix>
+              <icon-clock-circle />
+            </template>
           </a-statistic>
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card class="stat-card">
-          <a-statistic title="总页数" :value="totalPages">
-            <template #prefix><icon-file /></template>
+          <a-statistic
+            title="总页数"
+            :value="totalPages"
+          >
+            <template #prefix>
+              <icon-file />
+            </template>
           </a-statistic>
         </a-card>
       </a-col>
@@ -86,27 +130,55 @@
         size="small"
       >
         <template #columns>
-          <a-table-column title="时间" :width="160">
+          <a-table-column
+            title="时间"
+            :width="160"
+          >
             <template #cell="{ record }">
               <span class="ts-cell">{{ formatTs(record.timestamp) }}</span>
             </template>
           </a-table-column>
-          <a-table-column title="用户" :width="120">
+          <a-table-column
+            title="用户"
+            :width="120"
+          >
             <template #cell="{ record }">
-              <a-tag color="blue" size="small">{{ record.username }}</a-tag>
+              <a-tag
+                color="blue"
+                size="small"
+              >
+                {{ record.username }}
+              </a-tag>
             </template>
           </a-table-column>
-          <a-table-column title="操作" data-index="action" :width="140" />
-          <a-table-column title="详情" data-index="details" />
-          <a-table-column title="时长(ms)" data-index="duration" :width="100">
+          <a-table-column
+            title="操作"
+            data-index="action"
+            :width="140"
+          />
+          <a-table-column
+            title="详情"
+            data-index="details"
+          />
+          <a-table-column
+            title="时长(ms)"
+            data-index="duration"
+            :width="100"
+          >
             <template #cell="{ record }">
               <span :style="{ color: record.duration > 5000 ? '#f53f3f' : 'inherit' }">
                 {{ record.duration ?? '-' }}
               </span>
             </template>
           </a-table-column>
-          <a-table-column title="任务ID" data-index="task_id" :width="90">
-            <template #cell="{ record }">{{ record.task_id ?? '-' }}</template>
+          <a-table-column
+            title="任务ID"
+            data-index="task_id"
+            :width="90"
+          >
+            <template #cell="{ record }">
+              {{ record.task_id ?? '-' }}
+            </template>
           </a-table-column>
         </template>
       </a-table>

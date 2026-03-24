@@ -5,10 +5,18 @@
     
     <!-- 组长专属：任务派发面板 -->
     <div class="dispatch-panel">
-      <a-card title="📋 当班任务派发" class="dispatch-card">
+      <a-card
+        title="📋 当班任务派发"
+        class="dispatch-card"
+      >
         <template #extra>
           <a-space>
-            <a-button type="primary" size="small" @click="loadActiveUsers" :loading="loadingUsers">
+            <a-button
+              type="primary"
+              size="small"
+              :loading="loadingUsers"
+              @click="loadActiveUsers"
+            >
               <template #icon>
                 <icon-refresh />
               </template>
@@ -22,21 +30,41 @@
           <div class="section-header">
             <icon-team />
             <span>当前出勤人员选择</span>
-            <a-tag color="blue" size="small">{{ selectedUsers.length }}人已选</a-tag>
+            <a-tag
+              color="blue"
+              size="small"
+            >
+              {{ selectedUsers.length }}人已选
+            </a-tag>
           </div>
           
-          <a-checkbox-group v-model="selectedUsers" class="user-checkbox-group">
+          <a-checkbox-group
+            v-model="selectedUsers"
+            class="user-checkbox-group"
+          >
             <a-row :gutter="[16, 16]">
-              <a-col :span="8" v-for="user in activeUsers" :key="user.id">
+              <a-col
+                v-for="user in activeUsers"
+                :key="user.id"
+                :span="8"
+              >
                 <a-checkbox :value="user.id">
                   <div class="user-item">
-                    <a-avatar :size="32" :style="{ backgroundColor: getUserColor(user.role) }">
+                    <a-avatar
+                      :size="32"
+                      :style="{ backgroundColor: getUserColor(user.role) }"
+                    >
                       {{ user.username?.charAt(0)?.toUpperCase() || 'U' }}
                     </a-avatar>
                     <div class="user-info">
-                      <div class="user-name">{{ user.username }}</div>
+                      <div class="user-name">
+                        {{ user.username }}
+                      </div>
                       <div class="user-role">
-                        <a-tag :color="getUserColor(user.role)" size="small">
+                        <a-tag
+                          :color="getUserColor(user.role)"
+                          size="small"
+                        >
                           {{ permissionStore.allRoles.find((r) => r.value === user.role)?.label ?? user.role }}
                         </a-tag>
                       </div>
@@ -48,13 +76,21 @@
           </a-checkbox-group>
           
           <div class="attendance-actions">
-            <a-button type="outline" size="small" @click="selectAll">
+            <a-button
+              type="outline"
+              size="small"
+              @click="selectAll"
+            >
               <template #icon>
                 <icon-check />
               </template>
               全选
             </a-button>
-            <a-button type="outline" size="small" @click="clearSelection">
+            <a-button
+              type="outline"
+              size="small"
+              @click="clearSelection"
+            >
               <template #icon>
                 <icon-close />
               </template>
@@ -84,9 +120,15 @@
               style="width: 120px"
               :disabled="dispatching"
             >
-              <a-option value="morning">早班</a-option>
-              <a-option value="afternoon">中班</a-option>
-              <a-option value="night">晚班</a-option>
+              <a-option value="morning">
+                早班
+              </a-option>
+              <a-option value="afternoon">
+                中班
+              </a-option>
+              <a-option value="night">
+                晚班
+              </a-option>
             </a-select>
             
             <a-select
@@ -96,10 +138,18 @@
               style="width: 200px"
               :disabled="dispatching"
             >
-              <a-option value="image">图片审核</a-option>
-              <a-option value="chat">单聊审核</a-option>
-              <a-option value="video">视频审核</a-option>
-              <a-option value="live">直播间巡查</a-option>
+              <a-option value="image">
+                图片审核
+              </a-option>
+              <a-option value="chat">
+                单聊审核
+              </a-option>
+              <a-option value="video">
+                视频审核
+              </a-option>
+              <a-option value="live">
+                直播间巡查
+              </a-option>
             </a-select>
           </a-space>
         </div>
@@ -110,10 +160,10 @@
             type="primary"
             size="large"
             long
-            @click="dispatchTasks"
             :loading="dispatching"
             :disabled="!canDispatch"
             class="dispatch-button"
+            @click="dispatchTasks"
           >
             <template #icon>
               <icon-thunderbolt />
@@ -126,11 +176,19 @@
         </div>
         
         <!-- 派发结果展示 -->
-        <div v-if="dispatchResult" class="dispatch-result">
+        <div
+          v-if="dispatchResult"
+          class="dispatch-result"
+        >
           <div class="section-header">
             <icon-check-circle style="color: #52c41a" />
             <span>派发结果</span>
-            <a-tag color="green" size="small">已锁定</a-tag>
+            <a-tag
+              color="green"
+              size="small"
+            >
+              已锁定
+            </a-tag>
           </div>
           
           <a-table
@@ -140,10 +198,17 @@
             size="small"
           >
             <template #columns>
-              <a-table-column title="员工" data-index="username" :width="100">
+              <a-table-column
+                title="员工"
+                data-index="username"
+                :width="100"
+              >
                 <template #cell="{ record }">
                   <div class="user-cell">
-                    <a-avatar :size="24" :style="{ backgroundColor: '#1890ff' }">
+                    <a-avatar
+                      :size="24"
+                      :style="{ backgroundColor: '#1890ff' }"
+                    >
                       {{ record.username?.charAt(0)?.toUpperCase() || 'U' }}
                     </a-avatar>
                     <span>{{ record.username }}</span>
@@ -151,17 +216,32 @@
                 </template>
               </a-table-column>
               
-              <a-table-column title="姓名" data-index="full_name" :width="80" />
+              <a-table-column
+                title="姓名"
+                data-index="full_name"
+                :width="80"
+              />
               
-              <a-table-column title="分配通道" data-index="task_channel" :width="100">
+              <a-table-column
+                title="分配通道"
+                data-index="task_channel"
+                :width="100"
+              >
                 <template #cell="{ record }">
-                  <a-tag :color="getChannelColor(record.task_channel)" size="small">
+                  <a-tag
+                    :color="getChannelColor(record.task_channel)"
+                    size="small"
+                  >
                     {{ getChannelLabel(record.task_channel) }}
                   </a-tag>
                 </template>
               </a-table-column>
               
-              <a-table-column title="本周历史次数" data-index="historical_count" :width="100">
+              <a-table-column
+                title="本周历史次数"
+                data-index="historical_count"
+                :width="100"
+              >
                 <template #cell="{ record }">
                   <span :class="{ 'high-count': record.historical_count > 3 }">
                     {{ record.historical_count }}次
@@ -169,12 +249,25 @@
                 </template>
               </a-table-column>
               
-              <a-table-column title="公平性说明" data-index="fairness_note" :width="200">
+              <a-table-column
+                title="公平性说明"
+                data-index="fairness_note"
+                :width="200"
+              >
                 <template #cell="{ record }">
                   <div class="fairness-note">
-                    <icon-info-circle v-if="record.historical_count === 0" style="color: #1890ff" />
-                    <icon-warning v-else-if="record.historical_count > 3" style="color: #ff7d00" />
-                    <icon-check-circle v-else style="color: #52c41a" />
+                    <icon-info-circle
+                      v-if="record.historical_count === 0"
+                      style="color: #1890ff"
+                    />
+                    <icon-warning
+                      v-else-if="record.historical_count > 3"
+                      style="color: #ff7d00"
+                    />
+                    <icon-check-circle
+                      v-else
+                      style="color: #52c41a"
+                    />
                     <span>
                       {{ getFairnessNote(record.historical_count) }}
                     </span>
@@ -209,7 +302,10 @@
         </div>
         
         <!-- 无结果提示 -->
-        <div v-else-if="!dispatching && selectedUsers.length > 0" class="no-result">
+        <div
+          v-else-if="!dispatching && selectedUsers.length > 0"
+          class="no-result"
+        >
           <a-empty description="暂未派发任务">
             <template #image>
               <icon-send />
@@ -233,7 +329,6 @@ import {
   rbacApi, 
   type ActiveUser, 
   type DispatchResponse,
-  UserRole,
   TaskChannel,
   ShiftType,
   getShiftTypeLabel

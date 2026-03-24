@@ -10,158 +10,361 @@
           <span class="page-title">人事与权限管理</span>
           <span class="page-subtitle">Personnel &amp; Access Control</span>
         </div>
-        <a-tag color="red" size="small">风控经理专属</a-tag>
+        <a-tag
+          color="red"
+          size="small"
+        >
+          风控经理专属
+        </a-tag>
       </div>
       <div class="header-actions">
         <a-button @click="loadUsers">
-          <template #icon><icon-refresh /></template>刷新
+          <template #icon>
+            <icon-refresh />
+          </template>刷新
         </a-button>
-        <a-button type="primary" @click="openCreateModal" v-if="permissionStore.can('action:update_role')">
-          <template #icon><icon-plus /></template>新增人员
+        <a-button
+          v-if="permissionStore.can('action:update_role')"
+          type="primary"
+          @click="openCreateModal"
+        >
+          <template #icon>
+            <icon-plus />
+          </template>新增人员
         </a-button>
       </div>
     </div>
 
     <!-- 角色统计卡片 -->
-    <div class="stat-cards" v-if="!loading">
-      <div class="stat-card" v-for="stat in roleStats" :key="stat.value">
+    <div
+      v-if="!loading"
+      class="stat-cards"
+    >
+      <div
+        v-for="stat in roleStats"
+        :key="stat.value"
+        class="stat-card"
+      >
         <div class="stat-top">
-          <a-tag :color="stat.color" size="small">{{ stat.label }}</a-tag>
+          <a-tag
+            :color="stat.color"
+            size="small"
+          >
+            {{ stat.label }}
+          </a-tag>
           <span class="stat-count">{{ stat.count }}</span>
         </div>
-        <div class="stat-bar"><div class="stat-fill" :style="{ width: stat.pct + '%', background: stat.hex }"></div></div>
+        <div class="stat-bar">
+          <div
+            class="stat-fill"
+            :style="{ width: stat.pct + '%', background: stat.hex }"
+          />
+        </div>
       </div>
     </div>
 
     <!-- 工具栏 -->
     <div class="toolbar">
-      <a-input-search v-model="searchText" placeholder="搜索用户名 / 姓名" style="width:240px" allow-clear />
-      <a-select v-model="filterRole" placeholder="角色筛选" style="width:150px" allow-clear>
-        <a-option value="">全部角色</a-option>
-        <a-option v-for="r in permissionStore.allRoles" :key="r.value" :value="r.value">{{ r.label }}</a-option>
+      <a-input-search
+        v-model="searchText"
+        placeholder="搜索用户名 / 姓名"
+        style="width:240px"
+        allow-clear
+      />
+      <a-select
+        v-model="filterRole"
+        placeholder="角色筛选"
+        style="width:150px"
+        allow-clear
+      >
+        <a-option value="">
+          全部角色
+        </a-option>
+        <a-option
+          v-for="r in permissionStore.allRoles"
+          :key="r.value"
+          :value="r.value"
+        >
+          {{ r.label }}
+        </a-option>
       </a-select>
-      <a-select v-model="filterStatus" style="width:120px">
-        <a-option value="all">全部状态</a-option>
-        <a-option value="active">在职</a-option>
-        <a-option value="inactive">停用</a-option>
+      <a-select
+        v-model="filterStatus"
+        style="width:120px"
+      >
+        <a-option value="all">
+          全部状态
+        </a-option>
+        <a-option value="active">
+          在职
+        </a-option>
+        <a-option value="inactive">
+          停用
+        </a-option>
       </a-select>
     </div>
 
     <!-- 用户表格 -->
     <div class="table-wrap">
-    <a-table :data="filteredUsers" :loading="loading" :pagination="{ pageSize: 12, showTotal: true }" row-key="id" stripe>
-      <!-- Arco Table：列必须放在 #columns，否则走 default 插槽分支，data 不会渲染表体 -->
-      <template #columns>
-        <a-table-column title="ID" data-index="id" :width="60" />
-        <a-table-column title="姓名" :width="170">
-          <template #cell="{ record }">
-            <div class="user-cell">
-              <a-avatar :size="28" :style="{ background: getRoleHex(record.role), fontSize: '12px' }">
-                {{ ((record.full_name || record.username || '?') + '')[0] }}
-              </a-avatar>
-              <div>
-                <div class="uname">{{ record.full_name || '—' }}</div>
-                <div class="ulogin">@{{ record.username || '—' }}</div>
+      <a-table
+        :data="filteredUsers"
+        :loading="loading"
+        :pagination="{ pageSize: 12, showTotal: true }"
+        row-key="id"
+        stripe
+      >
+        <!-- Arco Table：列必须放在 #columns，否则走 default 插槽分支，data 不会渲染表体 -->
+        <template #columns>
+          <a-table-column
+            title="ID"
+            data-index="id"
+            :width="60"
+          />
+          <a-table-column
+            title="姓名"
+            :width="170"
+          >
+            <template #cell="{ record }">
+              <div class="user-cell">
+                <a-avatar
+                  :size="28"
+                  :style="{ background: getRoleHex(record.role), fontSize: '12px' }"
+                >
+                  {{ ((record.full_name || record.username || '?') + '')[0] }}
+                </a-avatar>
+                <div>
+                  <div class="uname">
+                    {{ record.full_name || '—' }}
+                  </div>
+                  <div class="ulogin">
+                    @{{ record.username || '—' }}
+                  </div>
+                </div>
               </div>
-            </div>
-          </template>
-        </a-table-column>
-        <a-table-column title="邮箱">
-          <template #cell="{ record }">{{ record.email || '—' }}</template>
-        </a-table-column>
-        <a-table-column title="角色" :width="120">
-          <template #cell="{ record }">
-            <a-tag :color="getRoleColor(record.role)" size="small">{{ getRoleLabel(record.role) }}</a-tag>
-          </template>
-        </a-table-column>
-        <a-table-column title="状态" :width="90">
-          <template #cell="{ record }">
-            <a-badge :status="record.is_active ? 'processing' : 'default'" :text="record.is_active ? '在职' : '停用'" />
-          </template>
-        </a-table-column>
-        <a-table-column title="创建时间" :width="110">
-          <template #cell="{ record }">{{ formatDate(record.created_at) }}</template>
-        </a-table-column>
-        <a-table-column title="操作" :width="210" v-if="permissionStore.can('action:update_role')">
-          <template #cell="{ record }">
-            <a-space size="mini">
-              <a-tooltip content="编辑资料">
-                <a-button type="text" size="mini" @click="openEditModal(record)"><template #icon><icon-edit /></template></a-button>
-              </a-tooltip>
-              <a-tooltip content="修改角色">
-                <a-button type="text" size="mini" @click="openRoleModal(record)"><template #icon><icon-user-group /></template></a-button>
-              </a-tooltip>
-              <a-tooltip content="重置密码">
-                <a-button type="text" size="mini" @click="openPasswordModal(record)"><template #icon><icon-lock /></template></a-button>
-              </a-tooltip>
-              <a-tooltip :content="record.is_active ? '停用账号' : '启用账号'">
-                <a-button type="text" size="mini"
-                  :status="record.is_active ? 'warning' : 'success'"
-                  @click="confirmToggleStatus(record)"
-                  :disabled="record.id === selfId">
-                  <template #icon><icon-poweroff v-if="record.is_active" /><icon-check-circle v-else /></template>
-                </a-button>
-              </a-tooltip>
-              <a-tooltip content="删除人员">
-                <a-button type="text" size="mini" status="danger"
-                  @click="confirmDelete(record)" :disabled="record.id === selfId">
-                  <template #icon><icon-delete /></template>
-                </a-button>
-              </a-tooltip>
-            </a-space>
-          </template>
-        </a-table-column>
-      </template>
-    </a-table>
+            </template>
+          </a-table-column>
+          <a-table-column title="邮箱">
+            <template #cell="{ record }">
+              {{ record.email || '—' }}
+            </template>
+          </a-table-column>
+          <a-table-column
+            title="角色"
+            :width="120"
+          >
+            <template #cell="{ record }">
+              <a-tag
+                :color="getRoleColor(record.role)"
+                size="small"
+              >
+                {{ getRoleLabel(record.role) }}
+              </a-tag>
+            </template>
+          </a-table-column>
+          <a-table-column
+            title="状态"
+            :width="90"
+          >
+            <template #cell="{ record }">
+              <a-badge
+                :status="record.is_active ? 'processing' : 'default'"
+                :text="record.is_active ? '在职' : '停用'"
+              />
+            </template>
+          </a-table-column>
+          <a-table-column
+            title="创建时间"
+            :width="110"
+          >
+            <template #cell="{ record }">
+              {{ formatDate(record.created_at) }}
+            </template>
+          </a-table-column>
+          <a-table-column
+            v-if="permissionStore.can('action:update_role')"
+            title="操作"
+            :width="210"
+          >
+            <template #cell="{ record }">
+              <a-space size="mini">
+                <a-tooltip content="编辑资料">
+                  <a-button
+                    type="text"
+                    size="mini"
+                    @click="openEditModal(record)"
+                  >
+                    <template #icon>
+                      <icon-edit />
+                    </template>
+                  </a-button>
+                </a-tooltip>
+                <a-tooltip content="修改角色">
+                  <a-button
+                    type="text"
+                    size="mini"
+                    @click="openRoleModal(record)"
+                  >
+                    <template #icon>
+                      <icon-user-group />
+                    </template>
+                  </a-button>
+                </a-tooltip>
+                <a-tooltip content="重置密码">
+                  <a-button
+                    type="text"
+                    size="mini"
+                    @click="openPasswordModal(record)"
+                  >
+                    <template #icon>
+                      <icon-lock />
+                    </template>
+                  </a-button>
+                </a-tooltip>
+                <a-tooltip :content="record.is_active ? '停用账号' : '启用账号'">
+                  <a-button
+                    type="text"
+                    size="mini"
+                    :status="record.is_active ? 'warning' : 'success'"
+                    :disabled="record.id === selfId"
+                    @click="confirmToggleStatus(record)"
+                  >
+                    <template #icon>
+                      <icon-poweroff v-if="record.is_active" /><icon-check-circle v-else />
+                    </template>
+                  </a-button>
+                </a-tooltip>
+                <a-tooltip content="删除人员">
+                  <a-button
+                    type="text"
+                    size="mini"
+                    status="danger"
+                    :disabled="record.id === selfId"
+                    @click="confirmDelete(record)"
+                  >
+                    <template #icon>
+                      <icon-delete />
+                    </template>
+                  </a-button>
+                </a-tooltip>
+              </a-space>
+            </template>
+          </a-table-column>
+        </template>
+      </a-table>
     </div>
 
     <!-- ① 新增人员弹窗 -->
-    <a-modal v-model:visible="createModal.visible" title="新增人员" :ok-loading="createModal.loading"
-      @ok="submitCreate" @cancel="createModal.visible = false" width="480px">
-      <a-form :model="createModal.form" layout="vertical" ref="createFormRef">
+    <a-modal
+      v-model:visible="createModal.visible"
+      title="新增人员"
+      :ok-loading="createModal.loading"
+      width="480px"
+      @ok="submitCreate"
+      @cancel="createModal.visible = false"
+    >
+      <a-form
+        ref="createFormRef"
+        :model="createModal.form"
+        layout="vertical"
+      >
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="用户名" field="username" required
-              :rules="[{required:true,message:'请填写用户名'},{minLength:2,message:'至少2个字符'}]">
-              <a-input v-model="createModal.form.username" placeholder="英文+数字，全局唯一" />
+            <a-form-item
+              label="用户名"
+              field="username"
+              required
+              :rules="[{required:true,message:'请填写用户名'},{minLength:2,message:'至少2个字符'}]"
+            >
+              <a-input
+                v-model="createModal.form.username"
+                placeholder="英文+数字，全局唯一"
+              />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="姓名" field="full_name" required :rules="[{required:true,message:'请填写姓名'}]">
-              <a-input v-model="createModal.form.full_name" placeholder="真实姓名" />
+            <a-form-item
+              label="姓名"
+              field="full_name"
+              required
+              :rules="[{required:true,message:'请填写姓名'}]"
+            >
+              <a-input
+                v-model="createModal.form.full_name"
+                placeholder="真实姓名"
+              />
             </a-form-item>
           </a-col>
         </a-row>
         <a-form-item label="邮箱">
-          <a-input v-model="createModal.form.email" placeholder="选填" />
+          <a-input
+            v-model="createModal.form.email"
+            placeholder="选填"
+          />
         </a-form-item>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="初始密码" field="password" required
-              :rules="[{required:true,message:'请设置密码'},{minLength:6,message:'至少6位'}]">
-              <a-input-password v-model="createModal.form.password" placeholder="至少6位" />
+            <a-form-item
+              label="初始密码"
+              field="password"
+              required
+              :rules="[{required:true,message:'请设置密码'},{minLength:6,message:'至少6位'}]"
+            >
+              <a-input-password
+                v-model="createModal.form.password"
+                placeholder="至少6位"
+              />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="角色" field="role" required :rules="[{required:true,message:'请选择角色'}]">
-              <a-select v-model="createModal.form.role" placeholder="选择角色">
-                <a-option v-for="r in permissionStore.allRoles" :key="r.value" :value="r.value">
-                  <a-tag :color="r.color" size="small">{{ r.label }}</a-tag>
+            <a-form-item
+              label="角色"
+              field="role"
+              required
+              :rules="[{required:true,message:'请选择角色'}]"
+            >
+              <a-select
+                v-model="createModal.form.role"
+                placeholder="选择角色"
+              >
+                <a-option
+                  v-for="r in permissionStore.allRoles"
+                  :key="r.value"
+                  :value="r.value"
+                >
+                  <a-tag
+                    :color="r.color"
+                    size="small"
+                  >
+                    {{ r.label }}
+                  </a-tag>
                 </a-option>
               </a-select>
             </a-form-item>
           </a-col>
         </a-row>
         <a-form-item label="入职状态">
-          <a-switch v-model="createModal.form.is_active" checked-text="立即启用" unchecked-text="暂不启用" />
+          <a-switch
+            v-model="createModal.form.is_active"
+            checked-text="立即启用"
+            unchecked-text="暂不启用"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
 
     <!-- ② 编辑资料弹窗 -->
-    <a-modal v-model:visible="editModal.visible" title="编辑人员资料" :ok-loading="editModal.loading"
-      @ok="submitEdit" @cancel="editModal.visible = false" width="420px">
-      <a-form :model="editModal.form" layout="vertical">
+    <a-modal
+      v-model:visible="editModal.visible"
+      title="编辑人员资料"
+      :ok-loading="editModal.loading"
+      width="420px"
+      @ok="submitEdit"
+      @cancel="editModal.visible = false"
+    >
+      <a-form
+        :model="editModal.form"
+        layout="vertical"
+      >
         <a-form-item label="姓名">
           <a-input v-model="editModal.form.full_name" />
         </a-form-item>
@@ -172,51 +375,104 @@
     </a-modal>
 
     <!-- ③ 修改角色弹窗 -->
-    <a-modal v-model:visible="roleModal.visible" title="修改用户角色" :ok-loading="roleModal.loading"
-      @ok="submitRoleChange" @cancel="roleModal.visible = false" width="400px">
+    <a-modal
+      v-model:visible="roleModal.visible"
+      title="修改用户角色"
+      :ok-loading="roleModal.loading"
+      width="400px"
+      @ok="submitRoleChange"
+      @cancel="roleModal.visible = false"
+    >
       <div class="modal-user-banner">
-        <a-avatar :size="36" :style="{ background: getRoleHex(roleModal.user?.role || '') }">
+        <a-avatar
+          :size="36"
+          :style="{ background: getRoleHex(roleModal.user?.role || '') }"
+        >
           {{ (roleModal.user?.full_name || 'U').charAt(0) }}
         </a-avatar>
         <div>
-          <div style="font-weight:600">{{ roleModal.user?.full_name }}</div>
-          <div style="font-size:12px;color:var(--color-text-3)">@{{ roleModal.user?.username }}</div>
+          <div style="font-weight:600">
+            {{ roleModal.user?.full_name }}
+          </div>
+          <div style="font-size:12px;color:var(--color-text-3)">
+            @{{ roleModal.user?.username }}
+          </div>
         </div>
       </div>
       <a-divider :margin="12" />
       <a-form layout="vertical">
         <a-form-item label="当前角色">
-          <a-tag :color="getRoleColor(roleModal.user?.role || '')">{{ getRoleLabel(roleModal.user?.role || '') }}</a-tag>
+          <a-tag :color="getRoleColor(roleModal.user?.role || '')">
+            {{ getRoleLabel(roleModal.user?.role || '') }}
+          </a-tag>
         </a-form-item>
-        <a-form-item label="变更为" required>
-          <a-select v-model="roleModal.newRole" style="width:100%">
-            <a-option v-for="r in permissionStore.allRoles" :key="r.value" :value="r.value">
-              <a-tag :color="r.color" size="small">{{ r.label }}</a-tag>
+        <a-form-item
+          label="变更为"
+          required
+        >
+          <a-select
+            v-model="roleModal.newRole"
+            style="width:100%"
+          >
+            <a-option
+              v-for="r in permissionStore.allRoles"
+              :key="r.value"
+              :value="r.value"
+            >
+              <a-tag
+                :color="r.color"
+                size="small"
+              >
+                {{ r.label }}
+              </a-tag>
             </a-option>
           </a-select>
         </a-form-item>
-        <a-alert type="warning">角色变更即时生效，用户下次登录权限同步更新。</a-alert>
+        <a-alert type="warning">
+          角色变更即时生效，用户下次登录权限同步更新。
+        </a-alert>
       </a-form>
     </a-modal>
 
     <!-- ④ 重置密码弹窗 -->
-    <a-modal v-model:visible="passwordModal.visible" title="重置密码" :ok-loading="passwordModal.loading"
-      @ok="submitPasswordReset" @cancel="passwordModal.visible = false" width="400px">
+    <a-modal
+      v-model:visible="passwordModal.visible"
+      title="重置密码"
+      :ok-loading="passwordModal.loading"
+      width="400px"
+      @ok="submitPasswordReset"
+      @cancel="passwordModal.visible = false"
+    >
       <div class="modal-user-banner">
-        <a-avatar :size="36" :style="{ background: getRoleHex(passwordModal.user?.role || '') }">
+        <a-avatar
+          :size="36"
+          :style="{ background: getRoleHex(passwordModal.user?.role || '') }"
+        >
           {{ (passwordModal.user?.full_name || 'U').charAt(0) }}
         </a-avatar>
         <div>
-          <div style="font-weight:600">{{ passwordModal.user?.full_name }}</div>
-          <div style="font-size:12px;color:var(--color-text-3)">@{{ passwordModal.user?.username }}</div>
+          <div style="font-weight:600">
+            {{ passwordModal.user?.full_name }}
+          </div>
+          <div style="font-size:12px;color:var(--color-text-3)">
+            @{{ passwordModal.user?.username }}
+          </div>
         </div>
       </div>
       <a-divider :margin="12" />
       <a-form layout="vertical">
-        <a-form-item label="新密码" required>
-          <a-input-password v-model="passwordModal.newPassword" placeholder="至少6位" />
+        <a-form-item
+          label="新密码"
+          required
+        >
+          <a-input-password
+            v-model="passwordModal.newPassword"
+            placeholder="至少6位"
+          />
         </a-form-item>
-        <a-alert type="warning">密码重置后原密码立即失效，请告知本人新密码。</a-alert>
+        <a-alert type="warning">
+          密码重置后原密码立即失效，请告知本人新密码。
+        </a-alert>
       </a-form>
     </a-modal>
   </div>

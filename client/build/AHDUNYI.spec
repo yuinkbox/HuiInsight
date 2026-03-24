@@ -47,6 +47,18 @@ if SHARED.exists():
     datas.append((str(SHARED), "shared"))
     print("[SPEC] shared/ included")
 
+# Environment files for different build environments
+# Note: These will be included as .env files in the build
+ENV_TEST = PROJECT / ".env.test"
+if ENV_TEST.exists():
+    datas.append((str(ENV_TEST), "."))
+    print("[SPEC] .env.test included")
+    
+ENV_DEV = PROJECT / ".env.development"
+if ENV_DEV.exists():
+    datas.append((str(ENV_DEV), "."))
+    print("[SPEC] .env.development included")
+
 hiddenimports = [
     "PyQt6", "PyQt6.QtWidgets", "PyQt6.QtCore", "PyQt6.QtGui",
     "PyQt6.QtWebChannel", "PyQt6.QtWebEngineWidgets",

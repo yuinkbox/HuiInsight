@@ -16,7 +16,6 @@ In FastAPI dependency injection::
     def example(db: Session = Depends(get_db)):
         ...
 """
-
 from typing import Generator
 
 from sqlalchemy import create_engine
@@ -28,7 +27,7 @@ DATABASE_URL: str = config.database.url
 
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,  # detect stale connections
+    pool_pre_ping=True,       # detect stale connections
     pool_recycle=config.database.pool_recycle,
     pool_size=config.database.pool_size,
     max_overflow=config.database.max_overflow,

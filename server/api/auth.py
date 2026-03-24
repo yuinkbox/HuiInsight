@@ -21,8 +21,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from server.constants.permissions import (get_permissions_for_role,
-                                          get_role_meta)
+from server.constants.permissions import get_permissions_for_role, get_role_meta
 from server.core.config import config
 from server.core.database import get_db
 from server.db.models import User

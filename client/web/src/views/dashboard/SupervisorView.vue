@@ -2,7 +2,10 @@
   <div class="supervisor-view">
     <!-- 顶部：单兵战报精准查询 -->
     <div class="user-search-section">
-      <a-card title="🔍 单兵战报精准查询" class="search-card">
+      <a-card
+        title="🔍 单兵战报精准查询"
+        class="search-card"
+      >
         <template #extra>
           <a-space>
             <a-date-picker
@@ -26,12 +29,15 @@
             v-model="searchKeyword"
             placeholder="输入员工姓名、用户名或ID进行搜索"
             :loading="searchingUser"
+            class="search-input"
             @search="searchUserStats"
             @press-enter="searchUserStats"
-            class="search-input"
           >
             <template #button>
-              <a-button type="primary" :loading="searchingUser">
+              <a-button
+                type="primary"
+                :loading="searchingUser"
+              >
                 <template #icon>
                   <icon-search />
                 </template>
@@ -47,10 +53,17 @@
         </div>
         
         <!-- 搜索结果提示 -->
-        <div v-if="searchResults.length > 0" class="search-results-hint">
+        <div
+          v-if="searchResults.length > 0"
+          class="search-results-hint"
+        >
           <icon-check-circle style="color: #52c41a" />
           找到 {{ searchResults.length }} 个匹配的员工
-          <a-button type="text" size="small" @click="clearSearch">
+          <a-button
+            type="text"
+            size="small"
+            @click="clearSearch"
+          >
             <template #icon>
               <icon-close />
             </template>
@@ -59,20 +72,33 @@
         </div>
         
         <!-- 搜索结果列表 -->
-        <div v-if="searchResults.length > 0" class="search-results">
-          <a-list :data="searchResults" :bordered="false" size="small">
+        <div
+          v-if="searchResults.length > 0"
+          class="search-results"
+        >
+          <a-list
+            :data="searchResults"
+            :bordered="false"
+            size="small"
+          >
             <template #item="{ item }">
               <a-list-item class="search-result-item">
                 <a-list-item-meta>
                   <template #avatar>
-                    <a-avatar :size="32" :style="{ backgroundColor: getUserColor(item.role) }">
+                    <a-avatar
+                      :size="32"
+                      :style="{ backgroundColor: getUserColor(item.role) }"
+                    >
                       {{ item.username?.charAt(0)?.toUpperCase() || 'U' }}
                     </a-avatar>
                   </template>
                   <template #title>
                     <div class="user-title">
                       <span class="user-name">{{ item.full_name }}</span>
-                      <a-tag :color="getUserColor(item.role)" size="small">
+                      <a-tag
+                        :color="getUserColor(item.role)"
+                        size="small"
+                      >
                         {{ permissionStore.allRoles.find((r) => r.value === item.role)?.label ?? item.role }}
                       </a-tag>
                     </div>
@@ -86,7 +112,11 @@
                   </template>
                 </a-list-item-meta>
                 <template #actions>
-                  <a-button type="primary" size="small" @click="showUserStats(item)">
+                  <a-button
+                    type="primary"
+                    size="small"
+                    @click="showUserStats(item)"
+                  >
                     <template #icon>
                       <icon-eye />
                     </template>
@@ -102,7 +132,10 @@
     
     <!-- 中部：团队实时看板 -->
     <div class="dashboard-section">
-      <a-card title="📊 团队实时看板" class="dashboard-card">
+      <a-card
+        title="📊 团队实时看板"
+        class="dashboard-card"
+      >
         <!-- 时间范围选择 -->
         <div class="time-range-section">
           <div class="section-header">
@@ -124,13 +157,20 @@
               style="width: 150px"
               :disabled="loadingInsight"
             />
-            <a-button type="primary" @click="loadTeamInsight" :loading="loadingInsight">
+            <a-button
+              type="primary"
+              :loading="loadingInsight"
+              @click="loadTeamInsight"
+            >
               <template #icon>
                 <icon-refresh />
               </template>
               查询数据
             </a-button>
-            <a-button type="outline" @click="resetDateRange">
+            <a-button
+              type="outline"
+              @click="resetDateRange"
+            >
               <template #icon>
                 <icon-reset />
               </template>
@@ -140,16 +180,24 @@
         </div>
         
         <!-- 数据展示区域 -->
-        <div v-if="loadingInsight" class="loading-state">
+        <div
+          v-if="loadingInsight"
+          class="loading-state"
+        >
           <a-spin size="large">
             <div class="loading-content">
               <icon-loading />
-              <div class="loading-text">正在加载团队数据...</div>
+              <div class="loading-text">
+                正在加载团队数据...
+              </div>
             </div>
           </a-spin>
         </div>
         
-        <div v-else-if="!teamInsight && !loadingInsight" class="empty-state">
+        <div
+          v-else-if="!teamInsight && !loadingInsight"
+          class="empty-state"
+        >
           <a-empty description="暂无团队数据">
             <template #image>
               <icon-pie-chart />
@@ -160,7 +208,10 @@
           </a-empty>
         </div>
         
-        <div v-else-if="teamInsight" class="data-display">
+        <div
+          v-else-if="teamInsight"
+          class="data-display"
+        >
           <!-- 总体统计卡片 -->
           <div class="overall-stats">
             <a-row :gutter="24">
@@ -239,10 +290,17 @@
               class="performance-table"
             >
               <template #columns>
-                <a-table-column title="员工" data-index="username" :width="100">
+                <a-table-column
+                  title="员工"
+                  data-index="username"
+                  :width="100"
+                >
                   <template #cell="{ record }">
                     <div class="user-cell">
-                      <a-avatar :size="24" :style="{ backgroundColor: getUserColor(record.role) }">
+                      <a-avatar
+                        :size="24"
+                        :style="{ backgroundColor: getUserColor(record.role) }"
+                      >
                         {{ record.username?.charAt(0)?.toUpperCase() || 'U' }}
                       </a-avatar>
                       <span>{{ record.username }}</span>
@@ -250,39 +308,73 @@
                   </template>
                 </a-table-column>
                 
-                <a-table-column title="姓名" data-index="full_name" :width="80" />
+                <a-table-column
+                  title="姓名"
+                  data-index="full_name"
+                  :width="80"
+                />
                 
-                <a-table-column title="审核场次" data-index="total_reviewed" :width="90">
+                <a-table-column
+                  title="审核场次"
+                  data-index="total_reviewed"
+                  :width="90"
+                >
                   <template #cell="{ record }">
                     <span class="stat-value">{{ record.total_reviewed || 0 }}</span>
                   </template>
                 </a-table-column>
                 
-                <a-table-column title="违规拦截" data-index="total_violations" :width="90">
+                <a-table-column
+                  title="违规拦截"
+                  data-index="total_violations"
+                  :width="90"
+                >
                   <template #cell="{ record }">
-                    <span class="stat-value" :class="{ 'high-violation': record.total_violations > 5 }">
+                    <span
+                      class="stat-value"
+                      :class="{ 'high-violation': record.total_violations > 5 }"
+                    >
                       {{ record.total_violations || 0 }}
                     </span>
                   </template>
                 </a-table-column>
                 
-                <a-table-column title="工作时长" data-index="total_duration" :width="100">
+                <a-table-column
+                  title="工作时长"
+                  data-index="total_duration"
+                  :width="100"
+                >
                   <template #cell="{ record }">
                     <span class="stat-value">{{ formatDuration(record.total_duration || 0) }}</span>
                   </template>
                 </a-table-column>
                 
-                <a-table-column title="违规率" data-index="violation_rate" :width="80">
+                <a-table-column
+                  title="违规率"
+                  data-index="violation_rate"
+                  :width="80"
+                >
                   <template #cell="{ record }">
-                    <span class="stat-value" :class="getViolationRateClass(record.violation_rate)">
+                    <span
+                      class="stat-value"
+                      :class="getViolationRateClass(record.violation_rate)"
+                    >
                       {{ ((record.violation_rate || 0) * 100).toFixed(1) }}%
                     </span>
                   </template>
                 </a-table-column>
                 
-                <a-table-column title="操作" :width="100" fixed="right">
+                <a-table-column
+                  title="操作"
+                  :width="100"
+                  fixed="right"
+                >
                   <template #cell="{ record }">
-                    <a-button type="text" size="small" @click="showUserStats(record)">
+                    <a-button
+                      type="text"
+                      size="small"
+                      @click="showUserStats(record)"
+                    >
                       <template #icon>
                         <icon-eye />
                       </template>
@@ -309,8 +401,15 @@
                   <span>任务量分布</span>
                 </div>
                 
-                <div v-if="teamInsight.channel_stats && teamInsight.channel_stats.length > 0" class="mock-chart">
-                  <div v-for="channel in teamInsight.channel_stats" :key="channel.channel" class="chart-bar">
+                <div
+                  v-if="teamInsight.channel_stats && teamInsight.channel_stats.length > 0"
+                  class="mock-chart"
+                >
+                  <div
+                    v-for="channel in teamInsight.channel_stats"
+                    :key="channel.channel"
+                    class="chart-bar"
+                  >
                     <div class="bar-label">
                       <span>{{ getChannelLabel(channel.channel) }}</span>
                       <span class="bar-value">{{ channel.total_tasks || 0 }}</span>
@@ -322,12 +421,15 @@
                           width: `${getChannelPercentage(channel.total_tasks || 0)}%`,
                           backgroundColor: getChannelColor(channel.channel)
                         }"
-                      ></div>
+                      />
                     </div>
                   </div>
                 </div>
                 
-                <div v-else class="no-data">
+                <div
+                  v-else
+                  class="no-data"
+                >
                   <icon-file-exclamation />
                   <span>暂无通道数据</span>
                 </div>
@@ -340,8 +442,15 @@
                   <span>审核场次分布</span>
                 </div>
                 
-                <div v-if="teamInsight.channel_stats && teamInsight.channel_stats.length > 0" class="mock-chart">
-                  <div v-for="channel in teamInsight.channel_stats" :key="channel.channel" class="chart-bar">
+                <div
+                  v-if="teamInsight.channel_stats && teamInsight.channel_stats.length > 0"
+                  class="mock-chart"
+                >
+                  <div
+                    v-for="channel in teamInsight.channel_stats"
+                    :key="channel.channel"
+                    class="chart-bar"
+                  >
                     <div class="bar-label">
                       <span>{{ getChannelLabel(channel.channel) }}</span>
                       <span class="bar-value">{{ channel.total_reviewed || 0 }}</span>
@@ -353,12 +462,15 @@
                           width: `${getChannelPercentage(channel.total_reviewed || 0)}%`,
                           backgroundColor: getChannelColor(channel.channel)
                         }"
-                      ></div>
+                      />
                     </div>
                   </div>
                 </div>
                 
-                <div v-else class="no-data">
+                <div
+                  v-else
+                  class="no-data"
+                >
                   <icon-file-exclamation />
                   <span>暂无通道数据</span>
                 </div>
@@ -371,10 +483,18 @@
     
     <!-- 底部：人事与权限管理 -->
     <div class="personnel-management-section">
-      <a-card title="👥 人事与权限管理" class="management-card">
+      <a-card
+        title="👥 人事与权限管理"
+        class="management-card"
+      >
         <template #extra>
           <a-space>
-            <a-button type="primary" size="small" @click="loadAllUsers" :loading="loadingUsers">
+            <a-button
+              type="primary"
+              size="small"
+              :loading="loadingUsers"
+              @click="loadAllUsers"
+            >
               <template #icon>
                 <icon-refresh />
               </template>
@@ -387,12 +507,24 @@
               size="small"
               @change="filterUsersByRole"
             >
-              <a-option value="">全部角色</a-option>
-              <a-option value="supervisor">主管</a-option>
-              <a-option value="shift_leader">组长</a-option>
-              <a-option value="auditor">审核员</a-option>
+              <a-option value="">
+                全部角色
+              </a-option>
+              <a-option value="supervisor">
+                主管
+              </a-option>
+              <a-option value="shift_leader">
+                组长
+              </a-option>
+              <a-option value="auditor">
+                审核员
+              </a-option>
             </a-select>
-            <a-button type="primary" size="small" @click="showDynamicRolesConfig">
+            <a-button
+              type="primary"
+              size="small"
+              @click="showDynamicRolesConfig"
+            >
               <template #icon>
                 <icon-settings />
               </template>
@@ -411,12 +543,25 @@
           class="user-management-table"
         >
           <template #columns>
-            <a-table-column title="ID" data-index="id" :width="70" fixed="left" />
+            <a-table-column
+              title="ID"
+              data-index="id"
+              :width="70"
+              fixed="left"
+            />
             
-            <a-table-column title="用户名" data-index="username" :width="100" fixed="left">
+            <a-table-column
+              title="用户名"
+              data-index="username"
+              :width="100"
+              fixed="left"
+            >
               <template #cell="{ record }">
                 <div class="user-cell">
-                  <a-avatar :size="28" :style="{ backgroundColor: getUserColor(record.role) }">
+                  <a-avatar
+                    :size="28"
+                    :style="{ backgroundColor: getUserColor(record.role) }"
+                  >
                     {{ record.username?.charAt(0)?.toUpperCase() || 'U' }}
                   </a-avatar>
                   <span class="username-text">{{ record.username }}</span>
@@ -424,51 +569,92 @@
               </template>
             </a-table-column>
             
-            <a-table-column title="姓名" data-index="full_name" :width="90" />
+            <a-table-column
+              title="姓名"
+              data-index="full_name"
+              :width="90"
+            />
             
-            <a-table-column title="邮箱" data-index="email" :width="180">
+            <a-table-column
+              title="邮箱"
+              data-index="email"
+              :width="180"
+            >
               <template #cell="{ record }">
                 <span class="email-text">{{ record.email }}</span>
               </template>
             </a-table-column>
             
-            <a-table-column title="当前角色" data-index="role" :width="100">
+            <a-table-column
+              title="当前角色"
+              data-index="role"
+              :width="100"
+            >
               <template #cell="{ record }">
-                <a-tag :color="getUserColor(record.role)" size="small">
+                <a-tag
+                  :color="getUserColor(record.role)"
+                  size="small"
+                >
                   {{ permissionStore.allRoles.find((r) => r.value === record.role)?.label ?? record.role }}
                 </a-tag>
               </template>
             </a-table-column>
             
-            <a-table-column title="管理员" data-index="is_admin" :width="80">
+            <a-table-column
+              title="管理员"
+              data-index="is_admin"
+              :width="80"
+            >
               <template #cell="{ record }">
-                <a-tag :color="record.is_admin ? 'green' : 'gray'" size="small">
+                <a-tag
+                  :color="record.is_admin ? 'green' : 'gray'"
+                  size="small"
+                >
                   {{ record.is_admin ? '是' : '否' }}
                 </a-tag>
               </template>
             </a-table-column>
             
-            <a-table-column title="状态" data-index="is_active" :width="80">
+            <a-table-column
+              title="状态"
+              data-index="is_active"
+              :width="80"
+            >
               <template #cell="{ record }">
-                <a-tag :color="record.is_active ? 'blue' : 'red'" size="small">
+                <a-tag
+                  :color="record.is_active ? 'blue' : 'red'"
+                  size="small"
+                >
                   {{ record.is_active ? '活跃' : '禁用' }}
                 </a-tag>
               </template>
             </a-table-column>
             
-            <a-table-column title="创建时间" data-index="created_at" :width="120">
+            <a-table-column
+              title="创建时间"
+              data-index="created_at"
+              :width="120"
+            >
               <template #cell="{ record }">
                 <span class="time-text">{{ formatTime(record.created_at) }}</span>
               </template>
             </a-table-column>
             
-            <a-table-column title="最后更新" data-index="updated_at" :width="120">
+            <a-table-column
+              title="最后更新"
+              data-index="updated_at"
+              :width="120"
+            >
               <template #cell="{ record }">
                 <span class="time-text">{{ formatTime(record.updated_at) }}</span>
               </template>
             </a-table-column>
             
-            <a-table-column title="操作" :width="180" fixed="right">
+            <a-table-column
+              title="操作"
+              :width="180"
+              fixed="right"
+            >
               <template #cell="{ record }">
                 <a-space :size="8">
                   <!-- 角色修改下拉框 -->
@@ -476,16 +662,26 @@
                     v-model="record.role"
                     :style="{ width: '100px' }"
                     size="small"
-                    @change="(value: any) => handleUpdateUserRole(record.id, value)"
                     :disabled="record.id === currentUserId"
+                    @change="(value: any) => handleUpdateUserRole(record.id, value)"
                   >
-                    <a-option value="supervisor">主管</a-option>
-                    <a-option value="shift_leader">组长</a-option>
-                    <a-option value="auditor">审核员</a-option>
+                    <a-option value="supervisor">
+                      主管
+                    </a-option>
+                    <a-option value="shift_leader">
+                      组长
+                    </a-option>
+                    <a-option value="auditor">
+                      审核员
+                    </a-option>
                   </a-select>
                   
                   <!-- 查看详情按钮 -->
-                  <a-button type="text" size="small" @click="showUserStats(record)">
+                  <a-button
+                    type="text"
+                    size="small"
+                    @click="showUserStats(record)"
+                  >
                     <template #icon>
                       <icon-eye />
                     </template>
@@ -509,7 +705,12 @@
               <icon-user-group />
               <span>角色分布:</span>
               <div class="role-distribution">
-                <a-tag v-for="(count, role) in roleDistribution" :key="role" :color="getUserColor(role as any)" size="small">
+                <a-tag
+                  v-for="(count, role) in roleDistribution"
+                  :key="role"
+                  :color="getUserColor(role as any)"
+                  size="small"
+                >
                   {{ permissionStore.allRoles.find((r) => r.value === role as any)?.label ?? role as any }}: {{ count }}
                 </a-tag>
               </div>
@@ -528,17 +729,26 @@
       :mask-closable="true"
       class="user-stats-drawer"
     >
-      <div v-if="selectedUser && userStats" class="user-stats-content">
+      <div
+        v-if="selectedUser && userStats"
+        class="user-stats-content"
+      >
         <!-- 用户基本信息 -->
         <div class="user-basic-info">
           <div class="user-avatar-section">
-            <a-avatar :size="64" :style="{ backgroundColor: getUserColor(selectedUser.role) }">
+            <a-avatar
+              :size="64"
+              :style="{ backgroundColor: getUserColor(selectedUser.role) }"
+            >
               {{ selectedUser.username?.charAt(0)?.toUpperCase() || 'U' }}
             </a-avatar>
             <div class="user-title">
               <h3>{{ selectedUser.full_name }}</h3>
               <div class="user-subtitle">
-                <a-tag :color="getUserColor(selectedUser.role)" size="small">
+                <a-tag
+                  :color="getUserColor(selectedUser.role)"
+                  size="small"
+                >
                   {{ permissionStore.allRoles.find((r) => r.value === selectedUser.role)?.label ?? selectedUser.role }}
                 </a-tag>
                 <span class="username">@{{ selectedUser.username }}</span>
@@ -625,39 +835,66 @@
             class="channel-stats-table"
           >
             <template #columns>
-              <a-table-column title="通道类型" data-index="channel" :width="120">
+              <a-table-column
+                title="通道类型"
+                data-index="channel"
+                :width="120"
+              >
                 <template #cell="{ record }">
-                  <a-tag :color="getChannelColor(record.channel)" size="small">
+                  <a-tag
+                    :color="getChannelColor(record.channel)"
+                    size="small"
+                  >
                     {{ getChannelLabel(record.channel) }}
                   </a-tag>
                 </template>
               </a-table-column>
               
-              <a-table-column title="任务量" data-index="task_count" :width="90">
+              <a-table-column
+                title="任务量"
+                data-index="task_count"
+                :width="90"
+              >
                 <template #cell="{ record }">
                   <span class="stat-value">{{ record.task_count || 0 }}</span>
                 </template>
               </a-table-column>
               
-              <a-table-column title="审核场次" data-index="total_reviewed" :width="90">
+              <a-table-column
+                title="审核场次"
+                data-index="total_reviewed"
+                :width="90"
+              >
                 <template #cell="{ record }">
                   <span class="stat-value">{{ record.total_reviewed || 0 }}</span>
                 </template>
               </a-table-column>
               
-              <a-table-column title="违规数" data-index="total_violations" :width="80">
+              <a-table-column
+                title="违规数"
+                data-index="total_violations"
+                :width="80"
+              >
                 <template #cell="{ record }">
                   <span class="stat-value">{{ record.total_violations || 0 }}</span>
                 </template>
               </a-table-column>
               
-              <a-table-column title="工作时长" data-index="total_duration" :width="100">
+              <a-table-column
+                title="工作时长"
+                data-index="total_duration"
+                :width="100"
+              >
                 <template #cell="{ record }">
                   <span class="stat-value">{{ formatDuration(record.total_duration || 0) }}</span>
                 </template>
               </a-table-column>
               
-              <a-table-column title="占比" data-index="percentage" :width="80">
+              <a-table-column
+                title="占比"
+                data-index="percentage"
+                :width="80"
+              >
                 <template #cell="{ record }">
                   <span class="stat-value">
                     {{ calculatePercentage(record.task_count, userStats.summary?.total_tasks) }}%
@@ -683,45 +920,82 @@
             class="shifts-table"
           >
             <template #columns>
-              <a-table-column title="日期" data-index="shift_date" :width="100" />
+              <a-table-column
+                title="日期"
+                data-index="shift_date"
+                :width="100"
+              />
               
-              <a-table-column title="班次" data-index="shift_type" :width="80">
+              <a-table-column
+                title="班次"
+                data-index="shift_type"
+                :width="80"
+              >
                 <template #cell="{ record }">
-                  <a-tag :color="getShiftTypeColor(record.shift_type)" size="small">
+                  <a-tag
+                    :color="getShiftTypeColor(record.shift_type)"
+                    size="small"
+                  >
                     {{ getShiftTypeLabel(record.shift_type) }}
                   </a-tag>
                 </template>
               </a-table-column>
               
-              <a-table-column title="通道" data-index="task_channel" :width="100">
+              <a-table-column
+                title="通道"
+                data-index="task_channel"
+                :width="100"
+              >
                 <template #cell="{ record }">
-                  <a-tag :color="getChannelColor(record.task_channel)" size="small">
+                  <a-tag
+                    :color="getChannelColor(record.task_channel)"
+                    size="small"
+                  >
                     {{ getChannelLabel(record.task_channel) }}
                   </a-tag>
                 </template>
               </a-table-column>
               
-              <a-table-column title="审核场次" data-index="reviewed_count" :width="90">
+              <a-table-column
+                title="审核场次"
+                data-index="reviewed_count"
+                :width="90"
+              >
                 <template #cell="{ record }">
                   <span class="stat-value">{{ record.reviewed_count || 0 }}</span>
                 </template>
               </a-table-column>
               
-              <a-table-column title="违规数" data-index="violation_count" :width="80">
+              <a-table-column
+                title="违规数"
+                data-index="violation_count"
+                :width="80"
+              >
                 <template #cell="{ record }">
                   <span class="stat-value">{{ record.violation_count || 0 }}</span>
                 </template>
               </a-table-column>
               
-              <a-table-column title="工作时长" data-index="work_duration" :width="100">
+              <a-table-column
+                title="工作时长"
+                data-index="work_duration"
+                :width="100"
+              >
                 <template #cell="{ record }">
                   <span class="stat-value">{{ formatDuration(record.work_duration || 0) }}</span>
                 </template>
               </a-table-column>
               
-              <a-table-column title="状态" data-index="is_completed" :width="80">
+              <a-table-column
+                title="状态"
+                data-index="is_completed"
+                :width="80"
+              >
                 <template #cell="{ record }">
-                  <a-tag :color="record.is_completed ? 'green' : 'orange'" size="small">
+                  <a-tag
+                    :color="record.is_completed ? 'green' : 'orange'"
+                    size="small"
+                  >
                     {{ record.is_completed ? '已完成' : '进行中' }}
                   </a-tag>
                 </template>
@@ -731,11 +1005,16 @@
         </div>
       </div>
       
-      <div v-else class="drawer-loading">
+      <div
+        v-else
+        class="drawer-loading"
+      >
         <a-spin size="large">
           <div class="loading-content">
             <icon-loading />
-            <div class="loading-text">正在加载用户数据...</div>
+            <div class="loading-text">
+              正在加载用户数据...
+            </div>
           </div>
         </a-spin>
       </div>

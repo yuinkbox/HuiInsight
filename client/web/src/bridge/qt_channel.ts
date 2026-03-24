@@ -91,20 +91,24 @@ function _loadQWebChannelScript(): Promise<void> {
   })
 }
 
-function _initDesktopBridge(): Promise<AppBridge | null> {
-  return new Promise(async (resolve) => {
-    try {
-      await _loadQWebChannelScript()
+async function _initDesktopBridgeAsync(): Promise<AppBridge | null> {
+  try {
+    await _loadQWebChannelScript()
+    return await new Promise<AppBridge | null>((resolve) => {
       new window.QWebChannel!(window.qt!.webChannelTransport, (channel) => {
         _bridge = channel.objects.bridge as AppBridge
         console.info('[QTBridge] AppBridge connected.')
         resolve(_bridge)
       })
-    } catch (err) {
-      console.warn('[QTBridge] Desktop bridge init failed:', err)
-      resolve(null)
-    }
-  })
+    })
+  } catch (err) {
+    console.warn('[QTBridge] Desktop bridge init failed:', err)
+    return null
+  }
+}
+
+function _initDesktopBridge(): Promise<AppBridge | null> {
+  return _initDesktopBridgeAsync()
 }
 
 // ---------------------------------------------------------------------------

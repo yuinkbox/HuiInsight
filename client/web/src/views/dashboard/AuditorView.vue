@@ -1,31 +1,49 @@
 <template>
   <div class="auditor-view">
-
     <!-- 顶部欢迎横幅 -->
     <div class="welcome-banner">
       <div class="banner-left">
         <div class="greeting">
           <span class="greeting-text">{{ greetingText }}，{{ userFullName }}</span>
-          <a-tag class="role-badge" color="blue">审核员</a-tag>
+          <a-tag
+            class="role-badge"
+            color="blue"
+          >
+            审核员
+          </a-tag>
         </div>
-        <div class="banner-sub">{{ todayDateStr }} · 今日工作概览</div>
+        <div class="banner-sub">
+          {{ todayDateStr }} · 今日工作概览
+        </div>
       </div>
       <div class="banner-right">
-        <div v-if="todayTask" class="shift-info">
+        <div
+          v-if="todayTask"
+          class="shift-info"
+        >
           <div class="shift-item">
             <span class="shift-label">当前任务</span>
-            <a-tag :color="channelColorMap[todayTask.task_channel] || 'blue'" size="medium">
+            <a-tag
+              :color="channelColorMap[todayTask.task_channel] || 'blue'"
+              size="medium"
+            >
               {{ getTaskChannelLabel(todayTask.task_channel) }}
             </a-tag>
           </div>
           <div class="shift-item">
             <span class="shift-label">班次</span>
-            <a-tag :color="shiftColorMap[todayTask.shift_type] || 'gray'" size="medium">
+            <a-tag
+              :color="shiftColorMap[todayTask.shift_type] || 'gray'"
+              size="medium"
+            >
               {{ getShiftTypeLabel(todayTask.shift_type) }}
             </a-tag>
           </div>
         </div>
-        <div v-else-if="!taskLoading" class="no-shift">
+        <div
+          v-else-if="!taskLoading"
+          class="no-shift"
+        >
           <icon-calendar />
           <span>今日暂未分配任务</span>
         </div>
@@ -36,7 +54,11 @@
     <div class="section-title">
       <icon-thunderbolt />
       <span>今日数据</span>
-      <a-spin v-if="taskLoading" :size="14" style="margin-left:8px" />
+      <a-spin
+        v-if="taskLoading"
+        :size="14"
+        style="margin-left:8px"
+      />
     </div>
 
     <div class="metrics-grid">
@@ -46,8 +68,12 @@
           <icon-check-circle />
         </div>
         <div class="metric-body">
-          <div class="metric-value">{{ todayTask?.reviewed_count ?? 0 }}</div>
-          <div class="metric-label">已审场次</div>
+          <div class="metric-value">
+            {{ todayTask?.reviewed_count ?? 0 }}
+          </div>
+          <div class="metric-label">
+            已审场次
+          </div>
         </div>
         <div class="metric-trend">
           <icon-arrow-rise class="trend-up" />
@@ -60,8 +86,12 @@
           <icon-exclamation-circle />
         </div>
         <div class="metric-body">
-          <div class="metric-value red">{{ todayTask?.violation_count ?? 0 }}</div>
-          <div class="metric-label">违规拦截</div>
+          <div class="metric-value red">
+            {{ todayTask?.violation_count ?? 0 }}
+          </div>
+          <div class="metric-label">
+            违规拦截
+          </div>
         </div>
         <div class="metric-trend">
           <icon-arrow-rise class="trend-up" />
@@ -74,10 +104,17 @@
           <icon-clock-circle />
         </div>
         <div class="metric-body">
-          <div class="metric-value blue mono">{{ formatDurationHMS(todayTask?.work_duration ?? 0) }}</div>
-          <div class="metric-label">今日直播巡查时长</div>
+          <div class="metric-value blue mono">
+            {{ formatDurationHMS(todayTask?.work_duration ?? 0) }}
+          </div>
+          <div class="metric-label">
+            今日直播巡查时长
+          </div>
         </div>
-        <div class="goto-patrol" @click="goToPatrol">
+        <div
+          class="goto-patrol"
+          @click="goToPatrol"
+        >
           <icon-live-broadcast />
           <span>前往直播巡查计时</span>
           <icon-arrow-right class="arrow-icon" />
@@ -97,10 +134,17 @@
           <icon-check-circle class="icon-green" />
           <span>已审场次</span>
         </div>
-        <div class="weekly-value">{{ weeklyStats.total_reviewed }}</div>
-        <div class="weekly-sub">本周累计</div>
+        <div class="weekly-value">
+          {{ weeklyStats.total_reviewed }}
+        </div>
+        <div class="weekly-sub">
+          本周累计
+        </div>
         <div class="weekly-bar">
-          <div class="weekly-bar-fill green" :style="{ width: weeklyBarWidth(weeklyStats.total_reviewed, 200) }"></div>
+          <div
+            class="weekly-bar-fill green"
+            :style="{ width: weeklyBarWidth(weeklyStats.total_reviewed, 200) }"
+          />
         </div>
       </div>
 
@@ -109,10 +153,17 @@
           <icon-exclamation-circle class="icon-red" />
           <span>违规拦截</span>
         </div>
-        <div class="weekly-value red">{{ weeklyStats.total_violations }}</div>
-        <div class="weekly-sub">本周累计</div>
+        <div class="weekly-value red">
+          {{ weeklyStats.total_violations }}
+        </div>
+        <div class="weekly-sub">
+          本周累计
+        </div>
         <div class="weekly-bar">
-          <div class="weekly-bar-fill red" :style="{ width: weeklyBarWidth(weeklyStats.total_violations, 50) }"></div>
+          <div
+            class="weekly-bar-fill red"
+            :style="{ width: weeklyBarWidth(weeklyStats.total_violations, 50) }"
+          />
         </div>
       </div>
 
@@ -121,10 +172,17 @@
           <icon-clock-circle class="icon-blue" />
           <span>在岗时长</span>
         </div>
-        <div class="weekly-value blue">{{ Math.round(weeklyStats.total_duration / 60) }}</div>
-        <div class="weekly-sub">分钟 · 本周累计</div>
+        <div class="weekly-value blue">
+          {{ Math.round(weeklyStats.total_duration / 60) }}
+        </div>
+        <div class="weekly-sub">
+          分钟 · 本周累计
+        </div>
         <div class="weekly-bar">
-          <div class="weekly-bar-fill blue" :style="{ width: weeklyBarWidth(weeklyStats.total_duration / 60, 3000) }"></div>
+          <div
+            class="weekly-bar-fill blue"
+            :style="{ width: weeklyBarWidth(weeklyStats.total_duration / 60, 3000) }"
+          />
         </div>
       </div>
 
@@ -133,14 +191,20 @@
           <icon-file-list class="icon-purple" />
           <span>完成任务</span>
         </div>
-        <div class="weekly-value purple">{{ weeklyStats.task_count }}</div>
-        <div class="weekly-sub">本周累计</div>
+        <div class="weekly-value purple">
+          {{ weeklyStats.task_count }}
+        </div>
+        <div class="weekly-sub">
+          本周累计
+        </div>
         <div class="weekly-bar">
-          <div class="weekly-bar-fill purple" :style="{ width: weeklyBarWidth(weeklyStats.task_count, 20) }"></div>
+          <div
+            class="weekly-bar-fill purple"
+            :style="{ width: weeklyBarWidth(weeklyStats.task_count, 20) }"
+          />
         </div>
       </div>
     </div>
-
   </div>
 </template>
 

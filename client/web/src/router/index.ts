@@ -8,13 +8,12 @@
  * 新增角色或调整权限：只需修改后端 permissions.py，前端零改动。
  */
 
-import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import { auth } from '@/utils/auth'
 import { usePermissionStore } from '@/stores/permission'
 import { useWorkflowStore } from '@/stores/workflow'
-import { isDesktopMode } from '@/bridge/qt_channel'
 import { rbacApi } from '@/api/rbac'
 
 import MainLayout from '@/layouts/MainLayout.vue'

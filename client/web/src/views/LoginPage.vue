@@ -2,23 +2,32 @@
   <div class="login-page">
     <!-- 背景装饰 -->
     <div class="background-decoration">
-      <div class="gradient-circle circle-1"></div>
-      <div class="gradient-circle circle-2"></div>
-      <div class="gradient-circle circle-3"></div>
+      <div class="gradient-circle circle-1" />
+      <div class="gradient-circle circle-2" />
+      <div class="gradient-circle circle-3" />
     </div>
 
     <!-- 登录卡片 -->
-    <a-card class="login-card" :bordered="false">
+    <a-card
+      class="login-card"
+      :bordered="false"
+    >
       <template #cover>
         <div class="card-header">
           <div class="logo">
             <icon-computer size="32" />
             <span class="logo-text">AHDUNYI</span>
           </div>
-          <a-typography-title :level="3" class="welcome-text">
+          <a-typography-title
+            :level="3"
+            class="welcome-text"
+          >
             HuiInsight 徽鉴
           </a-typography-title>
-          <a-typography-text type="secondary" class="subtitle">
+          <a-typography-text
+            type="secondary"
+            class="subtitle"
+          >
             工作辛苦了，但也需要保持专注与严谨哦
           </a-typography-text>
         </div>
@@ -38,7 +47,9 @@
             @input="handleUsernameInput"
             @paste="handleUsernamePaste"
           >
-            <template #prefix><icon-user /></template>
+            <template #prefix>
+              <icon-user />
+            </template>
           </a-input>
         </div>
 
@@ -55,14 +66,20 @@
             @input="handlePasswordInput"
             @paste="handlePasswordPaste"
           >
-            <template #prefix><icon-lock /></template>
+            <template #prefix>
+              <icon-lock />
+            </template>
           </a-input-password>
         </div>
 
         <!-- 记住登录 -->
         <div class="form-item remember-item">
-          <a-checkbox v-model="rememberMe">记住登录状态</a-checkbox>
-          <a-link @click="showForgetPassword">忘记密码？</a-link>
+          <a-checkbox v-model="rememberMe">
+            记住登录状态
+          </a-checkbox>
+          <a-link @click="showForgetPassword">
+            忘记密码？
+          </a-link>
         </div>
 
         <!-- 登录按钮 -->
@@ -72,16 +89,21 @@
           long
           :loading="loginLoading"
           :disabled="!canLogin"
-          @click="handleLogin"
           class="login-button"
+          @click="handleLogin"
         >
-          <template #icon><icon-login v-if="!loginLoading" /></template>
+          <template #icon>
+            <icon-login v-if="!loginLoading" />
+          </template>
           {{ loginLoading ? '登录中...' : '立即登录' }}
         </a-button>
 
         <!-- 登录结果提示 -->
         <Transition name="alert-slide">
-          <div v-if="apiStatus" class="api-status">
+          <div
+            v-if="apiStatus"
+            class="api-status"
+          >
             <a-alert
               :type="apiStatus.type"
               :title="apiStatus.title"
@@ -95,13 +117,23 @@
 
         <!-- 后端连接状态 -->
         <Transition name="alert-slide">
-          <div class="backend-status" v-if="!backendConnected">
-            <a-alert type="warning" show-icon>
-              <template #icon><icon-wifi /></template>
+          <div
+            v-if="!backendConnected"
+            class="backend-status"
+          >
+            <a-alert
+              type="warning"
+              show-icon
+            >
+              <template #icon>
+                <icon-wifi />
+              </template>
               后端服务未连接
               <template #content>
                 请确保后端服务正在运行 ({{ apiBaseUrl }})
-                <a-link @click="checkBackend"> 点击重试</a-link>
+                <a-link @click="checkBackend">
+                  点击重试
+                </a-link>
               </template>
             </a-alert>
           </div>
@@ -109,7 +141,9 @@
 
         <!-- 版本信息 -->
         <div class="version-info">
-          <a-typography-text type="secondary">© 2026 HuiInsight</a-typography-text>
+          <a-typography-text type="secondary">
+            © 2026 HuiInsight
+          </a-typography-text>
         </div>
       </div>
     </a-card>

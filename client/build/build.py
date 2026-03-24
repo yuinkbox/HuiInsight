@@ -46,7 +46,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--env",
-        choices=["development", "production", "test"],
+        choices=["development", "test", "production"],
         default="production",
         help="Build environment (default: production)",
     )
@@ -251,3 +251,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

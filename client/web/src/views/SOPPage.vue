@@ -2,7 +2,10 @@
   <div class="sop-page">
     <!-- 页面标题 -->
     <div class="page-header">
-      <a-space direction="vertical" :size="8">
+      <a-space
+        direction="vertical"
+        :size="8"
+      >
         <a-typography-title :level="2">
           📋 红线标准
         </a-typography-title>

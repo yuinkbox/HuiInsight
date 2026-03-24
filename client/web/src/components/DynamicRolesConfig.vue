@@ -11,19 +11,28 @@
       <!-- 顶部操作栏 -->
       <div class="config-header">
         <a-space>
-          <a-button type="primary" @click="handleAddRole">
+          <a-button
+            type="primary"
+            @click="handleAddRole"
+          >
             <template #icon>
               <icon-plus />
             </template>
             新增角色
           </a-button>
-          <a-button type="outline" @click="handleAddPermission">
+          <a-button
+            type="outline"
+            @click="handleAddPermission"
+          >
             <template #icon>
               <icon-plus />
             </template>
             新增权限
           </a-button>
-          <a-button type="text" @click="refreshData">
+          <a-button
+            type="text"
+            @click="refreshData"
+          >
             <template #icon>
               <icon-refresh />
             </template>
@@ -32,9 +41,15 @@
         </a-space>
         
         <div class="header-stats">
-          <a-tag color="blue">角色: {{ roles.length }}</a-tag>
-          <a-tag color="green">权限: {{ permissions.length }}</a-tag>
-          <a-tag color="orange">系统角色: {{ systemRolesCount }}</a-tag>
+          <a-tag color="blue">
+            角色: {{ roles.length }}
+          </a-tag>
+          <a-tag color="green">
+            权限: {{ permissions.length }}
+          </a-tag>
+          <a-tag color="orange">
+            系统角色: {{ systemRolesCount }}
+          </a-tag>
         </div>
       </div>
       
@@ -67,18 +82,41 @@
                   @click="selectRole(item)"
                 >
                   <div class="role-item-header">
-                    <div class="role-color" :style="{ backgroundColor: item.color }"></div>
+                    <div
+                      class="role-color"
+                      :style="{ backgroundColor: item.color }"
+                    />
                     <div class="role-info">
                       <div class="role-name">
                         <strong>{{ item.display_name }}</strong>
-                        <a-tag v-if="item.is_system" size="small" color="orange">系统</a-tag>
-                        <a-tag v-if="!item.is_active" size="small" color="red">禁用</a-tag>
+                        <a-tag
+                          v-if="item.is_system"
+                          size="small"
+                          color="orange"
+                        >
+                          系统
+                        </a-tag>
+                        <a-tag
+                          v-if="!item.is_active"
+                          size="small"
+                          color="red"
+                        >
+                          禁用
+                        </a-tag>
                       </div>
-                      <div class="role-code">{{ item.name }}</div>
+                      <div class="role-code">
+                        {{ item.name }}
+                      </div>
                     </div>
                     <div class="role-actions">
-                      <a-dropdown :trigger="['click']" position="br">
-                        <a-button type="text" size="mini">
+                      <a-dropdown
+                        :trigger="['click']"
+                        position="br"
+                      >
+                        <a-button
+                          type="text"
+                          size="mini"
+                        >
                           <icon-more />
                         </a-button>
                         <template #content>
@@ -90,8 +128,8 @@
                           </a-doption>
                           <a-doption
                             v-if="!item.is_system"
-                            @click="handleToggleRoleStatus(item)"
                             :disabled="item.user_count > 0"
+                            @click="handleToggleRoleStatus(item)"
                           >
                             <template #icon>
                               <icon-poweroff />
@@ -100,8 +138,8 @@
                           </a-doption>
                           <a-doption
                             v-if="!item.is_system && item.user_count === 0"
-                            @click="handleDeleteRole(item)"
                             class="danger-option"
+                            @click="handleDeleteRole(item)"
                           >
                             <template #icon>
                               <icon-delete />
@@ -124,7 +162,10 @@
                     </div>
                   </div>
                   
-                  <div class="role-description" v-if="item.description">
+                  <div
+                    v-if="item.description"
+                    class="role-description"
+                  >
                     {{ item.description }}
                   </div>
                 </div>
@@ -147,15 +188,20 @@
             <h3 v-if="selectedRole">
               🔐 {{ selectedRole.display_name }} - 权限配置
             </h3>
-            <h3 v-else>🔐 请选择一个角色</h3>
+            <h3 v-else>
+              🔐 请选择一个角色
+            </h3>
             
-            <div v-if="selectedRole" class="role-actions">
+            <div
+              v-if="selectedRole"
+              class="role-actions"
+            >
               <a-button
                 type="primary"
                 size="small"
-                @click="handleSavePermissions"
                 :loading="savingPermissions"
                 :disabled="selectedRole.is_system"
+                @click="handleSavePermissions"
               >
                 <template #icon>
                   <icon-save />
@@ -165,23 +211,26 @@
               <a-button
                 type="outline"
                 size="small"
-                @click="handleSelectAll"
                 :disabled="selectedRole.is_system"
+                @click="handleSelectAll"
               >
                 全选
               </a-button>
               <a-button
                 type="outline"
                 size="small"
-                @click="handleClearAll"
                 :disabled="selectedRole.is_system"
+                @click="handleClearAll"
               >
                 清空
               </a-button>
             </div>
           </div>
           
-          <div v-if="selectedRole" class="permissions-content">
+          <div
+            v-if="selectedRole"
+            class="permissions-content"
+          >
             <!-- 权限分类 -->
             <div
               v-for="category in permissionCategories"
@@ -193,8 +242,8 @@
                 <a-checkbox
                   :model-value="isCategorySelected(category.category)"
                   :indeterminate="isCategoryIndeterminate(category.category)"
-                  @change="(checked: boolean) => toggleCategory(category.category, checked)"
                   :disabled="selectedRole.is_system"
+                  @change="(checked: boolean) => toggleCategory(category.category, checked)"
                 >
                   全选
                 </a-checkbox>
@@ -208,17 +257,34 @@
                 >
                   <a-checkbox
                     :model-value="isPermissionSelected(permission.id)"
-                    @change="(checked: boolean) => togglePermission(permission.id, checked)"
                     :disabled="selectedRole.is_system || !permission.is_active"
+                    @change="(checked: boolean) => togglePermission(permission.id, checked)"
                   >
                     <div class="permission-info">
                       <div class="permission-name">
                         {{ permission.name }}
-                        <a-tag v-if="!permission.is_active" size="small" color="red">禁用</a-tag>
-                        <a-tag v-if="permission.is_system" size="small" color="orange">系统</a-tag>
+                        <a-tag
+                          v-if="!permission.is_active"
+                          size="small"
+                          color="red"
+                        >
+                          禁用
+                        </a-tag>
+                        <a-tag
+                          v-if="permission.is_system"
+                          size="small"
+                          color="orange"
+                        >
+                          系统
+                        </a-tag>
                       </div>
-                      <div class="permission-code">{{ permission.code }}</div>
-                      <div class="permission-description" v-if="permission.description">
+                      <div class="permission-code">
+                        {{ permission.code }}
+                      </div>
+                      <div
+                        v-if="permission.description"
+                        class="permission-description"
+                      >
                         {{ permission.description }}
                       </div>
                     </div>
@@ -227,7 +293,10 @@
               </div>
             </div>
             
-            <div v-if="permissionCategories.length === 0" class="empty-permissions">
+            <div
+              v-if="permissionCategories.length === 0"
+              class="empty-permissions"
+            >
               <a-empty description="暂无权限数据">
                 <template #image>
                   <icon-key />
@@ -236,7 +305,10 @@
             </div>
           </div>
           
-          <div v-else class="no-role-selected">
+          <div
+            v-else
+            class="no-role-selected"
+          >
             <a-empty description="请从左侧选择一个角色进行权限配置">
               <template #image>
                 <icon-user-group />
@@ -262,7 +334,11 @@
       :rules="roleRules"
       layout="vertical"
     >
-      <a-form-item label="角色标识" field="name" required>
+      <a-form-item
+        label="角色标识"
+        field="name"
+        required
+      >
         <a-input
           v-model="roleForm.name"
           placeholder="例如: team_leader, auditor"
@@ -273,14 +349,21 @@
         </template>
       </a-form-item>
       
-      <a-form-item label="显示名称" field="display_name" required>
+      <a-form-item
+        label="显示名称"
+        field="display_name"
+        required
+      >
         <a-input
           v-model="roleForm.display_name"
           placeholder="例如: 组长, 审核员"
         />
       </a-form-item>
       
-      <a-form-item label="描述" field="description">
+      <a-form-item
+        label="描述"
+        field="description"
+      >
         <a-textarea
           v-model="roleForm.description"
           placeholder="角色描述..."
@@ -289,7 +372,11 @@
         />
       </a-form-item>
       
-      <a-form-item label="颜色" field="color" required>
+      <a-form-item
+        label="颜色"
+        field="color"
+        required
+      >
         <a-color-picker
           v-model="roleForm.color"
           :show-preview="true"
@@ -297,19 +384,39 @@
         />
       </a-form-item>
       
-      <a-form-item label="仪表盘视图" field="dashboard_view" required>
+      <a-form-item
+        label="仪表盘视图"
+        field="dashboard_view"
+        required
+      >
         <a-select v-model="roleForm.dashboard_view">
-          <a-option value="auditor">审核员视图</a-option>
-          <a-option value="supervisor">主管视图</a-option>
-          <a-option value="manager">经理视图</a-option>
-          <a-option value="admin">管理员视图</a-option>
+          <a-option value="auditor">
+            审核员视图
+          </a-option>
+          <a-option value="supervisor">
+            主管视图
+          </a-option>
+          <a-option value="manager">
+            经理视图
+          </a-option>
+          <a-option value="admin">
+            管理员视图
+          </a-option>
         </a-select>
       </a-form-item>
       
-      <a-form-item label="状态" field="is_active" v-if="editingRole">
+      <a-form-item
+        v-if="editingRole"
+        label="状态"
+        field="is_active"
+      >
         <a-switch v-model="roleForm.is_active">
-          <template #checked>启用</template>
-          <template #unchecked>禁用</template>
+          <template #checked>
+            启用
+          </template>
+          <template #unchecked>
+            禁用
+          </template>
         </a-switch>
       </a-form-item>
     </a-form>
@@ -329,7 +436,11 @@
       :rules="permissionRules"
       layout="vertical"
     >
-      <a-form-item label="权限标识" field="code" required>
+      <a-form-item
+        label="权限标识"
+        field="code"
+        required
+      >
         <a-input
           v-model="permissionForm.code"
           placeholder="例如: action:update_role, view:dashboard"
@@ -340,21 +451,32 @@
         </template>
       </a-form-item>
       
-      <a-form-item label="权限名称" field="name" required>
+      <a-form-item
+        label="权限名称"
+        field="name"
+        required
+      >
         <a-input
           v-model="permissionForm.name"
           placeholder="例如: 更新角色权限, 查看仪表盘"
         />
       </a-form-item>
       
-      <a-form-item label="分类" field="category" required>
+      <a-form-item
+        label="分类"
+        field="category"
+        required
+      >
         <a-input
           v-model="permissionForm.category"
           placeholder="例如: action, view, manage"
         />
       </a-form-item>
       
-      <a-form-item label="描述" field="description">
+      <a-form-item
+        label="描述"
+        field="description"
+      >
         <a-textarea
           v-model="permissionForm.description"
           placeholder="权限描述..."
@@ -363,10 +485,18 @@
         />
       </a-form-item>
       
-      <a-form-item label="状态" field="is_active" v-if="editingPermission">
+      <a-form-item
+        v-if="editingPermission"
+        label="状态"
+        field="is_active"
+      >
         <a-switch v-model="permissionForm.is_active">
-          <template #checked>启用</template>
-          <template #unchecked>禁用</template>
+          <template #checked>
+            启用
+          </template>
+          <template #unchecked>
+            禁用
+          </template>
         </a-switch>
       </a-form-item>
     </a-form>
@@ -374,7 +504,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import type { FormInstance } from '@arco-design/web-vue'
 import {
@@ -385,9 +515,7 @@ import {
   updateRole,
   deleteRole,
   createPermission,
-  updatePermission,
-  getRoleCatalogue,
-  getPermissionCatalogue
+  updatePermission
 } from '@/api/dynamicRoles'
 
 interface Role {
@@ -415,11 +543,6 @@ interface Permission {
   is_system: boolean
   is_active: boolean
   created_at: string
-}
-
-interface PermissionCategory {
-  category: string
-  permissions: Permission[]
 }
 
 // 模态框控制

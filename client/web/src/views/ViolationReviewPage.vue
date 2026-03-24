@@ -7,60 +7,111 @@
         <span class="page-title">违规复核</span>
       </div>
       <a-space>
-        <a-range-picker v-model="dateRange" style="width:280px" @change="loadTasks" />
-        <a-button @click="loadTasks" :loading="loading">
-          <template #icon><icon-refresh /></template>刷新
+        <a-range-picker
+          v-model="dateRange"
+          style="width:280px"
+          @change="loadTasks"
+        />
+        <a-button
+          :loading="loading"
+          @click="loadTasks"
+        >
+          <template #icon>
+            <icon-refresh />
+          </template>刷新
         </a-button>
       </a-space>
     </div>
 
     <!-- 统计行 -->
-    <a-row :gutter="16" class="stat-row">
+    <a-row
+      :gutter="16"
+      class="stat-row"
+    >
       <a-col :span="6">
         <a-card class="stat-card">
-          <a-statistic title="总违规数" :value="stats.totalViolations"
-            :value-style="{ color: '#f53f3f' }">
-            <template #prefix><icon-bug /></template>
+          <a-statistic
+            title="总违规数"
+            :value="stats.totalViolations"
+            :value-style="{ color: '#f53f3f' }"
+          >
+            <template #prefix>
+              <icon-bug />
+            </template>
           </a-statistic>
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card class="stat-card">
-          <a-statistic title="总审核量" :value="stats.totalReviewed"
-            :value-style="{ color: '#165dff' }">
-            <template #prefix><icon-eye /></template>
+          <a-statistic
+            title="总审核量"
+            :value="stats.totalReviewed"
+            :value-style="{ color: '#165dff' }"
+          >
+            <template #prefix>
+              <icon-eye />
+            </template>
           </a-statistic>
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card class="stat-card">
-          <a-statistic title="违规率" :value="stats.violationRate"
-            :precision="2" suffix="%"
-            :value-style="{ color: stats.violationRate > 5 ? '#f53f3f' : '#00b42a' }">
-            <template #prefix><icon-percentage /></template>
+          <a-statistic
+            title="违规率"
+            :value="stats.violationRate"
+            :precision="2"
+            suffix="%"
+            :value-style="{ color: stats.violationRate > 5 ? '#f53f3f' : '#00b42a' }"
+          >
+            <template #prefix>
+              <icon-percentage />
+            </template>
           </a-statistic>
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card class="stat-card">
-          <a-statistic title="已完成任务" :value="stats.completedTasks"
-            :value-style="{ color: '#00b42a' }">
-            <template #prefix><icon-check-circle /></template>
+          <a-statistic
+            title="已完成任务"
+            :value="stats.completedTasks"
+            :value-style="{ color: '#00b42a' }"
+          >
+            <template #prefix>
+              <icon-check-circle />
+            </template>
           </a-statistic>
         </a-card>
       </a-col>
     </a-row>
 
     <!-- 任务列表 -->
-    <a-card title="任务明细" class="table-card">
+    <a-card
+      title="任务明细"
+      class="table-card"
+    >
       <template #extra>
-        <a-select v-model="channelFilter" style="width:140px" allow-clear placeholder="通道筛选"
-          @change="() => {}">
-          <a-option value="">全部</a-option>
-          <a-option value="image">图片</a-option>
-          <a-option value="chat">单聊</a-option>
-          <a-option value="video">视频</a-option>
-          <a-option value="live">直播</a-option>
+        <a-select
+          v-model="channelFilter"
+          style="width:140px"
+          allow-clear
+          placeholder="通道筛选"
+          @change="() => {}"
+        >
+          <a-option value="">
+            全部
+          </a-option>
+          <a-option value="image">
+            图片
+          </a-option>
+          <a-option value="chat">
+            单聊
+          </a-option>
+          <a-option value="video">
+            视频
+          </a-option>
+          <a-option value="live">
+            直播
+          </a-option>
         </a-select>
       </template>
 
@@ -72,9 +123,15 @@
         stripe
       >
         <template #columns>
-          <a-table-column title="日期" data-index="shift_date" :width="110" />
+          <a-table-column
+            title="日期"
+            data-index="shift_date"
+            :width="110"
+          />
           <a-table-column title="班次">
-            <template #cell="{ record }">{{ shiftLabel(record.shift_type) }}</template>
+            <template #cell="{ record }">
+              {{ shiftLabel(record.shift_type) }}
+            </template>
           </a-table-column>
           <a-table-column title="通道">
             <template #cell="{ record }">
@@ -83,8 +140,16 @@
               </a-tag>
             </template>
           </a-table-column>
-          <a-table-column title="审核量" data-index="reviewed_count" :sortable="{ sortDirections: ['ascend','descend'] }" />
-          <a-table-column title="违规数" data-index="violation_count" :sortable="{ sortDirections: ['ascend','descend'] }">
+          <a-table-column
+            title="审核量"
+            data-index="reviewed_count"
+            :sortable="{ sortDirections: ['ascend','descend'] }"
+          />
+          <a-table-column
+            title="违规数"
+            data-index="violation_count"
+            :sortable="{ sortDirections: ['ascend','descend'] }"
+          >
             <template #cell="{ record }">
               <span :style="{ color: record.violation_count > 0 ? '#f53f3f' : 'inherit' }">
                 {{ record.violation_count }}
@@ -111,10 +176,19 @@
               />
             </template>
           </a-table-column>
-          <a-table-column title="操作" :width="100">
+          <a-table-column
+            title="操作"
+            :width="100"
+          >
             <template #cell="{ record }">
-              <a-button type="text" size="small" @click="viewDetail(record)">
-                <template #icon><icon-eye /></template>详情
+              <a-button
+                type="text"
+                size="small"
+                @click="viewDetail(record)"
+              >
+                <template #icon>
+                  <icon-eye />
+                </template>详情
               </a-button>
             </template>
           </a-table-column>
@@ -129,7 +203,11 @@
       :footer="false"
       :width="480"
     >
-      <a-descriptions :data="detailFields" bordered :column="1" />
+      <a-descriptions
+        :data="detailFields"
+        bordered
+        :column="1"
+      />
     </a-modal>
   </div>
 </template>

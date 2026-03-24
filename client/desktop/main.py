@@ -24,16 +24,8 @@ from typing import Optional
 # Monorepo root: client/desktop/ -> client/ -> repo_root
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from client.desktop.config.enhanced_config import (
-    EnhancedAppSettings,
-    get_config,
-    get_environment,
-    get_server_url,
-)
-from client.desktop.utils.enhanced_network_client import (
-    test_server_connectivity,
-    format_connectivity_result,
-)
+from client.desktop.config.env_config import config_manager, settings
+from client.desktop.config.settings import AppSettings
 from client.desktop.utils.file_helper import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -63,7 +55,7 @@ def _check_dependencies() -> list:
     return missing
 
 
-def _start_room_monitor(settings: EnhancedAppSettings, bridge) -> Optional[object]:
+def _start_room_monitor(settings: AppSettings, bridge) -> Optional[object]:
     """Start RoomMonitor and wire its callback to the AppBridge.
 
     Args:
@@ -99,63 +91,7 @@ def _start_room_monitor(settings: EnhancedAppSettings, bridge) -> Optional[objec
         return None
 
 
-def _check_server_connection(server_url: str) -> bool:
-    """
-    检查服务器连接性
-    
-    Args:
-        server_url: 服务器URL
-        
-    Returns:
-        是否连接成功
-    """
-    print("正在检查服务器连接...")
-    logger.info("开始服务器连接检查: %s", server_url)
-    
-    try:
-        # 执行详细的连接性检查
-        result = test_server_connectivity(server_url, timeout=10)
-        
-        # 格式化并显示结果
-        formatted_result = format_connectivity_result(result)
-        print("\n" + "=" * 60)
-        print("服务器连接检查结果:")
-        print("=" * 60)
-        print(formatted_result)
-        print("=" * 60 + "\n")
-        
-        # 记录到日志
-        logger.info("服务器连接检查完成: %s", "成功" if result["reachable"] else "失败")
-        
-        if not result["reachable"]:
-            # 显示详细的错误信息
-            if result.get("error_message"):
-                print(f"[ERROR] 连接失败: {result['error_message']}")
-                
-            # 提供诊断建议
-            print("\n诊断建议:")
-            if not result.get("dns_resolved", False):
-                print("  • DNS解析失败 - 请检查网络连接或服务器域名")
-            elif not result.get("port_open", True):
-                print("  • 端口被拒绝 - 请检查服务器是否正在运行，或防火墙设置")
-            elif not result.get("http_accessible", False):
-                print("  • HTTP访问失败 - 请检查服务器应用是否正常运行")
-            else:
-                print("  • 未知连接问题 - 请检查网络配置")
-                
-            return False
-            
-        print("✅ 服务器连接成功！")
-        return True
-        
-    except Exception as e:
-        error_msg = f"连接检查过程中发生错误: {e}"
-        print(f"[ERROR] {error_msg}")
-        logger.error(error_msg)
-        return False
-
-
-def _run_gui(settings: EnhancedAppSettings) -> int:
+def _run_gui(settings: AppSettings) -> int:
     """Create QApplication and run the main event loop.
 
     Returns:
@@ -223,25 +159,17 @@ def main() -> int:
     """Application entry point. Returns integer exit code."""
     print("AHDUNYI Terminal PRO  -  starting...")
 
-    # 加载增强配置（dataclass，支持点号访问）
-    config: EnhancedAppSettings = get_config()
-    server_url = get_server_url()
-    environment = get_environment()
+    # Configuration already loaded by config_manager
+    app_settings = settings
 
-    print(f"环境: {environment}")
-    print(f"服务器: {server_url}")
-
-    # 设置日志
     setup_logging(
-        log_dir=Path(config.paths.logs_directory),
-        log_file=config.logging.file,
-        level=config.logging.level,
-        enable_console=config.debug.enable_console,
+        log_dir=Path(app_settings.paths.logs_directory),
+        log_file=app_settings.logging.file,
+        level=app_settings.logging.level,
+        enable_console=app_settings.debug.enable_console,
     )
-    
-    logger.info("配置加载完成 - 环境: %s, 服务器: %s", environment, server_url)
-    
-    # 检查依赖
+    logger.info("Settings loaded: server=%s", app_settings.server.url)
+
     missing = _check_dependencies()
     if missing:
         msg = "Missing dependencies: " + ", ".join(missing)
@@ -249,13 +177,8 @@ def main() -> int:
         print("[ERROR] " + msg)
         print("Run: pip install " + " ".join(missing))
         return 1
-    
-    # 检查服务器连接
-    if not _check_server_connection(server_url):
-        logger.error("服务器连接检查失败")
-        return 1
-    
-    return _run_gui(config)
+
+    return _run_gui(app_settings)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,10 @@
   <div class="components-page">
     <!-- 页面标题 -->
     <div class="page-header">
-      <a-space direction="vertical" :size="8">
+      <a-space
+        direction="vertical"
+        :size="8"
+      >
         <a-typography-title :level="2">
           Arco Design 组件库
         </a-typography-title>
@@ -15,35 +18,56 @@
         v-model="searchKeyword"
         placeholder="搜索组件..."
         :style="{ width: '320px' }"
+        allow-clear
         @search="handleSearch"
         @clear="handleClearSearch"
-        allow-clear
       />
     </div>
 
     <!-- 组件分类 -->
-    <a-tabs v-model="activeCategory" class="category-tabs">
-      <a-tab-pane key="basic" title="基础组件">
+    <a-tabs
+      v-model="activeCategory"
+      class="category-tabs"
+    >
+      <a-tab-pane
+        key="basic"
+        title="基础组件"
+      >
         <component-grid :components="basicComponents" />
       </a-tab-pane>
       
-      <a-tab-pane key="layout" title="布局组件">
+      <a-tab-pane
+        key="layout"
+        title="布局组件"
+      >
         <component-grid :components="layoutComponents" />
       </a-tab-pane>
       
-      <a-tab-pane key="data" title="数据展示">
+      <a-tab-pane
+        key="data"
+        title="数据展示"
+      >
         <component-grid :components="dataComponents" />
       </a-tab-pane>
       
-      <a-tab-pane key="feedback" title="反馈组件">
+      <a-tab-pane
+        key="feedback"
+        title="反馈组件"
+      >
         <component-grid :components="feedbackComponents" />
       </a-tab-pane>
       
-      <a-tab-pane key="navigation" title="导航组件">
+      <a-tab-pane
+        key="navigation"
+        title="导航组件"
+      >
         <component-grid :components="navigationComponents" />
       </a-tab-pane>
       
-      <a-tab-pane key="other" title="其他组件">
+      <a-tab-pane
+        key="other"
+        title="其他组件"
+      >
         <component-grid :components="otherComponents" />
       </a-tab-pane>
     </a-tabs>

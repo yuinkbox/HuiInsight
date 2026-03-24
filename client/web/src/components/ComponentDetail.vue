@@ -1,11 +1,23 @@
 <template>
-  <div class="component-detail" v-if="props.component">
+  <div
+    v-if="props.component"
+    class="component-detail"
+  >
     <!-- 组件基本信息 -->
     <div class="component-header">
-      <a-space direction="vertical" :size="8">
+      <a-space
+        direction="vertical"
+        :size="8"
+      >
         <div class="component-title">
-          <component :is="props.component.icon" size="24" />
-          <a-typography-title :level="3" class="title-text">
+          <component
+            :is="props.component.icon"
+            size="24"
+          />
+          <a-typography-title
+            :level="3"
+            class="title-text"
+          >
             {{ props.component.name }}
           </a-typography-title>
         </div>
@@ -16,13 +28,19 @@
       
       <div class="component-actions">
         <a-space :size="8">
-          <a-button type="primary" @click="handleUse">
+          <a-button
+            type="primary"
+            @click="handleUse"
+          >
             <template #icon>
               <icon-code />
             </template>
             使用组件
           </a-button>
-          <a-button type="outline" @click="handleCopyAll">
+          <a-button
+            type="outline"
+            @click="handleCopyAll"
+          >
             <template #icon>
               <icon-copy />
             </template>
@@ -34,7 +52,10 @@
 
     <!-- 标签 -->
     <div class="component-tags">
-      <a-space :size="8" wrap>
+      <a-space
+        :size="8"
+        wrap
+      >
         <a-tag
           v-for="tag in props.component.tags"
           :key="tag"
@@ -47,7 +68,10 @@
 
     <!-- 使用说明 -->
     <div class="section">
-      <a-typography-title :level="4" class="section-title">
+      <a-typography-title
+        :level="4"
+        class="section-title"
+      >
         使用说明
       </a-typography-title>
       <div class="usage-content">
@@ -56,8 +80,14 @@
     </div>
 
     <!-- 属性表格 -->
-    <div class="section" v-if="props.component.props">
-      <a-typography-title :level="4" class="section-title">
+    <div
+      v-if="props.component.props"
+      class="section"
+    >
+      <a-typography-title
+        :level="4"
+        class="section-title"
+      >
         属性 (Props)
       </a-typography-title>
       <a-table
@@ -72,7 +102,10 @@
         
         <template #default="{ record }">
           <code v-if="record.default">{{ record.default }}</code>
-          <a-typography-text v-else type="secondary">
+          <a-typography-text
+            v-else
+            type="secondary"
+          >
             -
           </a-typography-text>
         </template>
@@ -80,12 +113,21 @@
     </div>
 
     <!-- 代码示例 -->
-    <div class="section" v-if="props.component.examples">
-      <a-typography-title :level="4" class="section-title">
+    <div
+      v-if="props.component.examples"
+      class="section"
+    >
+      <a-typography-title
+        :level="4"
+        class="section-title"
+      >
         代码示例
       </a-typography-title>
       
-      <a-tabs v-model="activeExample" class="example-tabs">
+      <a-tabs
+        v-model="activeExample"
+        class="example-tabs"
+      >
         <a-tab-pane
           v-for="(example, index) in props.component.examples"
           :key="index"
@@ -118,8 +160,14 @@
     </div>
 
     <!-- 默认示例 -->
-    <div class="section" v-else>
-      <a-typography-title :level="4" class="section-title">
+    <div
+      v-else
+      class="section"
+    >
+      <a-typography-title
+        :level="4"
+        class="section-title"
+      >
         基础示例
       </a-typography-title>
       
@@ -145,7 +193,10 @@
 
     <!-- 注意事项 -->
     <div class="section">
-      <a-typography-title :level="4" class="section-title">
+      <a-typography-title
+        :level="4"
+        class="section-title"
+      >
         注意事项
       </a-typography-title>
       <ul class="notes-list">
@@ -160,6 +211,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Message } from '@arco-design/web-vue'
 
 interface ComponentProp {
   name: string
@@ -192,10 +244,14 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 属性表格列定义
+const activeExample = ref(0)
 
-// 激活的示例
-
+const propColumns = [
+  { title: '属性名', dataIndex: 'name' },
+  { title: '类型', dataIndex: 'type', slotName: 'type' },
+  { title: '默认值', dataIndex: 'default', slotName: 'default' },
+  { title: '说明', dataIndex: 'description' },
+]
 
 // 基础示例代码
 const basicExampleCode = `<template>
@@ -205,7 +261,7 @@ const basicExampleCode = `<template>
   </div>
 </template>
 
-<script setup lang="ts">
+<${'script'} setup lang="ts">
 import { ref } from 'vue'
 
 // ${props.component?.name} 组件基础示例
@@ -215,7 +271,7 @@ const value = ref('')
 const handleChange = (newValue: any) => {
   console.log('值变化:', newValue)
 }
-</script>
+</${'script'}>
 
 <style scoped>
 .component-container {

@@ -17,13 +17,17 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Now import from the project
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session  # noqa: E402
 
-from server.constants.permissions import ROLE_META, ROLE_PERMISSION_MATRIX
-from server.constants.permissions import Permission as PermEnum
-from server.constants.roles import UserRole
-from server.core.database import engine
-from server.db.models_extended import DynamicRole, Permission, RolePermission
+from server.constants.permissions import ROLE_META, ROLE_PERMISSION_MATRIX  # noqa: E402
+from server.constants.permissions import Permission as PermEnum  # noqa: E402
+from server.constants.roles import UserRole  # noqa: E402
+from server.core.database import engine  # noqa: E402
+from server.db.models_extended import (  # noqa: E402
+    DynamicRole,
+    Permission,
+    RolePermission,
+)
 
 
 def migrate_existing_roles(session: Session) -> dict:

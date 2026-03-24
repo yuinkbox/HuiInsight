@@ -23,8 +23,12 @@ from server.api.permissions import _get_current_user
 from server.constants.permissions import Permission, get_permissions_for_role
 from server.core.database import get_db
 from server.db.models import ActionLog, User
-from server.schemas import (ActionLogCreate, ActionLogListResponse,
-                            ActionLogOut, OkResponse)
+from server.schemas import (
+    ActionLogCreate,
+    ActionLogListResponse,
+    ActionLogOut,
+    OkResponse,
+)
 
 router = APIRouter(prefix="/api/log", tags=["logs"])
 

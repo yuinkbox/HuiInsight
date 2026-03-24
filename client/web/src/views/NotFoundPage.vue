@@ -7,13 +7,19 @@
     >
       <template #extra>
         <a-space :size="16">
-          <a-button type="primary" @click="goHome">
+          <a-button
+            type="primary"
+            @click="goHome"
+          >
             <template #icon>
               <icon-home />
             </template>
             返回首页
           </a-button>
-          <a-button type="outline" @click="goBack">
+          <a-button
+            type="outline"
+            @click="goBack"
+          >
             <template #icon>
               <icon-arrow-left />
             </template>

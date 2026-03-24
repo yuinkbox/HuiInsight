@@ -1,11 +1,20 @@
 <template>
-  <a-layout class="main-layout" :class="{ 'mini-layout': isMiniMode }">
-
+  <a-layout
+    class="main-layout"
+    :class="{ 'mini-layout': isMiniMode }"
+  >
     <!-- 顶部 Header（迷你模式完全隐藏） -->
-    <a-layout-header v-if="!isMiniMode" class="header">
+    <a-layout-header
+      v-if="!isMiniMode"
+      class="header"
+    >
       <div class="header-left">
         <!-- 侧边栏折叠按钮 -->
-        <button class="sidebar-toggle-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? '展开菜单' : '收起菜单'">
+        <button
+          class="sidebar-toggle-btn"
+          :title="sidebarCollapsed ? '展开菜单' : '收起菜单'"
+          @click="sidebarCollapsed = !sidebarCollapsed"
+        >
           <icon-menu-fold v-if="!sidebarCollapsed" />
           <icon-menu-unfold v-else />
         </button>
@@ -16,31 +25,60 @@
       </div>
 
       <div class="header-right">
-        <a-dropdown trigger="click" position="br">
+        <a-dropdown
+          trigger="click"
+          position="br"
+        >
           <div class="user-info">
-            <a-avatar :size="32" :style="{ backgroundColor: '#165dff' }">
+            <a-avatar
+              :size="32"
+              :style="{ backgroundColor: '#165dff' }"
+            >
               {{ userAvatar }}
             </a-avatar>
             <div class="user-details">
-              <div class="user-name">{{ userName }}</div>
-              <div class="user-role"><a-tag :color="permissionStore.roleColor" size="small">{{ userRole }}</a-tag></div>
+              <div class="user-name">
+                {{ userName }}
+              </div>
+              <div class="user-role">
+                <a-tag
+                  :color="permissionStore.roleColor"
+                  size="small"
+                >
+                  {{ userRole }}
+                </a-tag>
+              </div>
             </div>
             <icon-down class="dropdown-icon" />
           </div>
 
           <template #content>
             <a-doption @click="goToDashboard">
-              <template #icon><icon-dashboard /></template>工作台
+              <template #icon>
+                <icon-dashboard />
+              </template>工作台
             </a-doption>
             <a-doption @click="viewProfile">
-              <template #icon><icon-user /></template>个人资料
+              <template #icon>
+                <icon-user />
+              </template>个人资料
             </a-doption>
-            <a-doption v-if="permissionStore.can('view:settings')" @click="viewSettings">
-              <template #icon><icon-team /></template>人事权限
+            <a-doption
+              v-if="permissionStore.can('view:settings')"
+              @click="viewSettings"
+            >
+              <template #icon>
+                <icon-team />
+              </template>人事权限
             </a-doption>
             <a-divider :margin="4" />
-            <a-doption @click="showLogoutConfirm" class="logout-option">
-              <template #icon><icon-logout /></template>退出登录
+            <a-doption
+              class="logout-option"
+              @click="showLogoutConfirm"
+            >
+              <template #icon>
+                <icon-logout />
+              </template>退出登录
             </a-doption>
           </template>
         </a-dropdown>
@@ -66,43 +104,74 @@
             @menu-item-click="handleMenuClick"
           >
             <a-sub-menu key="dashboard-group">
-              <template #icon><icon-dashboard /></template>
-              <template #title>工作概览</template>
+              <template #icon>
+                <icon-dashboard />
+              </template>
+              <template #title>
+                工作概览
+              </template>
               <a-menu-item key="dashboard">
-                <template #icon><icon-home /></template>概览主页
+                <template #icon>
+                  <icon-home />
+                </template>概览主页
               </a-menu-item>
-              <a-menu-item key="hr" v-if="permissionStore.can('view:settings')">
-                <template #icon><icon-user-group /></template>人事权限
+              <a-menu-item
+                v-if="permissionStore.can('view:settings')"
+                key="hr"
+              >
+                <template #icon>
+                  <icon-user-group />
+                </template>人事权限
               </a-menu-item>
             </a-sub-menu>
 
             <a-sub-menu key="risk-audit">
-              <template #icon><icon-shield /></template>
-              <template #title>实时监看</template>
+              <template #icon>
+                <icon-shield />
+              </template>
+              <template #title>
+                实时监看
+              </template>
               <a-menu-item key="realtime">
-                <template #icon><icon-radar-chart /></template>直播监测
+                <template #icon>
+                  <icon-radar-chart />
+                </template>直播监测
               </a-menu-item>
               <a-menu-item key="violation-review">
-                <template #icon><icon-file-search /></template>内容审核
+                <template #icon>
+                  <icon-file-search />
+                </template>内容审核
               </a-menu-item>
             </a-sub-menu>
 
             <a-sub-menu key="sop">
-              <template #icon><icon-book /></template>
-              <template #title>审核标准</template>
+              <template #icon>
+                <icon-book />
+              </template>
+              <template #title>
+                审核标准
+              </template>
               <a-menu-item key="standards">
-                <template #icon><icon-line-chart /></template>红线标准
+                <template #icon>
+                  <icon-line-chart />
+                </template>红线标准
               </a-menu-item>
               <a-menu-item key="rules">
-                <template #icon><icon-unordered-list /></template>业务规则
+                <template #icon>
+                  <icon-unordered-list />
+                </template>业务规则
               </a-menu-item>
             </a-sub-menu>
 
-            <a-menu-item key="supervisor/shadow-audit" v-if="permissionStore.can('view:shadow_audit')">
-              <template #icon><icon-eye /></template>管理大屏
+            <a-menu-item
+              v-if="permissionStore.can('view:shadow_audit')"
+              key="supervisor/shadow-audit"
+            >
+              <template #icon>
+                <icon-eye />
+              </template>管理大屏
             </a-menu-item>
           </a-menu>
-
         </a-layout-sider>
       </div>
 
@@ -114,10 +183,16 @@
           class="content"
           @scroll.passive="updateScrollNav"
         >
-          <div class="breadcrumb" v-if="showBreadcrumb && !isMiniMode && !sidebarCollapsed">
+          <div
+            v-if="showBreadcrumb && !isMiniMode && !sidebarCollapsed"
+            class="breadcrumb"
+          >
             <a-breadcrumb>
               <a-breadcrumb-item><icon-home /></a-breadcrumb-item>
-              <a-breadcrumb-item v-for="item in breadcrumbItems" :key="item">
+              <a-breadcrumb-item
+                v-for="item in breadcrumbItems"
+                :key="item"
+              >
                 {{ item }}
               </a-breadcrumb-item>
             </a-breadcrumb>
@@ -138,7 +213,10 @@
         aria-label="页面滚动快捷操作"
       >
         <div class="main-scroll-nav__inner">
-          <span class="main-scroll-nav__slot" title="回到顶部">
+          <span
+            class="main-scroll-nav__slot"
+            title="回到顶部"
+          >
             <a-back-top
               target-container="#main-layout-scroll"
               :visible-height="200"
@@ -161,9 +239,12 @@
     </Teleport>
 
     <!-- 全局底部状态栏（迷你模式下隐藏） -->
-    <div v-if="!isMiniMode" class="global-statusbar">
+    <div
+      v-if="!isMiniMode"
+      class="global-statusbar"
+    >
       <div class="statusbar-left">
-        <span class="statusbar-dot online"></span>
+        <span class="statusbar-dot online" />
         <span class="statusbar-text">服务连接正常</span>
       </div>
       <div class="statusbar-right">

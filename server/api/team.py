@@ -24,9 +24,15 @@ from server.api.permissions import _get_current_user
 from server.constants.permissions import Permission, get_permissions_for_role
 from server.core.database import get_db
 from server.db.models import ShiftTask, User
-from server.schemas import (ChannelStats, OverallStats, TaskOut,
-                            TeamInsightResponse, UserDetailedStats, UserOut,
-                            UserStats)
+from server.schemas import (
+    ChannelStats,
+    OverallStats,
+    TaskOut,
+    TeamInsightResponse,
+    UserDetailedStats,
+    UserOut,
+    UserStats,
+)
 
 router = APIRouter(prefix="/api/team", tags=["team"])
 
