@@ -2,7 +2,7 @@
   "display_name": "AHDUNYI Terminal PRO",
   "version": "1.0.0",
   "server": {
-    "url": "http://203.10.99.58:8002"
+    "url": "http://106.15.32.246:8000"
   },
   "gui": {
     "window_width": 1440,
