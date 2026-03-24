@@ -1,4 +1,4 @@
-﻿; AHDUNYI Terminal PRO - Inno Setup Script
+; 徽鉴 HuiInsight - Inno Setup Script
 ; Wraps the PyInstaller onedir output into a standard Windows installer.
 ;
 ; Prerequisites:
@@ -8,15 +8,15 @@
 ;   ISCC.exe client\build\AHDUNYI.iss
 ;
 ; Output:
-;   installer\AHDUNYI_Terminal_PRO_Setup_<version>.exe
+;   installer\HuiInsight_Setup_<version>.exe
 ;
-; Author : AHDUNYI
+; Author : xvyu
 ; Version: 1.0.0
 
-#define AppName      "AHDUNYI Terminal PRO"
+#define AppName      "徽鉴 HuiInsight"
 #define AppVersion   "1.0.0"
-#define AppPublisher "AHDUNYI"
-#define AppExeName   "AHDUNYI_Terminal_PRO.exe"
+#define AppPublisher "xvyu"
+#define AppExeName   "HuiInsight.exe"
 #define SourceDir    "..\..\dist\AHDUNYI_Terminal_PRO"
 #define OutputDir    "..\..\installer"
 
@@ -30,7 +30,7 @@ DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 AllowNoIcons=yes
 OutputDir={#OutputDir}
-OutputBaseFilename=AHDUNYI_Terminal_PRO_Setup_{#AppVersion}
+OutputBaseFilename=HuiInsight_Setup_{#AppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern

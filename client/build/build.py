@@ -305,7 +305,7 @@ def main() -> int:
     print("=" * 60)
     print("[OK]  Build complete!")
     print("=" * 60)
-    print("Run : dist\\AHDUNYI_Terminal_PRO\\AHDUNYI_Terminal_PRO.exe")
+    print("Run : dist\\HuiInsight\\HuiInsight.exe")
     print("Cfg : config.json  (place next to the .exe)")
     print("Logs: logs\\client.log")
     return 0

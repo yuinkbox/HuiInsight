@@ -324,7 +324,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import dayjs from 'dayjs'
-import AuditorView from './AuditorView.vue'
+import AuditorView from './AuditorPage.vue'
 import { 
   rbacApi, 
   type ActiveUser, 

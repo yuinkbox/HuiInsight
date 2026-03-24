@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-AHDUNYI Terminal PRO - PyInstaller spec (Monorepo layout).
+徽鉴 HuiInsight - PyInstaller spec (Monorepo layout).
 
 Packs:
   - client/desktop/main.py   (entry point)
@@ -8,8 +8,8 @@ Packs:
   - shared/**                (shared schemas/constants)
   - config.json              (optional, repo root)
 
-Author : AHDUNYI
-Version: 9.0.0
+Author : xvyu
+Version: 1.0.0
 """
 
 import os
@@ -48,12 +48,11 @@ if SHARED.exists():
     print("[SPEC] shared/ included")
 
 # Environment files for different build environments
-# Note: These will be included as .env files in the build
 ENV_TEST = PROJECT / ".env.test"
 if ENV_TEST.exists():
     datas.append((str(ENV_TEST), "."))
     print("[SPEC] .env.test included")
-    
+
 ENV_DEV = PROJECT / ".env.development"
 if ENV_DEV.exists():
     datas.append((str(ENV_DEV), "."))
@@ -105,7 +104,7 @@ exe = EXE(            # noqa: F821
     a.scripts,
     [],
     exclude_binaries=True,
-    name="AHDUNYI_Terminal_PRO",
+    name="HuiInsight",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -127,7 +126,7 @@ coll = COLLECT(       # noqa: F821
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="AHDUNYI_Terminal_PRO",
+    name="HuiInsight",
 )
 
 print("[SPEC] done - hidden imports: " + str(len(hiddenimports)))
