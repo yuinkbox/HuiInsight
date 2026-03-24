@@ -1159,14 +1159,7 @@ const startWorkflow = async () => {
     workflowStore.lastActionTime = Date.now()
     startTimer()
     startAFKDetection()
-    if (isDesktopMode()) {
-      getBridge().then(b => b?.startMonitor?.())
-    }
-    // restart RoomMonitor on workflow start
-    if (isDesktopMode()) {
-      getBridge().then(b => b?.startMonitor?.())
-    }
-    // restart RoomMonitor on workflow start
+    // 重启 RoomMonitor
     if (isDesktopMode()) {
       getBridge().then(b => b?.startMonitor?.())
     }
