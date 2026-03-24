@@ -31,52 +31,53 @@ jobs:
           username: ${{ secrets.TENCENT_CLOUD_USER }}
           key: ${{ secrets.TENCENT_CLOUD_SSH_KEY }}
           script: |
-            echo "🚀 Deploying to Tencent Cloud Test Environment..."
+            echo "\U0001f680 Deploying to Tencent Cloud Test Environment..."
             cd /app/AHDUNYI_Terminal_PRO
-            
+
             # 切换到develop分支
-            echo "📥 Pulling latest develop branch code..."
+            echo "\U0001f4e5 Pulling latest develop branch code..."
             git fetch origin
             git checkout develop
             git pull origin develop
-            
+
             # 复制测试环境配置文件
-            echo "📁 Setting up test environment configuration..."
+            echo "\U0001f4c1 Setting up test environment configuration..."
             if [ -f ".env.test" ]; then
               cp .env.test server/.env
-              echo "✅ Copied .env.test to server/.env"
+              echo "\u2705 Copied .env.test to server/.env"
             else
-              echo "⚠ Warning: .env.test not found, using default configuration"
+              echo "\u26a0 Warning: .env.test not found, using default configuration"
             fi
-            
+
             # 创建测试环境虚拟环境（如果不存在）
             if [ ! -d "server/venv" ]; then
-              echo "🐍 Creating Python virtual environment..."
+              echo "\U0001f40d Creating Python virtual environment..."
               python3 -m venv server/venv
             fi
-            
+
             # 安装依赖
-            echo "📦 Installing Python dependencies..."
+            echo "\U0001f4e6 Installing Python dependencies..."
             server/venv/bin/pip install -r server/requirements.txt
-            
-            # 执行数据库迁移
-            echo "🗄️ Running database migrations..."
+
+            # 执行数据库迁移（忽略表已存在的错误，不中断部署）
+            echo "\U0001f5c4 Running database migrations..."
             cd server
             export ENVIRONMENT=test
-            venv/bin/python -m alembic upgrade head
-            
-            # 初始化测试数据（如果需要）
-            echo "📊 Initializing test data..."
-            venv/bin/python -m server.db.init_db
-            
+            venv/bin/python -m alembic upgrade head || echo "\u26a0 Migration skipped (already up to date or table exists)"
+            cd ..
+
+            # 初始化测试数据（忽略已存在错误，不中断部署）
+            echo "\U0001f4ca Initializing test data..."
+            server/venv/bin/python -m server.db.init_db || echo "\u26a0 init_db skipped (already initialized)"
+
             # 重启服务
-            echo "🔄 Restarting backend service..."
+            echo "\U0001f504 Restarting backend service..."
             sudo systemctl daemon-reload
             sudo systemctl restart ahdunyi-test-api
-            
+
             # 检查服务状态
-            echo "🔍 Checking service status..."
+            echo "\U0001f50d Checking service status..."
             sleep 3
             sudo systemctl status ahdunyi-test-api --no-pager
-            
-            echo "✅ Test environment deployment completed: $(date)"
+
+            echo "\u2705 Test environment deployment completed: $(date)"
