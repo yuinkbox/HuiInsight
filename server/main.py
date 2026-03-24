@@ -5,6 +5,7 @@ AHDUNYI Terminal PRO - Backend API Server with multi-environment support
 Author : AHDUNYI
 Version: 9.1.0
 """
+
 from contextlib import asynccontextmanager
 import logging
 import traceback
@@ -35,13 +36,13 @@ async def lifespan(app: FastAPI):
     print(f"🚀 Starting {config.app_name} Backend...")
     print(f"📊 Environment: {config.environment.upper()}")
     print(f"🔧 Debug Mode: {config.debug}")
-    
+
     # Create tables if they don't exist
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables ready")
-    
+
     yield
-    
+
     # Shutdown
     print(f"👋 Shutting down {config.app_name} Backend...")
 
@@ -125,7 +126,7 @@ def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "server.main:app",
         host=config.server.host,
