@@ -6,25 +6,25 @@ Author : AHDUNYI
 Version: 9.1.0
 """
 
-from contextlib import asynccontextmanager
 import logging
 import traceback
 import uuid
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from server.api.auth import router as auth_router
+from server.api.dynamic_roles import router as dynamic_roles_router
 from server.api.logs import router as logs_router
 from server.api.permissions import router as permissions_router
 from server.api.tasks import router as tasks_router
 from server.api.team import router as team_router
 from server.api.users import router as users_router
 from server.api.violation import router as violation_router
-from server.api.dynamic_roles import router as dynamic_roles_router
 from server.core.config import config
-from server.core.database import engine, Base
+from server.core.database import Base, engine
 
 logger = logging.getLogger(__name__)
 
