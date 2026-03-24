@@ -19,7 +19,7 @@
     "target_process": "small_dimple.exe",
     "heartbeat_interval": 2.0,
     "max_search_depth": 8,
-    "memory_probe_enabled": true,
+    "memory_probe_enabled": false,
     "memory_merge_mode": "override",
     "memory_max_region_bytes": 524288,
     "memory_max_total_bytes": 12582912

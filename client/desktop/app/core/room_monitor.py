@@ -23,7 +23,7 @@ except ImportError:
 
 import logging
 
-from client.desktop.app.core.memory_room_probe import MemoryRoomProbe
+# memory_room_probe removed - UI tree scanning only
 
 logger = logging.getLogger(__name__)
 
@@ -262,10 +262,6 @@ class RoomMonitor(threading.Thread):
         max_depth: int = 8,
         target_process: Optional[str] = None,
         extractor: Optional[IDExtractor] = None,
-        memory_probe_enabled: bool = False,
-        memory_merge_mode: str = "override",
-        memory_max_region_bytes: int = 512 * 1024,
-        memory_max_total_bytes: int = 12 * 1024 * 1024,
     ) -> None:
         super().__init__(daemon=True)
         self.callback = callback
@@ -275,19 +271,6 @@ class RoomMonitor(threading.Thread):
 
         self._extractor = extractor or DefaultIDExtractor()
         self._scanner = UIScanner(self.target_process_name, max_depth)
-        self._memory_merge_mode = (memory_merge_mode or "override").lower().strip()
-        if self._memory_merge_mode not in ("override", "fill"):
-            logger.warning(
-                "Unknown memory_merge_mode %r, using 'override'",
-                memory_merge_mode,
-            )
-            self._memory_merge_mode = "override"
-        self._memory_probe: Optional[MemoryRoomProbe] = None
-        if memory_probe_enabled:
-            self._memory_probe = MemoryRoomProbe(
-                max_region_bytes=memory_max_region_bytes,
-                max_total_bytes=memory_max_total_bytes,
-            )
 
         self._running = False
         self._stop_event = threading.Event()
@@ -308,12 +291,10 @@ class RoomMonitor(threading.Thread):
         self._room_debounce_count: int = 0
 
         logger.info(
-            "RoomMonitor initialised: target=%s, interval=%.1fs, depth=%d, memory=%s (%s)",
+            "RoomMonitor initialised: target=%s, interval=%.1fs, depth=%d",
             self.target_process_name,
             heartbeat_interval,
             max_depth,
-            bool(self._memory_probe),
-            self._memory_merge_mode if self._memory_probe else "n/a",
         )
 
     def run(self) -> None:
@@ -336,24 +317,6 @@ class RoomMonitor(threading.Thread):
     def stop(self) -> None:
         self._stop_event.set()
         self._running = False
-
-    def _merge_memory_ui(
-        self,
-        ui_room: Optional[str],
-        ui_user: Optional[str],
-        mem_room: Optional[str],
-        mem_user: Optional[str],
-    ) -> Tuple[Optional[str], Optional[str]]:
-        """UI 优先，内存仅补齐；fill/override 均不再用内存覆盖已有 UI 结果（防抖动）。"""
-        room_id = ui_room or mem_room
-        user_id = ui_user or mem_user
-
-        if room_id and user_id and room_id == user_id:
-            sticky = getattr(self._extractor, "sticky_room_id", None)
-            if sticky and sticky != user_id:
-                room_id = sticky
-
-        return room_id, user_id
 
     def _debounce_room_id(self, candidate: Optional[str]) -> Optional[str]:
         """连续 2 次相同候选才采纳；与当前已展示相同则立即通过。"""
@@ -396,12 +359,6 @@ class RoomMonitor(threading.Thread):
             self._target_pid = target_pid
 
         room_id, user_id = self._extractor.extract(collected_ids)
-
-        if self._memory_probe is not None:
-            mem_room, mem_user = self._memory_probe.probe(target_pid)
-            room_id, user_id = self._merge_memory_ui(
-                room_id, user_id, mem_room, mem_user
-            )
 
         # 本轮无控件样本时：不清空用户栏（资料卡/树闪断）
         if not collected_ids:
@@ -491,16 +448,11 @@ def create_room_monitor(
         heartbeat_interval=heartbeat_interval,
         max_depth=max_depth,
         target_process=target_process,
-        memory_probe_enabled=memory_probe_enabled,
-        memory_merge_mode=memory_merge_mode,
-        memory_max_region_bytes=memory_max_region_bytes,
-        memory_max_total_bytes=memory_max_total_bytes,
     )
     logger.info(
-        "RoomMonitor created: target=%s, interval=%.1f, depth=%d, memory_probe=%s",
+        "RoomMonitor created: target=%s, interval=%.1f, depth=%d",
         target_process or monitor.DEFAULT_TARGET_PROCESS,
         heartbeat_interval,
         max_depth,
-        memory_probe_enabled,
     )
     return monitor
