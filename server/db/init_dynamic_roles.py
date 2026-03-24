@@ -78,9 +78,14 @@ def migrate_existing_permissions(session: Session) -> dict:
     """
     permission_mapping = {}
 
-    # Get all permission enums
-    for perm_enum in PermEnum:
-        perm_code = perm_enum.value
+    # Get all permission codes from the Permission class attributes
+    all_perm_codes = [
+        v
+        for k, v in vars(PermEnum).items()
+        if not k.startswith("_") and isinstance(v, str)
+    ]
+
+    for perm_code in all_perm_codes:
 
         # Check if permission already exists
         existing_perm = session.query(Permission).filter_by(code=perm_code).first()
