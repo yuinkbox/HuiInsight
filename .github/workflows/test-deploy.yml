@@ -25,59 +25,48 @@ jobs:
           flake8 server/ shared/ --max-line-length=120 --ignore=E501,W503 --exclude=server/alembic/versions/
       
       - name: Deploy to Tencent Cloud via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.TENCENT_CLOUD_HOST }}
-          username: ${{ secrets.TENCENT_CLOUD_USER }}
-          key: ${{ secrets.TENCENT_CLOUD_SSH_KEY }}
+          host: 122.51.72.36
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
           script: |
-            echo "\U0001f680 Deploying to Tencent Cloud Test Environment..."
             cd /app/AHDUNYI_Terminal_PRO
 
             # 切换到develop分支
-            echo "\U0001f4e5 Pulling latest develop branch code..."
             git fetch origin
             git checkout develop
             git pull origin develop
 
             # 复制测试环境配置文件
-            echo "\U0001f4c1 Setting up test environment configuration..."
             if [ -f ".env.test" ]; then
               cp .env.test server/.env
-              echo "\u2705 Copied .env.test to server/.env"
-            else
-              echo "\u26a0 Warning: .env.test not found, using default configuration"
             fi
 
             # 创建测试环境虚拟环境（如果不存在）
             if [ ! -d "server/venv" ]; then
-              echo "\U0001f40d Creating Python virtual environment..."
               python3 -m venv server/venv
             fi
 
             # 安装依赖
-            echo "\U0001f4e6 Installing Python dependencies..."
-            server/venv/bin/pip install -r server/requirements.txt
+            server/venv/bin/pip install -r server/requirements.txt -q
 
             # 执行数据库迁移（忽略表已存在的错误，不中断部署）
-            echo "\U0001f5c4 Running database migrations..."
             cd server
             export ENVIRONMENT=test
-            venv/bin/python -m alembic upgrade head || echo "\u26a0 Migration skipped (already up to date or table exists)"
+            venv/bin/python -m alembic upgrade head || echo "Migration skipped (already up to date)"
             cd ..
 
             # 初始化测试数据（忽略已存在错误，不中断部署）
-            echo "\U0001f4ca Initializing test data..."
-            server/venv/bin/python -m server.db.init_db || echo "\u26a0 init_db skipped (already initialized)"
+            server/venv/bin/python -m server.db.init_db || echo "init_db skipped (already initialized)"
 
             # 重启服务
-            echo "\U0001f504 Restarting backend service..."
             sudo systemctl daemon-reload
             sudo systemctl restart ahdunyi-test-api
 
             # 检查服务状态
-            echo "\U0001f50d Checking service status..."
             sleep 3
             sudo systemctl status ahdunyi-test-api --no-pager
 
-            echo "\u2705 Test environment deployment completed: $(date)"
+            echo "Deploy completed: $(date)"
