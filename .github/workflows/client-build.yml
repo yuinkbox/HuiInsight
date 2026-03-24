@@ -1,49 +1,128 @@
-name: Client Build (Windows EXE)
+name: Client Build - Windows Installer
 
 on:
+  workflow_dispatch:  # 手动触发
+    inputs:
+      version:
+        description: '版本号 (e.g. 1.2.0)'
+        required: true
+        default: '1.0.0'
+      environment:
+        description: '构建环境'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - test
   push:
-    branches: [main]
-    paths:
-      - 'client/**'
-      - 'shared/**'
-  pull_request:
-    paths:
-      - 'client/**'
-      - 'shared/**'
+    tags:
+      - 'v*.*.*'  # 推送版本 tag 时自动触发
 
 jobs:
-  build-exe:
+  build-windows-installer:
     runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 60
 
-      - name: Set up Python
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Set up Node.js
+      - name: Set up Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "push") {
+            $ver = "${{ github.ref_name }}" -replace '^v', ''
+          } else {
+            $ver = "${{ github.event.inputs.version }}"
+          }
+          echo "VERSION=$ver" >> $env:GITHUB_OUTPUT
+          echo "Build version: $ver"
+
+      - name: Determine build environment
+        id: env
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "push") {
+            $env_name = "production"
+          } else {
+            $env_name = "${{ github.event.inputs.environment }}"
+          }
+          echo "ENV=$env_name" >> $env:GITHUB_OUTPUT
+          echo "Build environment: $env_name"
+
       - name: Install Python dependencies
-        run: pip install -r client/desktop/requirements.txt
+        run: |
+          pip install pyinstaller pyqt6 pyqt6-webengine psutil requests uiautomation
 
-      - name: Install frontend dependencies
-        run: npm ci
-        working-directory: client/web
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          echo "Installing Inno Setup 6..."
+          $url = "https://files.jrsoftware.org/is/6/innosetup-6.3.3.exe"
+          $out = "$env:TEMP\innosetup.exe"
+          Invoke-WebRequest -Uri $url -OutFile $out
+          Start-Process -FilePath $out -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait
+          echo "Inno Setup installed."
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (Test-Path $iscc) {
+            echo "ISCC found: $iscc"
+            echo "C:\Program Files (x86)\Inno Setup 6" >> $env:GITHUB_PATH
+          } else {
+            echo "WARNING: ISCC.exe not found at expected path"
+          }
 
-      - name: Build Vue frontend
-        run: npm run build
-        working-directory: client/web
+      - name: Build application (frontend + PyInstaller + Inno Setup)
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.version.outputs.VERSION }}"
+          $env_name = "${{ steps.env.outputs.ENV }}"
+          python client/build/build.py --env $env_name --clean
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
-      - name: Build EXE with PyInstaller
-        run: python client/build/build.py
+      - name: Verify outputs
+        shell: pwsh
+        run: |
+          echo "=== dist/ contents ==="
+          if (Test-Path dist) { Get-ChildItem -Recurse dist -Filter "*.exe" | Select-Object FullName, @{N='MB';E={[math]::Round($_.Length/1MB,1)}} }
+          echo "=== installer/ contents ==="
+          if (Test-Path installer) { Get-ChildItem installer -Filter "*.exe" | Select-Object FullName, @{N='MB';E={[math]::Round($_.Length/1MB,1)}} }
 
-      - name: Upload EXE artifact
+      - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AHDUNYI_Terminal_PRO_${{ github.sha }}
-          path: dist/AHDUNYI_Terminal_PRO/
+          name: AHDUNYI_Terminal_PRO_Setup_${{ steps.version.outputs.VERSION }}
+          path: installer/*.exe
           retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload portable (onedir) artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AHDUNYI_Terminal_PRO_Portable_${{ steps.version.outputs.VERSION }}
+          path: dist/AHDUNYI_Terminal_PRO/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Create GitHub Release (tag push only)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/*.exe
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 AHDUNYI Terminal PRO - one-click build script with multi-environment support.
 
@@ -195,6 +195,67 @@ def step_pyinstaller() -> bool:
     return _run(cmd, ROOT, "PyInstaller", timeout=600)
 
 
+def step_inno_setup(version: str = "1.0.0") -> bool:
+    """Step 6: Build Windows installer using Inno Setup (optional).
+
+    Looks for ISCC.exe in common Inno Setup install locations.
+    Skips gracefully if Inno Setup is not found (non-blocking).
+
+    Args:
+        version: Version string to embed in installer filename.
+
+    Returns:
+        True if installer built successfully or Inno Setup not found (skip),
+        False if Inno Setup found but build failed.
+    """
+    print()
+    print("[STEP 6] Building Windows installer (Inno Setup)")
+    _sep()
+
+    # Search for ISCC.exe
+    iscc = shutil.which("ISCC") or shutil.which("ISCC.exe")
+    if not iscc:
+        candidates = [
+            Path(r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe"),
+            Path(r"C:\Program Files\Inno Setup 6\ISCC.exe"),
+            Path(r"C:\Program Files (x86)\Inno Setup 5\ISCC.exe"),
+        ]
+        for c in candidates:
+            if c.exists():
+                iscc = str(c)
+                break
+
+    if not iscc:
+        print("[SKIP] Inno Setup not found - skipping installer build.")
+        print("       Install from: https://jrsoftware.org/isinfo.php")
+        return True  # non-blocking
+
+    print("[OK]  ISCC: " + iscc)
+
+    iss_file = ROOT / "client" / "build" / "AHDUNYI.iss"
+    if not iss_file.exists():
+        print("[ERR] AHDUNYI.iss not found: " + str(iss_file))
+        return False
+
+    # Ensure output directory exists
+    installer_dir = ROOT / "installer"
+    installer_dir.mkdir(exist_ok=True)
+
+    cmd = [
+        iscc,
+        f"/DAppVersion={version}",
+        str(iss_file),
+    ]
+    result = _run(cmd, ROOT, "Inno Setup", timeout=300)
+    if result:
+        setup_exes = list(installer_dir.glob("*Setup*.exe"))
+        for f in setup_exes:
+            mb = f.stat().st_size / (1024 * 1024)
+            print("[OUT]  " + f.name + "  (" + str(round(mb, 1)) + " MB)")
+            print("       " + str(f))
+    return result
+
+
 def step_report() -> None:
     print()
     print("[STEP 5] Report")
@@ -237,6 +298,7 @@ def main() -> int:
         return 1
     if not step_pyinstaller():
         return 1
+    step_inno_setup(version="1.0.0")
     step_report()
 
     print()
