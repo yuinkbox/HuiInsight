@@ -120,8 +120,7 @@ class _ExitConfirmDialog(QDialog):
         root.addSpacing(14)
 
         body_lbl = QLabel(
-            "确定要退出 AHDUNYI Terminal PRO 吗？
-"
+            "确定要退出 AHDUNYI Terminal PRO 吗？"
             "当前工作进度已自动保存，下次登录可恢复。"
         )
         body_lbl.setObjectName("body")
