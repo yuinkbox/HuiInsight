@@ -305,6 +305,17 @@ export const rbacApi = {
     }
   },
 
+  /** 获取当前用户自己的操作日志（无需特殊权限，用于历史记录持久化） */
+  async getMyActionLogs(params?: {
+    action?: string
+    start_time?: string
+    end_time?: string
+    page?: number
+    page_size?: number
+  }): Promise<{ items: ActionLogItem[]; total: number; page: number; page_size: number }> {
+    return api.get('/api/log/my', { params }) as any
+  },
+
   /** ?????????????? */
   async getActionLogs(params?: {
     user_id?: number

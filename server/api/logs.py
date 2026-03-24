@@ -81,6 +81,70 @@ def write_action_log(
         return OkResponse(success=False, message=f"Log write failed silently: {exc}")
 
 
+@router.get("/my", response_model=ActionLogListResponse)
+def get_my_action_logs(
+    action: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(100, ge=1, le=200),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(_get_current_user),
+) -> ActionLogListResponse:
+    """Return the calling user's own action logs (no special permission required).
+
+    Used by the RealTimePatrolPage to load historical operation records
+    after login or page refresh, enabling persistent action log display.
+
+    Args:
+        action:      Filter by action name (partial match).
+        start_time:  ISO datetime lower bound.
+        end_time:    ISO datetime upper bound.
+        page:        1-based page number.
+        page_size:   Number of items per page (max 200).
+        db:          Injected DB session.
+        current_user: Resolved from JWT.
+
+    Returns:
+        :class:`ActionLogListResponse`
+    """
+    try:
+        q = (
+            db.query(ActionLog)
+            .filter(ActionLog.user_id == current_user.id)
+            .order_by(ActionLog.timestamp.desc())
+        )
+        if action:
+            q = q.filter(ActionLog.action.contains(action))
+        if start_time:
+            try:
+                st = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
+                q = q.filter(ActionLog.timestamp >= st)
+            except ValueError:
+                pass
+        if end_time:
+            try:
+                et = datetime.fromisoformat(end_time.replace("Z", "+00:00"))
+                q = q.filter(ActionLog.timestamp <= et)
+            except ValueError:
+                pass
+
+        total = q.count()
+        items = q.offset((page - 1) * page_size).limit(page_size).all()
+
+        return ActionLogListResponse(
+            items=[ActionLogOut.model_validate(i) for i in items],
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Log query failed: {exc}",
+        ) from exc
+
+
 @router.get("/list", response_model=ActionLogListResponse)
 def list_action_logs(
     user_id: Optional[int] = None,

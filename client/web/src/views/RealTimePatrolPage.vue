@@ -1276,9 +1276,28 @@ onMounted(async () => {
       startTimer()
       startAFKDetection()
     }
-    // 恢复操作日志
+    // 恢复操作日志（优先从后端拉取，降级到 localStorage）
     const savedLog = localStorage.getItem('blind_checker_log')
     if (savedLog) { try { actionLog.value = JSON.parse(savedLog) } catch { /* ignore */ } }
+    // 异步从后端拉取历史日志（不阻塞启动）
+    rbacApi.getMyActionLogs({ page_size: 100 }).then(res => {
+      if (res.items && res.items.length) {
+        const backendLogs = res.items.map(i => ({
+          id: i.id,
+          timestamp: new Date(i.timestamp).toLocaleTimeString('zh-CN', { hour12: false }),
+          action: i.action,
+          details: i.details,
+        }))
+        const existingIds = new Set(actionLog.value.map((l: any) => l.id))
+        const merged = [
+          ...actionLog.value,
+          ...backendLogs.filter((l: any) => !existingIds.has(l.id)),
+        ]
+        merged.sort((a: any, b: any) => b.id - a.id)
+        actionLog.value = merged.slice(0, 100)
+        localStorage.setItem('blind_checker_log', JSON.stringify(actionLog.value))
+      }
+    }).catch(() => { /* 静默失败，使用 localStorage 数据 */ })
   }
 
   await loadTasks()
