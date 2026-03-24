@@ -46,6 +46,7 @@ _VERSION_STORE: dict = {
 # Schemas
 # ---------------------------------------------------------------------------
 
+
 class VersionInfo(BaseModel):
     """Client version information response."""
 
@@ -71,6 +72,7 @@ class VersionUpdateRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.get("/version", response_model=VersionInfo)
 def get_latest_version() -> VersionInfo:
