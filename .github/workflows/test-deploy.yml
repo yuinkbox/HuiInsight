@@ -29,7 +29,7 @@ jobs:
         with:
           host: 122.51.72.36
           username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.TENCENT_CLOUD_SSH_KEY }}
           port: 22
           script: |
             cd /app/AHDUNYI_Terminal_PRO
