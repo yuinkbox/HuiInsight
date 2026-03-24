@@ -1272,10 +1272,33 @@ onMounted(async () => {
   // 注意：这里不调用 restart_room_monitor，等用户手动点击「接入工作流」再启动
   const hasActiveWorkflow = workflowStore.isWorking || workflowStore.restore()
 
+  // 始终先尝试恢复操作日志（不受工作流状态影响）
+  workflowStore.restoreActionLog()
+  if (workflowStore.actionLog.length === 0) {
+    rbacApi.getMyActionLogs({ page_size: 100 }).then(res => {
+      if (res.items && res.items.length) {
+        const backendLogs = res.items.map(i => ({
+          id: i.id,
+          timestamp: new Date(i.timestamp).toLocaleTimeString('zh-CN', { hour12: false }),
+          action: i.action,
+          details: i.details,
+        }))
+        backendLogs.forEach(l => workflowStore.addActionLog(l))
+        workflowStore.actionLog.sort((a, b) => b.id - a.id)
+      }
+    }).catch(() => {})
+  }
+
   if (!hasActiveWorkflow) {
-    // 新登录或无工作流：强制清除 localStorage 中的幽灵工作流状态
+    // 新登录或无工作流：只清工作流状态，不清 actionLog
     localStorage.removeItem('workflow_state')
-    workflowStore.reset()
+    workflowStore.workStatus = 'offline'
+    workflowStore.totalSeconds = 0
+    workflowStore.reviewedCount = 0
+    workflowStore.violationCount = 0
+    workflowStore.isHandlingViolation = false
+    workflowStore.isSuspended = false
+    workflowStore.todayTaskId = null
     currentRoomId.value = ''
     currentUserId.value = ''
   } else {
@@ -1283,24 +1306,6 @@ onMounted(async () => {
     if (workflowStore.workStatus === 'patrolling' && !workflowStore.isSuspended) {
       startTimer()
       startAFKDetection()
-    }
-    // 始终恢复操作日志（Store -> localStorage -> 后端）
-    workflowStore.restoreActionLog()
-    if (workflowStore.actionLog.length === 0) {
-      // Store 和 localStorage 都没有，从后端拉取
-      rbacApi.getMyActionLogs({ page_size: 100 }).then(res => {
-        if (res.items && res.items.length) {
-          const backendLogs = res.items.map(i => ({
-            id: i.id,
-            timestamp: new Date(i.timestamp).toLocaleTimeString('zh-CN', { hour12: false }),
-            action: i.action,
-            details: i.details,
-          }))
-          backendLogs.forEach(l => workflowStore.addActionLog(l))
-          // re-sort after bulk insert
-          workflowStore.actionLog.sort((a, b) => b.id - a.id)
-        }
-      }).catch(() => {})
     }
   }
 

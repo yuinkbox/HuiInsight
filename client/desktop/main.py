@@ -135,6 +135,8 @@ def _run_gui(settings: AppSettings) -> int:
             mon = _start_room_monitor(settings, main_win.bridge)
             if mon:
                 _monitors.append(mon)
+                # Store reference so restart_room_monitor/stop_room_monitor can manage it
+                main_win._active_monitor = mon
 
         main_win.show()
         logger.info("MainWindow displayed.")

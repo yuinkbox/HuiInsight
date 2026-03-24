@@ -1,0 +1,71 @@
+name: Sync Check - Test Server vs develop
+
+on:
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check and sync server code with develop
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.TENCENT_CLOUD_HOST }}
+          username: ${{ secrets.TENCENT_CLOUD_USER }}
+          key: ${{ secrets.TENCENT_CLOUD_SSH_KEY }}
+          script: |
+            set -e
+            cd /app/AHDUNYI_Terminal_PRO
+
+            echo "========================================"
+            echo "  Server Code Sync Check"
+            echo "  Time: $(date)"
+            echo "========================================"
+
+            # 获取远端最新
+            git fetch origin develop
+
+            LOCAL=$(git rev-parse HEAD)
+            REMOTE=$(git rev-parse origin/develop)
+
+            echo "Local  commit : $LOCAL"
+            echo "Remote commit : $REMOTE"
+
+            if [ "$LOCAL" = "$REMOTE" ]; then
+              echo ""
+              echo "✅ Server is UP TO DATE with develop. No action needed."
+            else
+              echo ""
+              echo "⚠  Server is BEHIND develop. Starting sync..."
+              echo "   Commits to pull:"
+              git log --oneline HEAD..origin/develop
+              echo ""
+
+              git checkout develop
+              git pull origin develop
+
+              # 安装/更新依赖
+              echo "📦 Updating dependencies..."
+              server/venv/bin/pip install -r server/requirements.txt -q
+
+              # 数据库迁移
+              echo "🗄  Running migrations..."
+              cd server
+              export ENVIRONMENT=test
+              venv/bin/python -m alembic upgrade head
+              cd ..
+
+              # 重启服务
+              echo "🔄 Restarting service..."
+              sudo systemctl restart ahdunyi-test-api
+              sleep 3
+
+              echo ""
+              echo "✅ Sync complete. Service status:"
+              sudo systemctl status ahdunyi-test-api --no-pager -l
+
+              echo ""
+              echo "✅ Server is now at: $(git rev-parse HEAD)"
+            fi
