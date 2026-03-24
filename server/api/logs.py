@@ -109,7 +109,7 @@ def list_action_logs(
     Returns:
         :class:`ActionLogListResponse`
     """
-    perms = get_permissions_for_role(current_user.role.value)
+    perms = get_permissions_for_role(current_user.role.name)
     if Permission.VIEW_SHADOW_AUDIT not in perms:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -38,7 +38,7 @@ router = APIRouter(prefix="/api/team", tags=["team"])
 
 
 def _require_insight_permission(current_user: User) -> None:
-    perms = get_permissions_for_role(current_user.role.value)
+    perms = get_permissions_for_role(current_user.role.name)
     if Permission.VIEW_TEAM_INSIGHT not in perms:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

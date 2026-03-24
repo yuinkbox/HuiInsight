@@ -181,7 +181,7 @@ def update_user(
     if (
         target.id == current_user.id
         and body.role
-        and body.role != current_user.role.value
+        and body.role != current_user.role.name
     ):
         raise HTTPException(status_code=400, detail="Cannot change your own role.")
     try:

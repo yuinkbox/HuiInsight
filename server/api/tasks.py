@@ -110,7 +110,7 @@ def get_or_create_live_patrol_task(
     out.user_info = {
         "username": current_user.username,
         "full_name": current_user.full_name,
-        "role": current_user.role.value,
+        "role": current_user.role.name,
     }
     return out
 
@@ -178,7 +178,7 @@ def get_my_tasks(
             out.user_info = {
                 "username": current_user.username,
                 "full_name": current_user.full_name,
-                "role": current_user.role.value,
+                "role": current_user.role.name,
             }
             return out
 
@@ -282,7 +282,7 @@ def auto_dispatch(
 
     Requires ``action:dispatch_task`` permission.
     """
-    perms = get_permissions_for_role(current_user.role.value)
+    perms = get_permissions_for_role(current_user.role.name)
     if Permission.ACTION_DISPATCH_TASK not in perms:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
