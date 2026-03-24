@@ -1,4 +1,4 @@
-; AHDUNYI Terminal PRO - Inno Setup Script
+﻿; AHDUNYI Terminal PRO - Inno Setup Script
 ; Wraps the PyInstaller onedir output into a standard Windows installer.
 ;
 ; Prerequisites:
@@ -47,7 +47,7 @@ ShowLanguageDialog=no
 LanguageDetectionMethod=none
 
 [Languages]
-Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
