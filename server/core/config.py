@@ -150,8 +150,8 @@ def create_config() -> AppConfig:
     config = AppConfig(
         environment=environment,
         debug=debug,
-        app_name=os.environ.get("APP_NAME", "AHDUNYI Terminal PRO"),
-        app_version=os.environ.get("APP_VERSION", "9.1.0"),
+        app_name=os.environ.get("APP_NAME", "徽鉴 HuiInsight"),
+        app_version=os.environ.get("APP_VERSION", "1.0.0"),
         database=database_config,
         auth=auth_config,
         server=server_config,

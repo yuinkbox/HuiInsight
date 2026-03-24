@@ -35,7 +35,7 @@ router = APIRouter(prefix="/api/client", tags=["client"])
 _VERSION_STORE: dict = {
     "latest_version": "1.0.0",
     "min_required_version": "1.0.0",
-    "download_url": "http://106.15.32.246:8000/downloads/AHDUNYI_Terminal_PRO_Setup_1.0.0.exe",
+    "download_url": "http://106.15.32.246:8000/downloads/HuiInsight_Setup_1.0.0.exe",
     "changelog": "\u521d\u59cb\u7248\u672c",
     "force_update": False,
     "release_date": "2026-03-24",
