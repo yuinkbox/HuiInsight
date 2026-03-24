@@ -58,6 +58,10 @@ export interface AppBridge {
   closeViolationPopup(): void
   /** Notify main WebView that violation was submitted from the popup. */
   notifyViolationSubmitted(payloadJson: string): void
+  /** Start (or restart) the RoomMonitor - call on workflow start. */
+  startMonitor(): void
+  /** Stop the RoomMonitor - call on workflow end. */
+  stopMonitor(): void
   // Signals
   roomIdChanged:       { connect: (cb: (id: string) => void) => void }
   roomInfoChanged:     { connect: (cb: (info: string) => void) => void }
