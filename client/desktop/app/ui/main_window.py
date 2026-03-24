@@ -40,61 +40,74 @@ logger = logging.getLogger(__name__)
 
 
 class _ExitConfirmDialog(QDialog):
-    """Modern dark-themed exit confirmation dialog."""
+    """Arco Design dark-theme exit confirmation dialog.
+
+    Matches ByteDance internal tool visual language:
+    dark background, Arco blue accent, compact layout.
+    """
 
     _STYLE = """
         QDialog {
-            background-color: #0d0f1a;
-            border: 1px solid #1e2240;
-            border-radius: 8px;
+            background-color: #1d2129;
+            border: 1px solid #2e3443;
+            border-radius: 6px;
         }
         QLabel#title {
-            color: #c8d0e0;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+            color: #e5e6eb;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'PingFang SC', 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
         }
         QLabel#body {
-            color: #5a6478;
+            color: #86909c;
             font-size: 12px;
-            font-family: 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+            line-height: 1.6;
+            font-family: 'PingFang SC', 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
         }
         QPushButton#btn_cancel {
-            background-color: transparent;
-            color: #5a6478;
-            border: 1px solid #1e2240;
-            border-radius: 5px;
-            padding: 5px 18px;
+            background-color: #272e3b;
+            color: #86909c;
+            border: 1px solid #2e3443;
+            border-radius: 3px;
+            padding: 4px 16px;
             font-size: 12px;
-            font-family: 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
-            min-width: 72px;
+            font-family: 'PingFang SC', 'Microsoft YaHei UI', sans-serif;
+            min-width: 64px;
+            min-height: 26px;
         }
         QPushButton#btn_cancel:hover {
-            background-color: #13162b;
-            color: #c8d0e0;
-            border-color: #2a3050;
+            background-color: #2e3443;
+            color: #c9cdd4;
+            border-color: #3d4757;
         }
-        QPushButton#btn_cancel:pressed { background-color: #0a0c18; }
+        QPushButton#btn_cancel:pressed {
+            background-color: #1d2129;
+        }
         QPushButton#btn_confirm {
-            background-color: #c0392b;
-            color: #e8e8e8;
+            background-color: #f53f3f;
+            color: #ffffff;
             border: none;
-            border-radius: 5px;
-            padding: 5px 18px;
+            border-radius: 3px;
+            padding: 4px 16px;
             font-size: 12px;
-            font-family: 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+            font-family: 'PingFang SC', 'Microsoft YaHei UI', sans-serif;
             font-weight: 500;
-            min-width: 72px;
+            min-width: 64px;
+            min-height: 26px;
         }
-        QPushButton#btn_confirm:hover { background-color: #a93226; }
-        QPushButton#btn_confirm:pressed { background-color: #922b21; }
+        QPushButton#btn_confirm:hover {
+            background-color: #cb2a2a;
+        }
+        QPushButton#btn_confirm:pressed {
+            background-color: #a81f1f;
+        }
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("退出确认")
         self.setModal(True)
-        self.setFixedSize(320, 148)
+        self.setFixedSize(340, 152)
         self.setWindowFlags(
             Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint
         )
@@ -102,54 +115,57 @@ class _ExitConfirmDialog(QDialog):
         self._build_ui()
         self._center_on_parent()
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton
+
         root = QVBoxLayout(self)
-        root.setContentsMargins(20, 18, 20, 16)
+        root.setContentsMargins(24, 20, 24, 18)
         root.setSpacing(0)
 
+        # Title row
         title_row = QHBoxLayout()
-        title_row.setSpacing(10)
+        title_row.setSpacing(8)
         icon_lbl = QLabel("⚠")
-        icon_lbl.setStyleSheet("font-size: 14px; color: #e67e22;")
+        icon_lbl.setStyleSheet("font-size: 13px; color: #ff7d00; padding-top: 1px;")
         title_row.addWidget(icon_lbl)
         title_lbl = QLabel("确认退出")
         title_lbl.setObjectName("title")
         title_row.addWidget(title_lbl)
         title_row.addStretch()
         root.addLayout(title_row)
-        root.addSpacing(8)
+        root.addSpacing(10)
 
+        # Body
         body_lbl = QLabel(
             "确定要退出 AHDUNYI Terminal PRO 吗？"
-            "当前工作进度已自动保存，下次登录可恢复。"
+            "
+当前工作进度已自动保存。"
         )
         body_lbl.setObjectName("body")
         body_lbl.setWordWrap(True)
         root.addWidget(body_lbl)
         root.addStretch()
-        root.addSpacing(12)
+        root.addSpacing(16)
 
+        # Buttons
         btn_row = QHBoxLayout()
-        btn_row.setSpacing(10)
+        btn_row.setSpacing(8)
         btn_row.addStretch()
 
         cancel_btn = QPushButton("再想想")
         cancel_btn.setObjectName("btn_cancel")
-        cancel_btn.setFixedHeight(28)
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.clicked.connect(self.reject)
         btn_row.addWidget(cancel_btn)
 
-        confirm_btn = QPushButton("确认退出")
+        confirm_btn = QPushButton("退出")
         confirm_btn.setObjectName("btn_confirm")
-        confirm_btn.setFixedHeight(28)
         confirm_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         confirm_btn.clicked.connect(self.accept)
         btn_row.addWidget(confirm_btn)
         root.addLayout(btn_row)
 
-    def _center_on_parent(self):
+    def _center_on_parent(self) -> None:
         if self.parent() is not None:
             pr = self.parent().geometry()
             self.move(
@@ -162,7 +178,6 @@ class _ExitConfirmDialog(QDialog):
                 (sc.width() - self.width()) // 2,
                 (sc.height() - self.height()) // 2,
             )
-
 
 
 class MainWindow(QMainWindow):
