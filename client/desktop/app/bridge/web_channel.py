@@ -294,3 +294,19 @@ class AppBridge(QObject):
                 [installer_path, "/VERYSILENT", "/NORESTART", "/CLOSEAPPLICATIONS"]
             )
             QTimer.singleShot(1500, QApplication.quit)
+
+    @pyqtSlot(str)
+    def startDownload(self, download_url: str) -> None:
+        """Start OTA installer download from JavaScript.
+
+        Args:
+            download_url: Direct URL to the installer file.
+        """
+        win = self.parent()
+        checker = getattr(win, "_update_checker", None) if win else None
+        if checker:
+            checker.start_download(download_url)
+            logger.info("Bridge: startDownload -> %s", download_url)
+        else:
+            logger.warning("Bridge: startDownload called but no UpdateChecker available")
+

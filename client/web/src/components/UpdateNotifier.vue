@@ -118,12 +118,9 @@ function startDownload() {
   if (!updateInfo.value || downloading.value || downloaded.value) return
   downloading.value = true
   progress.value    = 0
-  // Trigger download via Python bridge (bridge handles the actual download)
-  // The download_url is sent back to Python which started the UpdateChecker
-  // We communicate via window event that Python side listens to
-  window.dispatchEvent(new CustomEvent('ota:start-download', {
-    detail: { url: updateInfo.value.download_url }
-  }))
+  getBridge().then(bridge => {
+    bridge?.startDownload(updateInfo.value!.download_url)
+  })
 }
 
 function installNow() {

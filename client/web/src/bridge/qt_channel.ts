@@ -64,6 +64,8 @@ export interface AppBridge {
   stopMonitor(): void
   /** Launch the downloaded installer and exit (desktop only). */
   startInstallUpdate(installerPath: string): void
+  /** Start downloading the OTA installer (desktop only). */
+  startDownload(downloadUrl: string): void
   // Signals
   roomIdChanged:       { connect: (cb: (id: string) => void) => void }
   roomInfoChanged:     { connect: (cb: (info: string) => void) => void }
