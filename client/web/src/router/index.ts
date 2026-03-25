@@ -201,12 +201,6 @@ router.beforeEach(async (to, from, next) => {
     // the component itself can do a secondary guard via can() in template.
   }
 
-  // -- Redirect logged-in users away from login ----------------------------
-  if (to.name === 'Login' && isLoggedIn) {
-    next({ name: 'Dashboard' })
-    return
-  }
-
   next()
 })
 

@@ -1,13 +1,16 @@
 <template>
   <div class="login-page">
-    <!-- 背景装饰 -->
-    <div class="background-decoration">
-      <div class="gradient-circle circle-1" />
-      <div class="gradient-circle circle-2" />
-      <div class="gradient-circle circle-3" />
+    <div class="window-chrome">
+      <div class="chrome-left">
+        <span class="dot red" /><span class="dot yellow" /><span class="dot green" />
+      </div>
+      <span class="chrome-title">HuiInsight Secure Sign-in</span>
+      <span class="chrome-env">TEST</span>
+    </div>
+    <div class="bg">
+      <div class="c c1" /><div class="c c2" /><div class="c c3" />
     </div>
 
-    <!-- 登录卡片 -->
     <a-card
       class="login-card"
       :bordered="false"
@@ -15,53 +18,53 @@
       <template #cover>
         <div class="card-header">
           <div class="logo">
-            <icon-computer size="32" />
-            <span class="logo-text">AHDUNYI</span>
+            <icon-computer :size="32" /><span class="logo-text">AHDUNYI</span>
           </div>
           <a-typography-title
             :level="3"
             class="welcome-text"
           >
-            HuiInsight 徽鉴
+            徽鉴 HuiInsight
           </a-typography-title>
           <a-typography-text
             type="secondary"
             class="subtitle"
           >
-            工作辛苦了，但也需要保持专注与严谨哦
+            工作辛苦了，但也需要保持专注与严谨哦。
           </a-typography-text>
         </div>
       </template>
 
       <div class="login-form">
-        <!-- 用户名 -->
         <div class="form-item">
-          <a-input
-            ref="usernameInputRef"
+          <a-auto-complete
             v-model="username"
-            placeholder="请输入用户名"
-            size="large"
-            allow-clear
-            inputmode="latin"
-            @keyup.enter="handleLogin"
-            @input="handleUsernameInput"
-            @paste="handleUsernamePaste"
+            :data="filteredAccountOptions"
+            @focus="showAllHistoryAccounts"
+            @search="handleUsernameSearch"
+            @select="handleUsernameSelect"
           >
-            <template #prefix>
-              <icon-user />
-            </template>
-          </a-input>
+            <a-input
+              v-model="username"
+              placeholder="请输入用户名"
+              size="large"
+              allow-clear
+              @keyup.enter="handleLogin"
+            >
+              <template #prefix>
+                <icon-user />
+              </template>
+            </a-input>
+          </a-auto-complete>
         </div>
 
-        <!-- 密码 -->
         <div class="form-item">
-          <a-input-password
-            ref="passwordInputRef"
+          <a-input
             v-model="password"
+            :type="showPassword ? 'text' : 'password'"
             placeholder="请输入密码"
             size="large"
             allow-clear
-            inputmode="latin"
             @keyup.enter="handleLogin"
             @input="handlePasswordInput"
             @paste="handlePasswordPaste"
@@ -69,20 +72,60 @@
             <template #prefix>
               <icon-lock />
             </template>
-          </a-input-password>
+            <template #suffix>
+              <a-button
+                type="text"
+                size="mini"
+                class="pwd-toggle-btn"
+                :disabled="isAutoFilledPassword"
+                @click="showPassword = !showPassword"
+              >
+                <icon-eye v-if="!showPassword" /><icon-eye-invisible v-else />
+              </a-button>
+            </template>
+          </a-input>
         </div>
 
-        <!-- 记住登录 -->
+        <Transition name="alert-slide">
+          <div
+            v-if="rememberedAccounts.length > 0"
+            class="history-account-bar"
+          >
+            <a-typography-text
+              type="secondary"
+              class="history-label"
+            >
+              历史账号
+            </a-typography-text>
+            <div class="history-tags">
+              <a-tag
+                v-for="item in rememberedAccounts"
+                :key="item.username"
+                closable
+                bordered
+                class="history-tag"
+                @mousedown.prevent="applyRememberedAccount(item.username)"
+                @close="removeRememberedAccount(item.username)"
+              >
+                {{ item.username }}
+              </a-tag>
+            </div>
+          </div>
+        </Transition>
+
         <div class="form-item remember-item">
-          <a-checkbox v-model="rememberMe">
-            记住登录状态
-          </a-checkbox>
+          <div class="remember-options">
+            <a-checkbox v-model="rememberAccount">
+              记住账号
+            </a-checkbox><a-checkbox v-model="rememberPassword">
+              记住密码
+            </a-checkbox>
+          </div>
           <a-link @click="showForgetPassword">
             忘记密码？
           </a-link>
         </div>
 
-        <!-- 登录按钮 -->
         <a-button
           type="primary"
           size="large"
@@ -94,11 +137,9 @@
         >
           <template #icon>
             <icon-login v-if="!loginLoading" />
-          </template>
-          {{ loginLoading ? '登录中...' : '立即登录' }}
+          </template>{{ loginLoading ? '登录中...' : '立即登录' }}
         </a-button>
 
-        <!-- 登录结果提示 -->
         <Transition name="alert-slide">
           <div
             v-if="apiStatus"
@@ -114,8 +155,6 @@
             />
           </div>
         </Transition>
-
-        <!-- 后端连接状态 -->
         <Transition name="alert-slide">
           <div
             v-if="!backendConnected"
@@ -127,331 +166,107 @@
             >
               <template #icon>
                 <icon-wifi />
-              </template>
-              后端服务未连接
-              <template #content>
-                请确保后端服务正在运行 ({{ apiBaseUrl }})
-                <a-link @click="checkBackend">
+              </template>后端服务未连接<template #content>
+                请确保后端服务正在运行 ({{ apiBaseUrl }}) <a-link @click="checkBackend">
                   点击重试
                 </a-link>
               </template>
             </a-alert>
           </div>
         </Transition>
-
-        <!-- 版本信息 -->
-        <div class="version-info">
-          <a-typography-text type="secondary">
-            © 2026 HuiInsight
-          </a-typography-text>
-        </div>
       </div>
     </a-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import api from '@/api'
 import config from '@/config'
-import { auth } from '@/utils/auth'
+import { auth, type RememberedAccount } from '@/utils/auth'
 import { usePermissionStore } from '@/stores/permission'
 
-const router = useRouter()
-const route  = useRoute()
-const permissionStore = usePermissionStore()
+interface ApiStatus { type: 'success' | 'warning' | 'error' | 'info'; title: string; content: string }
+const router = useRouter(); const route = useRoute(); const permissionStore = usePermissionStore()
+const username = ref(''); const password = ref(''); const rememberAccount = ref(false); const rememberPassword = ref(false)
+const showPassword = ref(false); const isAutoFilledPassword = ref(false); const isApplyingHistory = ref(false)
+const loginLoading = ref(false); const backendConnected = ref(true); const rememberedAccounts = ref<RememberedAccount[]>([])
+const accountQuery = ref(''); const apiStatus = ref<ApiStatus | null>(null); const apiBaseUrl = config.api.baseUrl
 
-// ---- 响应式状态 ------------------------------------------------------------
-const username         = ref('')
-const password         = ref('')
-const rememberMe       = ref(false)
-const loginLoading     = ref(false)
-const backendConnected = ref(true)
-const apiBaseUrl       = config.api.baseUrl
-const usernameInputRef = ref()
-const passwordInputRef = ref()
-
-interface ApiStatus {
-  type: 'success' | 'warning' | 'error' | 'info'
-  title: string
-  content: string
-}
-const apiStatus = ref<ApiStatus | null>(null)
-
-// ---- 计算属性 --------------------------------------------------------------
 const canLogin = computed(() => username.value.trim().length > 0 && password.value.length >= 6)
-
-// ---- 输入校验 ---------------------------------------------------------------
-
-function isValidChar(char: string): boolean {
-  return /^[a-zA-Z0-9_]$/.test(char)
-}
-
-function filterValidChars(text: string): string {
-  return text.split('').filter(isValidChar).join('')
-}
-
-function triggerInvalidFeedback(inputRef: any) {
-  if (!inputRef?.value) return
-  const inputElement = inputRef.value.$el?.querySelector('input')
-  if (!inputElement) return
-  inputElement.classList.add('input-error-glow')
-  setTimeout(() => inputElement.classList.remove('input-error-glow'), 600)
-  if (navigator.vibrate) navigator.vibrate([50, 30, 50])
-  Message.warning('仅支持英文与数字，请切换输入法')
-}
-
-function handleUsernameInput(value: string) {
-  const filtered = filterValidChars(value)
-  if (filtered !== value) { username.value = filtered; triggerInvalidFeedback(usernameInputRef) }
-}
-
-function handleUsernamePaste(event: ClipboardEvent) {
-  event.preventDefault()
-  const pastedText = event.clipboardData?.getData('text') || ''
-  const filtered = filterValidChars(pastedText)
-  if (filtered !== pastedText) triggerInvalidFeedback(usernameInputRef)
-  username.value += filtered
-}
-
-function handlePasswordInput(value: string) {
-  const filtered = filterValidChars(value)
-  if (filtered !== value) { password.value = filtered; triggerInvalidFeedback(passwordInputRef) }
-}
-
-function handlePasswordPaste(event: ClipboardEvent) {
-  event.preventDefault()
-  const pastedText = event.clipboardData?.getData('text') || ''
-  const filtered = filterValidChars(pastedText)
-  if (filtered !== pastedText) triggerInvalidFeedback(passwordInputRef)
-  password.value += filtered
-}
-
-// ---- 生命周期 ---------------------------------------------------------------
-onMounted(() => {
-  document.title = 'HuiInsight 徽鉴 - 登录'
-  loadRememberedAccount()
-  checkBackend()
+const filteredAccountOptions = computed(() => {
+  const q = accountQuery.value.trim().toLowerCase()
+  return (q ? rememberedAccounts.value.filter((i) => i.username.toLowerCase().includes(q)) : rememberedAccounts.value).map((i) => i.username)
 })
+const clean = (t: string): string => t.replace(/[^a-zA-Z0-9_]/g, '')
+const warnInvalid = () => { if (navigator.vibrate) navigator.vibrate([50, 30, 50]); Message.warning('仅支持英文与数字，请切换输入法') }
 
-// ---- 方法 ------------------------------------------------------------------
+function applyRememberedAccount(name: string): void {
+  const exact = rememberedAccounts.value.find((i) => i.username === name); if (!exact) return
+  isApplyingHistory.value = true
+  username.value = exact.username; accountQuery.value = exact.username; password.value = exact.password
+  rememberAccount.value = true; rememberPassword.value = true; isAutoFilledPassword.value = true; showPassword.value = false
+  isApplyingHistory.value = false
+}
+function removeRememberedAccount(name: string): void {
+  auth.removeRememberedPassword(name); rememberedAccounts.value = auth.getRememberedAccounts()
+  if (username.value === name) { password.value = ''; rememberPassword.value = false; isAutoFilledPassword.value = false; showPassword.value = false }
+}
+function handleUsernameSearch(keyword: string): void {
+  const f = clean(keyword); if (f !== keyword) warnInvalid(); accountQuery.value = f; username.value = f
+  const exact = rememberedAccounts.value.find((i) => i.username === f); if (exact) applyRememberedAccount(exact.username)
+}
+function handleUsernameSelect(value: string): void { applyRememberedAccount(clean(value)) }
+function showAllHistoryAccounts(): void { accountQuery.value = '' }
+watch(username, (n, o) => { if (n === o || isApplyingHistory.value) return; password.value = ''; isAutoFilledPassword.value = false; showPassword.value = false })
+function handlePasswordInput(v: string): void { const f = clean(v); if (f !== v) { password.value = f; warnInvalid() } isAutoFilledPassword.value = false }
+function handlePasswordPaste(e: ClipboardEvent): void { e.preventDefault(); const p = e.clipboardData?.getData('text') || ''; const f = clean(p); if (f !== p) warnInvalid(); password.value += f; isAutoFilledPassword.value = false }
 
-async function checkBackend() {
-  try {
-    const res = await api.system.healthCheck()
-    backendConnected.value = res.status === 'healthy' || res.status === 'ok'
-  } catch {
-    backendConnected.value = false
-  }
+onMounted(() => { document.title = '徽鉴 HuiInsight - 登录'; loadRememberedAccount(); checkBackend() })
+async function checkBackend(): Promise<void> { try { const r = await api.system.healthCheck(); backendConnected.value = r.status === 'healthy' || r.status === 'ok' } catch { backendConnected.value = false } }
+function loadRememberedAccount(): void {
+  rememberedAccounts.value = auth.getRememberedAccounts(); const last = auth.getLastUsername(); if (!last) return
+  username.value = last; accountQuery.value = last; rememberAccount.value = true
+  const remembered = auth.getRememberedPassword(last)
+  if (remembered) { password.value = remembered; rememberPassword.value = true; isAutoFilledPassword.value = true; showPassword.value = false }
 }
 
-function loadRememberedAccount() {
-  const lastUsername = auth.getLastUsername()
-  if (lastUsername) { username.value = lastUsername; rememberMe.value = true }
-}
-
-async function handleLogin() {
-  if (!canLogin.value) return
-  loginLoading.value = true
-
+async function handleLogin(): Promise<void> {
+  if (!canLogin.value) return; loginLoading.value = true
   try {
-    const loginData = await api.auth.login(username.value, password.value)
-
-    auth.saveLoginData(loginData.access_token, loginData.user, rememberMe.value, username.value)
-
-    permissionStore.bootstrap({
-      role:        loginData.user.role,
-      permissions: loginData.permissions  ?? [],
-      role_meta:   loginData.role_meta ?? {
-        label: loginData.user.role, color: 'gray', dashboard_view: 'auditor',
-      },
-    })
-
-    Message.success(`欢迎回来，${loginData.user.full_name}`)
-    password.value = ''
-
-    const redirect = route.query.redirect as string
-    setTimeout(() => router.push(redirect || '/dashboard'), 500)
-
+    const finalUsername = username.value.trim(); const loginData = await api.auth.login(finalUsername, password.value)
+    auth.saveLoginData(loginData.access_token, loginData.user, rememberAccount.value, finalUsername)
+    if (rememberPassword.value) auth.saveRememberedPassword(finalUsername, password.value); else auth.removeRememberedPassword(finalUsername)
+    rememberedAccounts.value = auth.getRememberedAccounts()
+    permissionStore.bootstrap({ role: loginData.user.role, permissions: loginData.permissions ?? [], role_meta: loginData.role_meta ?? { label: loginData.user.role, color: 'gray', dashboard_view: 'auditor' } })
+    Message.success(`欢迎回来，${loginData.user.full_name}`); password.value = ''
+    const redirect = route.query.redirect as string; setTimeout(() => router.push(redirect || '/dashboard'), 500)
   } catch (error: any) {
-    password.value = ''
-    const status = error?.response?.status
-    const detail = error?.response?.data?.detail
-
-    if (status === 401) {
-      Message.error('账号或密码错误')
-      apiStatus.value = { type: 'error', title: '认证失败', content: detail || '用户名或密码不正确' }
-    } else if (status === 403) {
-      Message.error('账户已被禁用')
-      apiStatus.value = { type: 'warning', title: '账户禁用', content: '请联系管理员激活账户' }
-    } else if (!error?.response) {
-      Message.error('无法连接到后端服务')
-      apiStatus.value = { type: 'error', title: '网络连接失败', content: `无法连接后端 (${apiBaseUrl})，请检查网络或服务状态` }
-      backendConnected.value = false
-    } else if (status >= 500) {
-      Message.error(`测试服服务异常 (${status})`)
-      apiStatus.value = {
-        type: 'error',
-        title: `服务端异常 (${status})`,
-        content: `${detail || '后端返回 5xx 错误'}，当前目标：${apiBaseUrl}`,
-      }
-      backendConnected.value = true
-    } else {
-      Message.error('登录失败，请稍后重试')
-      apiStatus.value = {
-        type: 'error',
-        title: `请求失败 (${status || 'unknown'})`,
-        content: `${detail || '未知错误'}，当前目标：${apiBaseUrl}`,
-      }
-    }
-  } finally {
-    loginLoading.value = false
-  }
+    password.value = ''; const status = error?.response?.status; const detail = error?.response?.data?.detail
+    if (status === 401) apiStatus.value = { type: 'error', title: '认证失败', content: detail || '用户名或密码不正确' }
+    else if (status === 403) apiStatus.value = { type: 'warning', title: '账户禁用', content: '请联系管理员激活账户' }
+    else if (!error?.response) { apiStatus.value = { type: 'error', title: '网络连接失败', content: `无法连接后端 (${apiBaseUrl})，请检查网络或服务状态` }; backendConnected.value = false }
+    else if (status >= 500) { apiStatus.value = { type: 'error', title: `服务端异常 (${status})`, content: `${detail || '后端返回 5xx 错误'}，当前目标：${apiBaseUrl}` }; backendConnected.value = true }
+    else apiStatus.value = { type: 'error', title: `请求失败 (${status || 'unknown'})`, content: `${detail || '未知错误'}，当前目标：${apiBaseUrl}` }
+  } finally { loginLoading.value = false }
 }
-
-function showForgetPassword() {
-  Message.info('请联系系统管理员重置密码')
-}
+function showForgetPassword(): void { Message.info('请联系系统管理员重置密码') }
 </script>
 
 <style scoped>
-.login-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 24px;
-  position: relative;
-  overflow: hidden;
-  background: #0d0d0d;
-}
-
-.background-decoration {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.gradient-circle {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.12;
-}
-
-.circle-1 {
-  width: 480px; height: 480px;
-  background: radial-gradient(circle, #165dff, #00b42a);
-  top: -240px; right: -240px;
-}
-.circle-2 {
-  width: 360px; height: 360px;
-  background: radial-gradient(circle, #ff7d00, #f53f3f);
-  bottom: -180px; left: -180px;
-}
-.circle-3 {
-  width: 240px; height: 240px;
-  background: radial-gradient(circle, #722ed1, #eb2f96);
-  top: 50%; left: 8%;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 420px;
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
-  z-index: 1;
-  transition: box-shadow 0.3s;
-}
-.login-card:hover { box-shadow: 0 12px 56px rgba(0, 0, 0, 0.5); }
-
-.card-header {
-  text-align: center;
-  padding: 36px 24px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.logo-text {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  background: linear-gradient(135deg, #165dff 0%, #00b42a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.welcome-text { margin: 0; }
-.subtitle { display: block; margin-top: 8px; }
-.login-form { padding: 32px 24px; }
-.form-item { margin-bottom: 20px; }
-
-.remember-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 28px;
-}
-
-.login-button {
-  height: 48px;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.api-status,
-.backend-status { margin-top: 16px; }
-
-.version-info {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  text-align: center;
-}
-
-/* 输入框错误发光 */
-.input-error-glow {
-  animation: errorGlow 0.6s ease-out !important;
-}
-@keyframes errorGlow {
-  0%   { box-shadow: 0 0 0 0 rgba(245, 63, 63, 0.7),   inset 0 0 0 1px rgba(245, 63, 63, 0.3); }
-  50%  { box-shadow: 0 0 0 8px rgba(245, 63, 63, 0.2),  inset 0 0 0 1px rgba(245, 63, 63, 0.5); }
-  100% { box-shadow: 0 0 0 0 rgba(245, 63, 63, 0),      inset 0 0 0 1px rgba(245, 63, 63, 0); }
-}
-
-/* alert 进出过渡 */
-.alert-slide-enter-active {
-  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-}
-.alert-slide-leave-active {
-  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-}
-.alert-slide-enter-from {
-  opacity: 0;
-  transform: translateY(8px) scaleY(0.92);
-}
-.alert-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-4px) scaleY(0.95);
-}
-
-@media (max-width: 480px) {
-  .login-page { padding: 16px; }
-  .login-card { max-width: 100%; }
-  .card-header { padding: 24px 16px 16px; }
-  .login-form { padding: 24px 16px; }
-}
+.window-chrome{position:fixed;inset:0 0 auto 0;height:40px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 14px;z-index:20;background:linear-gradient(180deg,rgba(17,25,42,.92),rgba(14,19,33,.74));border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(12px)}
+.chrome-left{display:flex;gap:8px;align-items:center}.dot{width:10px;height:10px;border-radius:50%}.red{background:#f53f3f}.yellow{background:#ff7d00}.green{background:#00b42a}.chrome-title{justify-self:center;color:#c9d1ea;font-size:12px}.chrome-env{justify-self:end;color:#7bc2ff;font-size:11px}
+.login-page{min-height:100vh;padding-top:40px;display:flex;justify-content:center;align-items:center;background:radial-gradient(1000px 480px at 90% -10%,rgba(22,93,255,.2),transparent),#0d0f14}
+.bg{position:absolute;inset:40px 0 0 0;pointer-events:none}.c{position:absolute;border-radius:50%;filter:blur(86px);opacity:.12}.c1{width:420px;height:420px;background:radial-gradient(circle,#165dff,#00b42a);top:-180px;right:-140px}.c2{width:340px;height:340px;background:radial-gradient(circle,#ff7d00,#f53f3f);bottom:-150px;left:-120px}.c3{width:220px;height:220px;background:radial-gradient(circle,#722ed1,#eb2f96);top:48%;left:6%}
+.login-card{width:min(460px,92vw);background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 42px rgba(0,0,0,.38)}
+.card-header{text-align:center;padding:30px 28px 20px;border-bottom:1px solid rgba(255,255,255,.08)}.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px}.logo-text{font-weight:700;letter-spacing:1px}.subtitle{display:block;margin-top:8px}
+.login-form{padding:30px 28px 26px}.form-item{margin-bottom:20px}.history-account-bar{margin:8px 0 24px;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}.history-label{display:block;margin-bottom:9px}.history-tags{display:flex;flex-wrap:wrap;gap:10px}.history-tag{cursor:pointer}.remember-item{margin-top:6px;margin-bottom:26px;display:flex;justify-content:space-between;align-items:center}.remember-options{display:flex;gap:16px}
+:deep(.arco-input-wrapper){border-radius:10px;border-color:rgba(255,255,255,.16)!important;background:rgba(255,255,255,.04)!important;transition:all .2s ease}
+:deep(.arco-input-wrapper:hover){border-color:rgba(64,128,255,.62)!important;box-shadow:0 4px 14px rgba(29,71,170,.24)}
+:deep(.arco-input-wrapper.arco-input-focus){border-color:#4080ff!important;box-shadow:0 0 0 2px rgba(64,128,255,.26),0 8px 24px rgba(30,78,190,.25)!important}
+:deep(.arco-auto-complete-dropdown){background:#171f33;border:1px solid rgba(255,255,255,.1)}:deep(.arco-option:hover){background:rgba(64,128,255,.2)}
+.login-button{height:46px;border-radius:10px;border:0;background:linear-gradient(135deg,#165dff 0%,#3f8cff 55%,#7aa8ff 100%);transition:transform .2s ease,box-shadow .2s ease}.login-button:hover{transform:translateY(-1px);box-shadow:0 10px 20px rgba(36,98,240,.34)}
+.pwd-toggle-btn{padding:0;color:#8ea2d3}.pwd-toggle-btn:hover{color:#c9d7ff}.api-status,.backend-status{margin-top:16px}
 </style>

@@ -7,6 +7,7 @@ import router from './router'
 import '@arco-design/web-vue/dist/arco.css'
 import './styles/index.css'
 import { usePermissionStore } from '@/stores/permission'
+import { auth } from '@/utils/auth'
 
 // Enable dark theme
 document.body.setAttribute('arco-theme', 'dark')
@@ -18,6 +19,9 @@ app.use(router)
 app.use(ArcoVue)
 app.use(ArcoVueIcon)
 app.mount('#app')
+
+// 安全红线：每次启动都必须手动登录，禁止凭历史会话自动放行。
+auth.clearAuthSession()
 
 // Restore permission store from localStorage on app startup.
 // This works uniformly for both web and desktop (PyQt6) modes.

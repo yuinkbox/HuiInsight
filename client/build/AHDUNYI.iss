@@ -17,7 +17,7 @@
 #define AppVersion   "1.0.0"
 #define AppPublisher "xvyu"
 #define AppExeName   "HuiInsight.exe"
-#define SourceDir    "..\..\dist\AHDUNYI_Terminal_PRO"
+#define SourceDir    "..\..\dist\HuiInsight"
 #define OutputDir    "..\..\installer"
 
 [Setup]

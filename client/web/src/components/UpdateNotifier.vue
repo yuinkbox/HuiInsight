@@ -1,15 +1,29 @@
 <template>
   <!-- 强制更新：模态遮罩，不可关闭 -->
-  <div v-if="forceUpdate && updateInfo" class="update-mask">
+  <div
+    v-if="forceUpdate && updateInfo"
+    class="update-mask"
+  >
     <div class="update-modal">
-      <div class="update-modal__icon">&#x1F504;</div>
-      <div class="update-modal__title">发现新版本 {{ updateInfo.version }}</div>
+      <div class="update-modal__icon">
+        &#x1F504;
+      </div>
+      <div class="update-modal__title">
+        发现新版本 {{ updateInfo.version }}
+      </div>
       <div class="update-modal__body">
         当前版本过低，必须更新后才能继续使用。
       </div>
-      <div v-if="updateInfo.changelog" class="update-modal__changelog">
-        <div class="changelog-label">更新内容：</div>
-        <div class="changelog-text">{{ updateInfo.changelog }}</div>
+      <div
+        v-if="updateInfo.changelog"
+        class="update-modal__changelog"
+      >
+        <div class="changelog-label">
+          更新内容：
+        </div>
+        <div class="changelog-text">
+          {{ updateInfo.changelog }}
+        </div>
       </div>
       <div class="update-modal__actions">
         <button
@@ -29,25 +43,47 @@
           重启安装
         </button>
       </div>
-      <div v-if="downloading" class="progress-bar">
-        <div class="progress-bar__fill" :style="{ width: progress + '%' }" />
+      <div
+        v-if="downloading"
+        class="progress-bar"
+      >
+        <div
+          class="progress-bar__fill"
+          :style="{ width: progress + '%' }"
+        />
       </div>
     </div>
   </div>
 
   <!-- 普通更新：右下角浮动通知条 -->
   <transition name="slide-up">
-    <div v-if="!forceUpdate &amp;&amp; updateInfo &amp;&amp; visible" class="update-toast">
+    <div
+      v-if="!forceUpdate &amp;&amp; updateInfo &amp;&amp; visible"
+      class="update-toast"
+    >
       <div class="update-toast__header">
         <span class="update-toast__icon">&#x2B06;</span>
         <span class="update-toast__title">发现新版本 {{ updateInfo.version }}</span>
-        <button class="update-toast__close" @click="visible = false">&#x2715;</button>
+        <button
+          class="update-toast__close"
+          @click="visible = false"
+        >
+          &#x2715;
+        </button>
       </div>
-      <div v-if="updateInfo.changelog" class="update-toast__changelog">
+      <div
+        v-if="updateInfo.changelog"
+        class="update-toast__changelog"
+      >
         {{ updateInfo.changelog }}
       </div>
       <div class="update-toast__actions">
-        <button class="btn-later" @click="visible = false">稍后</button>
+        <button
+          class="btn-later"
+          @click="visible = false"
+        >
+          稍后
+        </button>
         <button
           class="btn-download"
           :disabled="downloading || downloaded"
@@ -57,10 +93,22 @@
           <span v-else-if="downloading">{{ progress }}%</span>
           <span v-else>已下载</span>
         </button>
-        <button v-if="downloaded" class="btn-install" @click="installNow">重启安装</button>
+        <button
+          v-if="downloaded"
+          class="btn-install"
+          @click="installNow"
+        >
+          重启安装
+        </button>
       </div>
-      <div v-if="downloading" class="progress-bar">
-        <div class="progress-bar__fill" :style="{ width: progress + '%' }" />
+      <div
+        v-if="downloading"
+        class="progress-bar"
+      >
+        <div
+          class="progress-bar__fill"
+          :style="{ width: progress + '%' }"
+        />
       </div>
     </div>
   </transition>
