@@ -106,7 +106,11 @@ def update_version_info(
     Raises:
         HTTPException: 403 if current user is not admin.
     """
-    if current_user.role not in ("admin", "super_admin", "manager"):
+    role_name = getattr(current_user.role, "name", "") if current_user.role else ""
+    if (
+        role_name not in ("admin", "super_admin", "manager")
+        and not current_user.is_superuser
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="\u53ea\u6709\u7ba1\u7406\u5458\u53ef\u4ee5\u66f4\u65b0\u7248\u672c\u4fe1\u606f",
