@@ -387,6 +387,11 @@ class MainWindow(QMainWindow):
         self._bridge.update_room_info(None, None)
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
+        if getattr(self, "_closing_for_update", False):
+            logger.info("MainWindow closing for OTA install.")
+            event.accept()
+            return
+
         dialog = _ExitConfirmDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             logger.info("MainWindow closing.")

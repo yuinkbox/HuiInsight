@@ -280,9 +280,10 @@ class AppBridge(QObject):
 
     @pyqtSlot(str)
     def startInstallUpdate(self, installer_path: str) -> None:
-        from client.desktop.app.core.updater import UpdateChecker
-
         win = self.parent()
+        if win is not None:
+            setattr(win, "_closing_for_update", True)
+
         if win and hasattr(win, "_update_checker") and win._update_checker:
             win._update_checker.install_and_restart()
         else:
@@ -291,7 +292,7 @@ class AppBridge(QObject):
             from PyQt6.QtWidgets import QApplication
 
             subprocess.Popen(
-                [installer_path, "/VERYSILENT", "/NORESTART", "/CLOSEAPPLICATIONS"]
+                [installer_path, "/SILENT", "/NORESTART", "/CLOSEAPPLICATIONS"]
             )
             QTimer.singleShot(1500, QApplication.quit)
 

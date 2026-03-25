@@ -24,12 +24,12 @@ def _resource_root() -> Path:
     """Return the directory that contains bundled resources.
 
     When running inside a PyInstaller one-file EXE, this is the
-    temporary extraction directory (_MEIPASS).  Otherwise it is the
-    project root (two levels above this file: src/config/ -> root).
+    temporary extraction directory (_MEIPASS). Otherwise it resolves
+    to the monorepo root so resources like client/web/dist are found.
     """
     if hasattr(sys, "_MEIPASS"):
         return Path(sys._MEIPASS)  # type: ignore[attr-defined]
-    return Path(__file__).parent.parent.parent
+    return Path(__file__).resolve().parent.parent.parent.parent
 
 
 # ---------------------------------------------------------------------------
@@ -167,6 +167,8 @@ class ConfigManager:
         """Overlay a parsed JSON dict onto the settings dataclass tree."""
         if "display_name" in data:
             settings.display_name = str(data["display_name"])
+        if "version" in data:
+            settings.version = str(data["version"])
 
         srv = data.get("server", {})
         if "url" in srv:

@@ -169,12 +169,7 @@ class UpdateChecker(threading.Thread):
 
         logger.info("Launching installer: %s", self._installer_path)
         subprocess.Popen(
-            [self._installer_path, "/VERYSILENT", "/NORESTART", "/CLOSEAPPLICATIONS"],
-            creationflags=(
-                subprocess.CREATE_NO_WINDOW
-                if hasattr(subprocess, "CREATE_NO_WINDOW")
-                else 0
-            ),
+            [self._installer_path, "/SILENT", "/NORESTART", "/CLOSEAPPLICATIONS"],
         )
         # Delay slightly to let installer start, then quit
         QTimer.singleShot(1500, QApplication.quit)

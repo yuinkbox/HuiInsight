@@ -120,7 +120,7 @@ def _start_update_checker(settings: AppSettings, bridge, main_win) -> None:
             on_update_available=_on_available,
             on_progress=_on_progress,
             on_ready=_on_ready,
-            delay_seconds=8.0,
+            delay_seconds=1.0,
         )
         main_win._update_checker = checker
         checker.start()
@@ -154,7 +154,7 @@ def _start_update_checker(settings, bridge, main_win) -> None:
             on_update_available=_on_available,
             on_progress=_on_progress,
             on_ready=_on_ready,
-            delay_seconds=8.0,
+            delay_seconds=1.0,
         )
         main_win._update_checker = checker
         checker.start()
