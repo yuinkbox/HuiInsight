@@ -46,7 +46,7 @@ def load_environment() -> str:
                 load_dotenv(dotenv_path=env_file, override=False)
                 env = os.environ.get("ENVIRONMENT", "").lower()
                 if env:
-                    print(f"📁 Loaded environment from file: {env_file.name}")
+                    print(f" Loaded environment from file: {env_file.name}")
                     break
 
     # Default to development if still not set
@@ -54,7 +54,7 @@ def load_environment() -> str:
         env = "development"
 
     if env not in ["development", "production", "test"]:
-        print(f"⚠ Warning: Unknown environment '{env}', defaulting to 'development'")
+        print(f" Warning: Unknown environment '{env}', defaulting to 'development'")
         env = "development"
 
     return env
@@ -76,10 +76,10 @@ def load_env_file(environment: str) -> bool:
     for env_file in env_files:
         if env_file.exists():
             load_dotenv(dotenv_path=env_file, override=True)
-            print(f"📁 Loaded environment file: {env_file.name}")
+            print(f" Loaded environment file: {env_file.name}")
             return True
 
-    print(f"⚠ Warning: No .env file found for environment '{environment}'")
+    print(f" Warning: No .env file found for environment '{environment}'")
     return False
 
 
@@ -175,15 +175,15 @@ class EnvAwareConfigManager(ConfigManager):
     def _log_config(self) -> None:
         """Log configuration safely."""
         print("=" * 60)
-        print(f"🚀 {self.settings.display_name} - Desktop Client")
-        print(f"📊 Environment: {self.environment.upper()}")
-        print(f"🌐 Server URL: {self.settings.server.url}")
+        print(f" {self.settings.display_name} - Desktop Client")
+        print(f" Environment: {self.environment.upper()}")
+        print(f" Server URL: {self.settings.server.url}")
         print(
-            f"🖥️  Window: {self.settings.gui.window_width}x{self.settings.gui.window_height}"
+            f"️  Window: {self.settings.gui.window_width}x{self.settings.gui.window_height}"
         )
-        print(f"📝 Log Level: {self.settings.logging.level}")
-        print(f"🔧 Debug Console: {self.settings.debug.enable_console}")
-        print(f"🎯 Target Process: {self.settings.room_monitor.target_process}")
+        print(f" Log Level: {self.settings.logging.level}")
+        print(f" Debug Console: {self.settings.debug.enable_console}")
+        print(f" Target Process: {self.settings.room_monitor.target_process}")
         print("=" * 60)
 
     @property

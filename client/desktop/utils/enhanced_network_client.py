@@ -438,23 +438,23 @@ def format_connectivity_result(result: Dict[str, Any]) -> str:
     """
     lines = []
     lines.append(f"服务器: {result['server_url']}")
-    lines.append(f"可达性: {'✅ 可达' if result['reachable'] else '❌ 不可达'}")
+    lines.append(f"可达性: {' 可达' if result['reachable'] else ' 不可达'}")
 
     if result["dns_resolved"]:
-        lines.append(f"DNS解析: ✅ 成功 ({result.get('resolved_ip', '未知')})")
+        lines.append(f"DNS解析:  成功 ({result.get('resolved_ip', '未知')})")
         if "dns_resolution_time_ms" in result:
             lines.append(f"DNS解析时间: {result['dns_resolution_time_ms']}ms")
     else:
-        lines.append("DNS解析: ❌ 失败")
+        lines.append("DNS解析:  失败")
 
     if "port_open" in result:
-        lines.append(f"端口检查: {'✅ 开放' if result['port_open'] else '❌ 关闭'}")
+        lines.append(f"端口检查: {' 开放' if result['port_open'] else ' 关闭'}")
         if "port_check_time_ms" in result:
             lines.append(f"端口检查时间: {result['port_check_time_ms']}ms")
 
     if "http_accessible" in result:
         lines.append(
-            f"HTTP访问: {'✅ 成功' if result['http_accessible'] else '❌ 失败'}"
+            f"HTTP访问: {' 成功' if result['http_accessible'] else ' 失败'}"
         )
         if "response_time_ms" in result:
             lines.append(f"响应时间: {result['response_time_ms']}ms")

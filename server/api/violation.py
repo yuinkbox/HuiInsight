@@ -60,7 +60,7 @@ def report_violation(body: ViolationReport) -> ReportResponse:
             "header": {
                 "title": {
                     "tag": "plain_text",
-                    "content": "🚨 直播违规处置通知",
+                    "content": " 直播违规处置通知",
                 },
                 "template": "red",
             },
@@ -99,7 +99,7 @@ def report_violation(body: ViolationReport) -> ReportResponse:
                             "is_short": True,
                             "text": {
                                 "tag": "lark_md",
-                                "content": f"**处罚动作**\n🔴 {action_label}",
+                                "content": f"**处罚动作**\n {action_label}",
                             },
                         },
                         {

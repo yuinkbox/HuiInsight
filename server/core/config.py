@@ -78,7 +78,7 @@ def load_environment() -> Environment:
     """Load environment from OS environment variable."""
     env = os.environ.get("ENVIRONMENT", "development").lower()
     if env not in ["development", "production", "test"]:
-        print(f"⚠ Warning: Unknown environment '{env}', defaulting to 'development'")
+        print(f" Warning: Unknown environment '{env}', defaulting to 'development'")
         env = "development"
     return env  # type: ignore
 
@@ -98,10 +98,10 @@ def load_env_file(environment: Environment) -> bool:
     for env_file in env_files:
         if env_file.exists():
             load_dotenv(dotenv_path=env_file, override=True)
-            print(f"📁 Loaded environment file: {env_file.name}")
+            print(f" Loaded environment file: {env_file.name}")
             return True
 
-    print(f"⚠ Warning: No .env file found for environment '{environment}'")
+    print(f" Warning: No .env file found for environment '{environment}'")
     return False
 
 
@@ -169,15 +169,15 @@ def create_config() -> AppConfig:
 def _log_config(config: AppConfig) -> None:
     """Log configuration safely (without sensitive information)."""
     print("=" * 60)
-    print(f"🚀 {config.app_name} - {config.environment.upper()} Environment")
+    print(f" {config.app_name} - {config.environment.upper()} Environment")
     print("=" * 60)
-    print(f"📊 Environment: {config.environment}")
-    print(f"🔧 Debug Mode: {config.debug}")
-    print(f"🌐 Server: {config.server.host}:{config.server.port}")
-    print(f"📁 Database: {_safe_db_url(config.database.url)}")
-    print(f"🔐 JWT Algorithm: {config.auth.jwt_algorithm}")
-    print(f"📚 API Docs: {'Enabled' if config.enable_docs else 'Disabled'}")
-    print(f"🔄 Auto-reload: {config.server.reload}")
+    print(f" Environment: {config.environment}")
+    print(f" Debug Mode: {config.debug}")
+    print(f" Server: {config.server.host}:{config.server.port}")
+    print(f" Database: {_safe_db_url(config.database.url)}")
+    print(f" JWT Algorithm: {config.auth.jwt_algorithm}")
+    print(f" API Docs: {'Enabled' if config.enable_docs else 'Disabled'}")
+    print(f" Auto-reload: {config.server.reload}")
     print("=" * 60)
 
 

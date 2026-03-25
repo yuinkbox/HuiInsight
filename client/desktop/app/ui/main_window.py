@@ -108,7 +108,7 @@ class _ExitConfirmDialog(QDialog):
 
         title_row = QHBoxLayout()
         title_row.setSpacing(8)
-        icon_lbl = QLabel("⚠")
+        icon_lbl = QLabel("")
         icon_lbl.setStyleSheet("font-size: 13px; color: #ff7d00; padding-top: 1px;")
         title_row.addWidget(icon_lbl)
         title_lbl = QLabel("退出")

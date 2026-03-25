@@ -45,7 +45,7 @@ def migrate_existing_roles(session: Session) -> dict:
         # Check if role already exists
         existing_role = session.query(DynamicRole).filter_by(name=role_value).first()
         if existing_role:
-            print(f"✓ Role '{role_value}' already exists (ID: {existing_role.id})")
+            print(f" Role '{role_value}' already exists (ID: {existing_role.id})")
             role_mapping[role_value] = existing_role.id
             continue
 
@@ -63,7 +63,7 @@ def migrate_existing_roles(session: Session) -> dict:
         session.add(new_role)
         session.flush()  # Get the ID
 
-        print(f"✓ Created role '{role_value}' (ID: {new_role.id})")
+        print(f" Created role '{role_value}' (ID: {new_role.id})")
         role_mapping[role_value] = new_role.id
 
     session.commit()
@@ -90,7 +90,7 @@ def migrate_existing_permissions(session: Session) -> dict:
         # Check if permission already exists
         existing_perm = session.query(Permission).filter_by(code=perm_code).first()
         if existing_perm:
-            print(f"✓ Permission '{perm_code}' already exists (ID: {existing_perm.id})")
+            print(f" Permission '{perm_code}' already exists (ID: {existing_perm.id})")
             permission_mapping[perm_code] = existing_perm.id
             continue
 
@@ -116,7 +116,7 @@ def migrate_existing_permissions(session: Session) -> dict:
         session.add(new_perm)
         session.flush()  # Get the ID
 
-        print(f"✓ Created permission '{perm_code}' (ID: {new_perm.id})")
+        print(f" Created permission '{perm_code}' (ID: {new_perm.id})")
         permission_mapping[perm_code] = new_perm.id
 
     session.commit()
@@ -131,13 +131,13 @@ def migrate_role_permissions(
     for role_value, perm_codes in ROLE_PERMISSION_MATRIX.items():
         role_id = role_mapping.get(role_value)
         if not role_id:
-            print(f"⚠ Warning: Role '{role_value}' not found in mapping")
+            print(f" Warning: Role '{role_value}' not found in mapping")
             continue
 
         for perm_code in perm_codes:
             perm_id = permission_mapping.get(perm_code)
             if not perm_id:
-                print(f"⚠ Warning: Permission '{perm_code}' not found in mapping")
+                print(f" Warning: Permission '{perm_code}' not found in mapping")
                 continue
 
             # Check if relationship already exists
@@ -155,7 +155,7 @@ def migrate_role_permissions(
             session.add(new_rel)
 
     session.commit()
-    print("✓ Migrated role-permission relationships")
+    print(" Migrated role-permission relationships")
 
 
 def update_user_roles(session: Session, role_mapping: dict):
@@ -171,7 +171,7 @@ def update_user_roles(session: Session, role_mapping: dict):
         # For now, we'll skip this step and handle it in a separate migration
         pass
 
-    print(f"✓ Updated {updated_count} users")
+    print(f" Updated {updated_count} users")
     return updated_count
 
 
@@ -210,7 +210,7 @@ def main():
 
         except Exception as e:
             session.rollback()
-            print(f"\n❌ Migration failed: {e}")
+            print(f"\n Migration failed: {e}")
             import traceback
 
             traceback.print_exc()

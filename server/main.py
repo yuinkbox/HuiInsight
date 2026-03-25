@@ -34,18 +34,18 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown events."""
     # Startup
-    print(f"🚀 Starting {config.app_name} Backend...")
-    print(f"📊 Environment: {config.environment.upper()}")
-    print(f"🔧 Debug Mode: {config.debug}")
+    print(f" Starting {config.app_name} Backend...")
+    print(f" Environment: {config.environment.upper()}")
+    print(f" Debug Mode: {config.debug}")
 
     # Create tables if they don't exist
     Base.metadata.create_all(bind=engine)
-    print("✅ Database tables ready")
+    print(" Database tables ready")
 
     yield
 
     # Shutdown
-    print(f"👋 Shutting down {config.app_name} Backend...")
+    print(f" Shutting down {config.app_name} Backend...")
 
 
 app = FastAPI(
