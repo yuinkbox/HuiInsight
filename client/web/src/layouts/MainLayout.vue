@@ -3,6 +3,33 @@
     class="main-layout"
     :class="{ 'mini-layout': isMiniMode }"
   >
+    <div
+      v-if="desktopBridge && !isMiniMode"
+      class="window-chrome"
+      @dblclick="toggleMaximize"
+      @mousedown="onChromeMouseDown"
+    >
+      <span class="chrome-title">HuiInsight · Secure Workspace</span>
+      <div class="chrome-right">
+        <span class="chrome-env">TEST</span>
+        <button
+          class="wc-btn wc-min"
+          title="最小化"
+          @click.stop="minimizeWindow"
+        />
+        <button
+          class="wc-btn wc-max"
+          title="最大化/还原"
+          @click.stop="toggleMaximize"
+        />
+        <button
+          class="wc-btn wc-close"
+          title="关闭"
+          @click.stop="closeWindow"
+        />
+      </div>
+    </div>
+
     <!-- 顶部 Header（迷你模式完全隐藏） -->
     <a-layout-header
       v-if="!isMiniMode"
@@ -262,6 +289,7 @@ import { auth } from '@/utils/auth'
 import { usePermissionStore } from '@/stores/permission'
 import { useWorkflowStore } from '@/stores/workflow'
 import { isMiniMode } from '@/composables/useMiniMode'
+import { getBridge } from '@/bridge/qt_channel'
 
 const router          = useRouter()
 const route           = useRoute()
@@ -269,6 +297,7 @@ const permissionStore = usePermissionStore()
 const workflowStore   = useWorkflowStore()
 
 const sidebarCollapsed = ref(false)
+const desktopBridge = ref<Awaited<ReturnType<typeof getBridge>>>(null)
 
 /** 主内容区滚动快捷导航（与 #main-layout-scroll 同步，不改变任何业务数据流） */
 const contentScrollRef = ref<HTMLElement | null>(null)
@@ -313,6 +342,39 @@ function unbindScrollNavObservers() {
   contentResizeObserver = null
 }
 
+
+async function initDesktopBridge() {
+  desktopBridge.value = await getBridge()
+}
+
+function minimizeWindow() {
+  desktopBridge.value?.minimizeWindow?.()
+}
+
+function toggleMaximize() {
+  desktopBridge.value?.toggleMaximizeWindow?.()
+}
+
+function closeWindow() {
+  desktopBridge.value?.closeWindow?.()
+}
+
+function onChromeMouseDown(event: MouseEvent) {
+  if (event.button !== 0) return
+  desktopBridge.value?.startWindowDrag?.(event.screenX, event.screenY)
+  window.addEventListener('mousemove', onChromeMouseMove)
+  window.addEventListener('mouseup', onChromeMouseUp, { once: true })
+}
+
+function onChromeMouseMove(event: MouseEvent) {
+  desktopBridge.value?.dragWindow?.(event.screenX, event.screenY)
+}
+
+function onChromeMouseUp() {
+  desktopBridge.value?.endWindowDrag?.()
+  window.removeEventListener('mousemove', onChromeMouseMove)
+}
+
 watch(
   () => route.fullPath,
   () => nextTick(updateScrollNav),
@@ -330,12 +392,15 @@ const userInfo = ref<StoredUser>({ username: '', full_name: '', role: '', is_sup
 onMounted(() => {
   const stored = auth.getUserInfo() as StoredUser | null
   if (stored) userInfo.value = stored
+  initDesktopBridge()
   window.addEventListener('resize', onWindowResizeForScrollNav, { passive: true })
   nextTick(() => bindScrollNavObservers())
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onWindowResizeForScrollNav)
+  window.removeEventListener('mousemove', onChromeMouseMove)
+  desktopBridge.value = null
   unbindScrollNavObservers()
 })
 
@@ -387,7 +452,7 @@ function handleMenuClick(key: string) {
 }
 
 function goToDashboard() { router.push('/dashboard') }
-function viewProfile()   { Message.info('个人资料功能开发中') }
+function viewProfile()   { router.push('/profile') }
 function viewSettings()  { router.push('/dashboard/hr') }
 
 function showLogoutConfirm() {
@@ -400,7 +465,7 @@ function showLogoutConfirm() {
       workflowStore.clearPersist()
       localStorage.removeItem('blind_checker_state')
       localStorage.removeItem('blind_checker_log')
-      auth.clearLoginData()
+      auth.clearAuthSession()
       permissionStore.clear()
       Message.success('已安全退出系统')
       router.push('/login')
@@ -410,8 +475,12 @@ function showLogoutConfirm() {
 </script>
 
 <style scoped>
+.window-chrome{position:fixed;inset:0 0 auto 0;height:38px;display:flex;justify-content:space-between;align-items:center;padding:0 14px 0 16px;z-index:120;background:linear-gradient(180deg,rgba(15,21,34,.96),rgba(12,17,29,.82));border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(10px);user-select:none;cursor:default}
+.chrome-right{display:flex;align-items:center;gap:8px}.chrome-title{color:#c9d1ea;font-size:12px;letter-spacing:.2px;font-weight:500;cursor:default;user-select:none}.chrome-env{font-size:11px;color:#7bc2ff;opacity:.88;margin-right:6px}
 .main-layout {
   height: 100vh;
+  padding-top: 38px;
+  padding-top: 38px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -436,6 +505,7 @@ function showLogoutConfirm() {
   height: 56px;
   background: var(--color-bg-2);
   border-bottom: 1px solid var(--color-border);
+  
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
@@ -461,17 +531,65 @@ function showLogoutConfirm() {
 .logo {
   display: flex; align-items: center; gap: 10px;
   font-size: 16px; font-weight: 600;
-  color: var(--color-text-1); white-space: nowrap;
+  color: #c9d1ea; white-space: nowrap;
 }
 
 .logo-text {
-  background: linear-gradient(90deg, #165dff, #00b42a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #c9d1ea;
+  letter-spacing: 0.2px;
+  font-weight: 600;
 }
 
 .header-right { display: flex; align-items: center; }
+
+.chrome-env {
+  font-size: 11px;
+  color: #7bc2ff;
+  opacity: 0.88;
+  margin-right: 2px;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 10px;
+}
+
+.wc-btn {
+  width: 20px;
+  height: 16px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  position: relative;
+  opacity: 0.82;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+
+.wc-btn:hover { background: rgba(255, 255, 255, 0.09); opacity: 1; }
+
+.wc-min::before,
+.wc-max::before,
+.wc-close::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.wc-min::before { width: 10px; height: 1.5px; background: #9fb4df; }
+.wc-max::before { width: 10px; height: 8px; border: 1.5px solid #9fb4df; border-radius: 1px; }
+.wc-close::before {
+  width: 10px;
+  height: 10px;
+  background:
+    linear-gradient(45deg, transparent 44%, #c8d7f8 44%, #c8d7f8 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, #c8d7f8 44%, #c8d7f8 56%, transparent 56%);
+}
+.wc-close:hover { background: rgba(245, 63, 63, 0.18); }
+
 
 .user-info {
   display: flex; align-items: center; gap: 10px;
@@ -528,7 +646,7 @@ function showLogoutConfirm() {
   align-items: center;
   justify-content: space-between;
   height: 26px;
-  padding: 0 16px;
+  padding: 0 20px;
   background: var(--color-bg-2);
   border-top: 1px solid var(--color-border);
 }
@@ -580,6 +698,10 @@ function showLogoutConfirm() {
 .breadcrumb { padding: 12px 24px 0; background: var(--color-bg-1); }
 .page-content { padding: 24px 24px 50px; }
 .page-content-mini { padding: 0; }
+
+.mini-layout {
+  padding-top: 38px;
+}
 
 /* 迷你模式：无 header/sider，内容区单独占满视口高度 */
 .mini-layout > .arco-layout {

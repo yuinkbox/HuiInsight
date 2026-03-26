@@ -63,6 +63,104 @@
       </div>
     </div>
 
+
+    <div class="username-requests"> 
+      <div class="username-requests__head"> 
+        <div class="username-requests__title">
+          用户名变更审批
+        </div>
+        <a-radio-group
+          v-model="usernameRequestFilter"
+          type="button"
+          size="small"
+          @change="loadUsernameChangeRequests"
+        > 
+          <a-radio value="pending">
+            待审批
+          </a-radio>
+          <a-radio value="approved">
+            已通过
+          </a-radio>
+          <a-radio value="rejected">
+            已驳回
+          </a-radio>
+          <a-radio value="all">
+            全部
+          </a-radio>
+        </a-radio-group>
+      </div>
+      <a-table
+        :data="usernameRequests"
+        row-key="id"
+        :pagination="{ pageSize: 5 }"
+        size="small"
+      > 
+        <template #columns>
+          <a-table-column
+            title="申请时间"
+            :width="170"
+          > 
+            <template #cell="{ record }">
+              {{ formatDateTime(record.created_at) }}
+            </template>
+          </a-table-column>
+          <a-table-column
+            title="申请人ID"
+            data-index="applicant_user_id"
+            :width="90"
+          />
+          <a-table-column
+            title="变更内容"
+            :width="260"
+          > 
+            <template #cell="{ record }">
+              {{ record.old_username }} → {{ record.new_username }}
+            </template>
+          </a-table-column>
+          <a-table-column
+            title="状态"
+            :width="110"
+          > 
+            <template #cell="{ record }">
+              <a-tag :color="usernameRequestStatusColor(record.status)">
+                {{ usernameRequestStatusText(record.status) }}
+              </a-tag>
+            </template>
+          </a-table-column>
+          <a-table-column title="备注"> 
+            <template #cell="{ record }">
+              {{ record.reason || record.review_comment || '—' }}
+            </template>
+          </a-table-column>
+          <a-table-column
+            title="审批"
+            :width="160"
+          > 
+            <template #cell="{ record }"> 
+              <a-space size="mini"> 
+                <a-button
+                  v-if="record.status === 'pending'"
+                  type="primary"
+                  size="mini"
+                  @click="approveUsernameRequest(record.id)"
+                >
+                  通过
+                </a-button>
+                <a-button
+                  v-if="record.status === 'pending'"
+                  status="danger"
+                  size="mini"
+                  @click="rejectUsernameRequest(record.id)"
+                >
+                  驳回
+                </a-button>
+              </a-space>
+            </template>
+          </a-table-column>
+        </template>
+      </a-table>
+    </div>
+
     <!-- 工具栏 -->
     <div class="toolbar">
       <a-input-search
@@ -481,7 +579,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
-import { rbacApi, type ActiveUser } from '@/api/rbac'
+import { rbacApi, type ActiveUser, type UsernameChangeRequestItem } from '@/api/rbac'
 import { usePermissionStore } from '@/stores/permission'
 import { auth } from '@/utils/auth'
 
@@ -512,6 +610,8 @@ const passwordModal = ref({
   visible: false, loading: false,
   user: null as ActiveUser | null, newPassword: '',
 })
+const usernameRequestFilter = ref<'all' | 'pending' | 'approved' | 'rejected'>('pending')
+const usernameRequests = ref<UsernameChangeRequestItem[]>([])
 
 // ── computed ───────────────────────────────────────────────
 const filteredUsers = computed(() => {
@@ -550,6 +650,21 @@ const roleHexMap: Record<string, string> = {
 }
 function getRoleHex(role: string) { return roleHexMap[role] ?? '#86909c' }
 function formatDate(iso: string) { return iso ? new Date(iso).toLocaleDateString('zh-CN') : '—' }
+function formatDateTime(iso?: string) { return iso ? new Date(iso).toLocaleString('zh-CN') : '—' }
+function usernameRequestStatusText(status: string) {
+  return ({ pending: '待审批', approved: '已通过', rejected: '已驳回', superseded: '已覆盖', cancelled: '已取消' } as Record<string, string>)[status] || status
+}
+function usernameRequestStatusColor(status: string) {
+  return ({ pending: 'arcoblue', approved: 'green', rejected: 'red', superseded: 'orange', cancelled: 'gray' } as Record<string, string>)[status] || 'gray'
+}
+type RawUser = ActiveUser & { role_name?: string }
+
+function normalizeUser(user: RawUser): ActiveUser {
+  return {
+    ...user,
+    role: user.role || user.role_name || '',
+  }
+}
 
 // ── data ───────────────────────────────────────────────────
 async function loadUsers() {
@@ -573,7 +688,7 @@ async function loadUsers() {
       }
     }
     if (res && Array.isArray(res.users)) {
-      users.value = res.users
+      users.value = res.users.map((u) => normalizeUser(u as RawUser))
       console.log('[SettingsPage] loaded', res.users.length, 'users')
     } else {
       console.warn('[SettingsPage] unexpected response shape:', res)
@@ -712,10 +827,56 @@ function confirmDelete(user: ActiveUser) {
   })
 }
 
+
+
+async function loadUsernameChangeRequests() {
+  try {
+    const filter = usernameRequestFilter.value === 'all' ? undefined : usernameRequestFilter.value
+    const res = await rbacApi.getUsernameChangeRequests(filter)
+    usernameRequests.value = res.items || []
+  } catch (e: any) {
+    Message.error(e?.response?.data?.detail || '加载用户名审批列表失败')
+  }
+}
+
+function approveUsernameRequest(requestId: number) {
+  Modal.confirm({
+    title: '确认通过用户名变更',
+    content: '通过后用户需使用新用户名登录，是否继续？',
+    async onOk() {
+      try {
+        await rbacApi.approveUsernameChangeRequest(requestId)
+        Message.success('已通过用户名变更申请')
+        await loadUsernameChangeRequests()
+        await loadUsers()
+      } catch (e: any) {
+        Message.error(e?.response?.data?.detail || '审批失败')
+      }
+    },
+  })
+}
+
+function rejectUsernameRequest(requestId: number) {
+  Modal.confirm({
+    title: '确认驳回用户名变更',
+    content: '驳回后申请将结束，可由用户重新提交。',
+    okButtonProps: { status: 'danger' },
+    async onOk() {
+      try {
+        await rbacApi.rejectUsernameChangeRequest(requestId)
+        Message.success('已驳回用户名变更申请')
+        await loadUsernameChangeRequests()
+      } catch (e: any) {
+        Message.error(e?.response?.data?.detail || '驳回失败')
+      }
+    },
+  })
+}
+
 // ── lifecycle ──────────────────────────────────────────────
 onMounted(async () => {
   await permissionStore.fetchAllRoles()
-  await loadUsers()
+  await Promise.all([loadUsers(), loadUsernameChangeRequests()])
 })
 </script>
 
@@ -790,6 +951,25 @@ onMounted(async () => {
   height: 100%;
   border-radius: 2px;
   transition: width 0.4s ease;
+}
+
+.username-requests {
+  margin-bottom: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(34, 40, 60, 0.55), rgba(24, 28, 44, 0.45));
+}
+.username-requests__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.username-requests__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #bcd0ff;
 }
 
 /* 工具栏 */

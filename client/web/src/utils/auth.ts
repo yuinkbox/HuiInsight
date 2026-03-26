@@ -78,8 +78,30 @@ export const auth = {
     const accounts = readRememberedAccounts().filter((item) => item.username !== normalized)
     writeRememberedAccounts(accounts)
 
-    if (localStorage.getItem(LAST_USERNAME_KEY) === normalized) {
-      localStorage.removeItem(LAST_USERNAME_KEY)
+  },
+
+
+
+  migrateRememberedUsername: (oldUsername: string, newUsername: string): void => {
+    const oldNormalized = normalizeUsername(oldUsername)
+    const newNormalized = normalizeUsername(newUsername)
+    if (!oldNormalized || !newNormalized || oldNormalized === newNormalized) return
+
+    const accounts = readRememberedAccounts()
+    const oldRecord = accounts.find((item) => item.username === oldNormalized)
+    const merged = accounts.filter((item) => item.username !== oldNormalized && item.username !== newNormalized)
+
+    if (oldRecord) {
+      merged.unshift({
+        username: newNormalized,
+        password: oldRecord.password,
+        updatedAt: Date.now(),
+      })
+      writeRememberedAccounts(merged)
+    }
+
+    if (localStorage.getItem(LAST_USERNAME_KEY) === oldNormalized) {
+      localStorage.setItem(LAST_USERNAME_KEY, newNormalized)
     }
   },
 

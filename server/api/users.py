@@ -20,6 +20,8 @@ Version: 1.0.0
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import re
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -30,7 +32,7 @@ from server.api.permissions import _get_current_user
 from server.constants.permissions import Permission
 from server.constants.roles import UserRole
 from server.core.database import get_db
-from server.db.models import User
+from server.db.models import ActionLog, User, UsernameChangeRequest
 from server.db.models_extended import DynamicRole
 from server.schemas import (
     ActiveUsersResponse,
@@ -40,11 +42,32 @@ from server.schemas import (
     UserPasswordReset,
     UserRoleUpdate,
     UserUpdate,
+    UsernameChangeRequestCreate,
+    UsernameChangeRequestListResponse,
+    UsernameChangeRequestOut,
+    UsernameChangeRequestReview,
 )
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{2,32}$")
+
+
+def _normalize_username(username: str) -> str:
+    return str(username or "").strip().lower()
+
+
+def _validate_username_or_400(username: str) -> str:
+    normalized = _normalize_username(username)
+    if not _USERNAME_PATTERN.fullmatch(normalized):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must match [a-zA-Z0-9_]{2,32}.",
+        )
+    return normalized
+
 
 
 def _require_permission(current_user: User, perm: str, db: Session) -> None:
@@ -307,3 +330,181 @@ def delete_user(
         raise HTTPException(
             status_code=500, detail=f"Failed to delete user: {exc}"
         ) from exc
+
+
+
+@router.post("/me/username-change-requests", response_model=UsernameChangeRequestOut, status_code=status.HTTP_201_CREATED)
+def create_my_username_change_request(
+    body: UsernameChangeRequestCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(_get_current_user),
+) -> UsernameChangeRequestOut:
+    """Create a username-change request for the current user."""
+    new_username = _validate_username_or_400(body.new_username)
+    old_username = _normalize_username(current_user.username)
+
+    if new_username == old_username:
+        raise HTTPException(status_code=400, detail="New username must differ from current username.")
+
+    if db.query(User).filter(User.username == new_username, User.id != current_user.id).first():
+        raise HTTPException(status_code=409, detail=f"Username '{new_username}' already exists.")
+
+    pending_same_name = (
+        db.query(UsernameChangeRequest)
+        .filter(
+            UsernameChangeRequest.new_username == new_username,
+            UsernameChangeRequest.status == "pending",
+        )
+        .first()
+    )
+    if pending_same_name:
+        raise HTTPException(status_code=409, detail=f"Username '{new_username}' is pending approval.")
+
+    try:
+        # supersede previous pending requests from the same applicant
+        db.query(UsernameChangeRequest).filter(
+            UsernameChangeRequest.applicant_user_id == current_user.id,
+            UsernameChangeRequest.status == "pending",
+        ).update({"status": "superseded"}, synchronize_session=False)
+
+        req = UsernameChangeRequest(
+            applicant_user_id=current_user.id,
+            old_username=old_username,
+            new_username=new_username,
+            reason=(body.reason or "").strip() or None,
+            status="pending",
+        )
+        db.add(req)
+        db.commit()
+        db.refresh(req)
+        return UsernameChangeRequestOut.model_validate(req)
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create request: {exc}") from exc
+
+
+@router.get("/me/username-change-requests", response_model=UsernameChangeRequestListResponse)
+def list_my_username_change_requests(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(_get_current_user),
+) -> UsernameChangeRequestListResponse:
+    """List current user's username-change requests."""
+    items = (
+        db.query(UsernameChangeRequest)
+        .filter(UsernameChangeRequest.applicant_user_id == current_user.id)
+        .order_by(UsernameChangeRequest.created_at.desc())
+        .all()
+    )
+    return UsernameChangeRequestListResponse(
+        items=[UsernameChangeRequestOut.model_validate(i) for i in items],
+        total=len(items),
+    )
+
+
+@router.get("/username-change-requests", response_model=UsernameChangeRequestListResponse)
+def list_username_change_requests(
+    status_filter: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(_get_current_user),
+) -> UsernameChangeRequestListResponse:
+    """Manager view: list all username-change requests."""
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
+    q = db.query(UsernameChangeRequest)
+    if status_filter:
+        q = q.filter(UsernameChangeRequest.status == status_filter)
+    items = q.order_by(UsernameChangeRequest.created_at.desc()).all()
+    return UsernameChangeRequestListResponse(
+        items=[UsernameChangeRequestOut.model_validate(i) for i in items],
+        total=len(items),
+    )
+
+
+@router.post("/username-change-requests/{request_id}/approve", response_model=OkResponse)
+def approve_username_change_request(
+    request_id: int,
+    body: UsernameChangeRequestReview,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(_get_current_user),
+) -> OkResponse:
+    """Manager approval: apply username change."""
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
+
+    req = db.query(UsernameChangeRequest).filter(UsernameChangeRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found.")
+    if req.status != "pending":
+        raise HTTPException(status_code=400, detail="Only pending requests can be approved.")
+
+    applicant = db.query(User).filter(User.id == req.applicant_user_id).first()
+    if not applicant:
+        raise HTTPException(status_code=404, detail="Applicant user not found.")
+
+    if db.query(User).filter(User.username == req.new_username, User.id != applicant.id).first():
+        raise HTTPException(status_code=409, detail=f"Username '{req.new_username}' already exists.")
+
+    try:
+        old_username = applicant.username
+        applicant.username = req.new_username
+        req.status = "approved"
+        req.reviewer_user_id = current_user.id
+        req.review_comment = (body.comment or "").strip() or None
+        req.reviewed_at = datetime.now(timezone.utc)
+
+        db.query(UsernameChangeRequest).filter(
+            UsernameChangeRequest.applicant_user_id == applicant.id,
+            UsernameChangeRequest.status == "pending",
+            UsernameChangeRequest.id != req.id,
+        ).update({"status": "superseded"}, synchronize_session=False)
+
+        db.add(
+            ActionLog(
+                user_id=current_user.id,
+                username=current_user.username,
+                action="approve_username_change",
+                details=f"approved user_id={applicant.id} username {old_username} -> {req.new_username}",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
+
+        db.commit()
+        return OkResponse(message=f"Username changed: {old_username} -> {req.new_username}")
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to approve request: {exc}") from exc
+
+
+@router.post("/username-change-requests/{request_id}/reject", response_model=OkResponse)
+def reject_username_change_request(
+    request_id: int,
+    body: UsernameChangeRequestReview,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(_get_current_user),
+) -> OkResponse:
+    """Manager reject: close request without applying username."""
+    _require_permission(current_user, Permission.ACTION_UPDATE_ROLE, db)
+
+    req = db.query(UsernameChangeRequest).filter(UsernameChangeRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found.")
+    if req.status != "pending":
+        raise HTTPException(status_code=400, detail="Only pending requests can be rejected.")
+
+    try:
+        req.status = "rejected"
+        req.reviewer_user_id = current_user.id
+        req.review_comment = (body.comment or "").strip() or None
+        req.reviewed_at = datetime.now(timezone.utc)
+        db.add(
+            ActionLog(
+                user_id=current_user.id,
+                username=current_user.username,
+                action="reject_username_change",
+                details=f"rejected request_id={req.id} applicant={req.applicant_user_id} new={req.new_username}",
+                timestamp=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+        return OkResponse(message="Username change request rejected.")
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to reject request: {exc}") from exc

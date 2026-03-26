@@ -145,3 +145,36 @@ class ActionLog(Base):
             f"<ActionLog id={self.id} user={self.username!r}"
             f" action={self.action!r}>"
         )
+
+
+
+class UsernameChangeRequest(Base):
+    """Workflow record for username change requests."""
+
+    __tablename__ = "username_change_requests"
+    __table_args__ = (
+        Index("ix_ucr_applicant_status", "applicant_user_id", "status"),
+        Index("ix_ucr_status_created", "status", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    applicant_user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    old_username: Mapped[str] = mapped_column(String(64), nullable=False)
+    new_username: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    reason: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, server_default="pending")
+    reviewer_user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    review_comment: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=False), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=False), nullable=True, onupdate=func.now()
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<UsernameChangeRequest id={self.id} applicant={self.applicant_user_id}"
+            f" status={self.status!r} old={self.old_username!r} new={self.new_username!r}>"
+        )

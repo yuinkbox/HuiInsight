@@ -249,3 +249,37 @@ class ActionLogListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+
+# ---------------------------------------------------------------------------
+# Username change workflow schemas
+# ---------------------------------------------------------------------------
+class UsernameChangeRequestCreate(BaseModel):
+    new_username: str = Field(..., min_length=2, max_length=32)
+    reason: Optional[str] = Field(None, max_length=255)
+
+
+class UsernameChangeRequestReview(BaseModel):
+    comment: Optional[str] = Field(None, max_length=255)
+
+
+class UsernameChangeRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    applicant_user_id: int
+    old_username: str
+    new_username: str
+    reason: Optional[str] = None
+    status: str
+    reviewer_user_id: Optional[int] = None
+    review_comment: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class UsernameChangeRequestListResponse(BaseModel):
+    items: List[UsernameChangeRequestOut]
+    total: int

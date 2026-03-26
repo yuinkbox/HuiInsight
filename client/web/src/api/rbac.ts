@@ -170,6 +170,20 @@ export interface ActionLogItem {
   timestamp: string
 }
 
+export interface UsernameChangeRequestItem {
+  id: number
+  applicant_user_id: number
+  old_username: string
+  new_username: string
+  reason?: string
+  status: 'pending' | 'approved' | 'rejected' | 'superseded' | 'cancelled'
+  reviewer_user_id?: number
+  review_comment?: string
+  reviewed_at?: string
+  created_at: string
+  updated_at?: string
+}
+
 // ---------------------------------------------------------------------------
 // API ????
 // ---------------------------------------------------------------------------
@@ -227,6 +241,35 @@ export const rbacApi = {
     if (role) params.role = role
     if (isActive !== undefined) params.is_active = String(isActive)
     return api.get('/api/users/all', { params }) as any
+  },
+
+  /** 发起我的用户名变更申请 */
+  async createMyUsernameChangeRequest(newUsername: string, reason?: string): Promise<UsernameChangeRequestItem> {
+    return api.post('/api/users/me/username-change-requests', {
+      new_username: newUsername,
+      reason: reason || undefined,
+    }) as any
+  },
+
+  /** 获取我的用户名变更申请记录 */
+  async getMyUsernameChangeRequests(): Promise<{ items: UsernameChangeRequestItem[]; total: number }> {
+    return api.get('/api/users/me/username-change-requests') as any
+  },
+
+  /** 管理端：查询用户名变更申请 */
+  async getUsernameChangeRequests(statusFilter?: string): Promise<{ items: UsernameChangeRequestItem[]; total: number }> {
+    const params = statusFilter ? { status_filter: statusFilter } : {}
+    return api.get('/api/users/username-change-requests', { params }) as any
+  },
+
+  /** 管理端：审批通过用户名变更 */
+  async approveUsernameChangeRequest(requestId: number, comment?: string): Promise<{ success: boolean; message: string }> {
+    return api.post(`/api/users/username-change-requests/${requestId}/approve`, { comment: comment || undefined }) as any
+  },
+
+  /** 管理端：驳回用户名变更 */
+  async rejectUsernameChangeRequest(requestId: number, comment?: string): Promise<{ success: boolean; message: string }> {
+    return api.post(`/api/users/username-change-requests/${requestId}/reject`, { comment: comment || undefined }) as any
   },
 
   /** 新增用户 */

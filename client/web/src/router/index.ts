@@ -24,6 +24,7 @@ const RealTimePatrolPage   = () => import('@/views/RealTimePatrolPage.vue')
 const ViolationReviewPage  = () => import('@/views/ViolationReviewPage.vue')
 const SOPPage              = () => import('@/views/SOPPage.vue')
 const SettingsPage         = () => import('@/views/SettingsPage.vue')
+const ProfilePage          = () => import('@/views/ProfilePage.vue')
 const NotFoundPage         = () => import('@/views/NotFoundPage.vue')
 const ShadowAuditDashboard = () => import('@/views/supervisor/ShadowAuditDashboard.vue')
 
@@ -119,6 +120,15 @@ const routes: RouteRecordRaw[] = [
           menu: true,
           requiresAuth: true,
           permission: 'view:shadow_audit',   // only manager in matrix
+        },
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: ProfilePage,
+        meta: {
+          title: '个人资料',
+          requiresAuth: true,
         },
       },
       {
