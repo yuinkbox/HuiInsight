@@ -29,7 +29,7 @@ jobs:
       - name: Python Code Quality Check
         run: |
           echo "🔍 Running Python code quality checks..."
-          pip install flake8 black isort
+          pip install flake8 black==24.10.0 isort
           
           # Check Python code style
           echo "📝 Checking code style with black..."
