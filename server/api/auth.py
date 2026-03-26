@@ -20,10 +20,10 @@ from jose import jwt
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from server.constants.permissions import get_permissions_for_role, get_role_meta
 from server.core.config import config
 from server.core.database import get_db
 from server.db.models import User
+from server.db.models_extended import DynamicRole
 from server.schemas import UserOut
 
 _SECRET_KEY: str = config.auth.jwt_secret_key
@@ -168,17 +168,19 @@ def login(
         }
     )
 
-    meta = get_role_meta(role_value)
+    # Get permissions and meta from DynamicRole in DB
+    dynamic_role: DynamicRole = user.role
+    permissions_list = [p.code for p in dynamic_role.permissions if p.is_active]
 
     return TokenResponse(
         access_token=token,
         token_type="bearer",
         user=UserOut.model_validate(user),
-        permissions=get_permissions_for_role(role_value),
+        permissions=permissions_list,
         role_meta=RoleMeta(
-            label=meta["label"],
-            color=meta["color"],
-            dashboard_view=meta["dashboard_view"],
+            label=dynamic_role.display_name,
+            color=dynamic_role.color,
+            dashboard_view=dynamic_role.dashboard_view,
         ),
     )
 
