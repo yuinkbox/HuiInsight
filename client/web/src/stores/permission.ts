@@ -22,6 +22,7 @@ export interface RoleMeta {
 }
 
 export interface RoleDescriptor {
+  id: number
   value: string
   label: string
   color: string

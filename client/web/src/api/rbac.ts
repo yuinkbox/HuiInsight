@@ -154,7 +154,9 @@ export interface ActiveUser {
   username: string
   email: string
   full_name: string
-  role: string
+  role_id: number
+  role_name: string
+  role_display_name: string
   is_active: boolean
   is_superuser: boolean
 }
@@ -278,7 +280,7 @@ export const rbacApi = {
     full_name: string
     password: string
     email?: string | undefined
-    role: string
+    role_id: number
     is_active: boolean
   }): Promise<ActiveUser> {
     return api.post('/api/users/', data) as any
@@ -293,15 +295,15 @@ export const rbacApi = {
   async updateUser(userId: number, data: {
     full_name?: string
     email?: string
-    role?: string
+    role_id?: number
     is_active?: boolean
   }): Promise<ActiveUser> {
     return api.put(`/api/users/${userId}`, data) as any
   },
 
   /** 仅更新用户角色 */
-  async updateUserRole(userId: number, newRole: string): Promise<{ success: boolean; message: string }> {
-    return api.put(`/api/users/${userId}/role`, { role: newRole }) as any
+  async updateUserRole(userId: number, newRoleId: number): Promise<{ success: boolean; message: string }> {
+    return api.put(`/api/users/${userId}/role`, { role_id: newRoleId }) as any
   },
 
   /** 切换用户启用/停用状态 */

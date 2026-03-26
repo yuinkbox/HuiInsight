@@ -226,7 +226,7 @@
               <div class="user-cell">
                 <a-avatar
                   :size="28"
-                  :style="{ background: getRoleHex(record.role), fontSize: '12px' }"
+                  :style="{ background: getRoleHex(record.role_name), fontSize: '12px' }"
                 >
                   {{ ((record.full_name || record.username || '?') + '')[0] }}
                 </a-avatar>
@@ -252,10 +252,10 @@
           >
             <template #cell="{ record }">
               <a-tag
-                :color="getRoleColor(record.role)"
+                :color="getRoleColor(record.role_name)"
                 size="small"
               >
-                {{ getRoleLabel(record.role) }}
+                {{ getRoleLabel(record.role_name) }}
               </a-tag>
             </template>
           </a-table-column>
@@ -484,7 +484,7 @@
       <div class="modal-user-banner">
         <a-avatar
           :size="36"
-          :style="{ background: getRoleHex(roleModal.user?.role || '') }"
+          :style="{ background: getRoleHex(roleModal.user?.role_name || '') }"
         >
           {{ (roleModal.user?.full_name || 'U').charAt(0) }}
         </a-avatar>
@@ -500,8 +500,8 @@
       <a-divider :margin="12" />
       <a-form layout="vertical">
         <a-form-item label="当前角色">
-          <a-tag :color="getRoleColor(roleModal.user?.role || '')">
-            {{ getRoleLabel(roleModal.user?.role || '') }}
+          <a-tag :color="getRoleColor(roleModal.user?.role_name || '')">
+            {{ getRoleLabel(roleModal.user?.role_name || '') }}
           </a-tag>
         </a-form-item>
         <a-form-item
@@ -544,7 +544,7 @@
       <div class="modal-user-banner">
         <a-avatar
           :size="36"
-          :style="{ background: getRoleHex(passwordModal.user?.role || '') }"
+          :style="{ background: getRoleHex(passwordModal.user?.role_name || '') }"
         >
           {{ (passwordModal.user?.full_name || 'U').charAt(0) }}
         </a-avatar>
@@ -617,7 +617,7 @@ const usernameRequests = ref<UsernameChangeRequestItem[]>([])
 const filteredUsers = computed(() => {
   let list = users.value
   // 角色筛选（前端完成，无需重新请求后端）
-  if (filterRole.value) list = list.filter(u => u.role === filterRole.value)
+  if (filterRole.value) list = list.filter(u => u.role_name === filterRole.value)
   if (filterStatus.value === 'active')   list = list.filter(u => u.is_active)
   if (filterStatus.value === 'inactive') list = list.filter(u => !u.is_active)
   const q = searchText.value.trim().toLowerCase()
@@ -635,9 +635,9 @@ const roleStats = computed(() => {
   const total = users.value.length || 1
   return permissionStore.allRoles.map(r => ({
     ...r,
-    count: users.value.filter(u => u.role === r.value).length,
+    count: users.value.filter(u => u.role_name === r.value).length,
     hex:   getRoleHex(r.value),
-    pct:   Math.round(users.value.filter(u => u.role === r.value).length / total * 100),
+    pct:   Math.round(users.value.filter(u => u.role_name === r.value).length / total * 100),
   }))
 })
 
@@ -657,12 +657,12 @@ function usernameRequestStatusText(status: string) {
 function usernameRequestStatusColor(status: string) {
   return ({ pending: 'arcoblue', approved: 'green', rejected: 'red', superseded: 'orange', cancelled: 'gray' } as Record<string, string>)[status] || 'gray'
 }
-type RawUser = ActiveUser & { role_name?: string }
+type RawUser = ActiveUser & { role?: string }
 
 function normalizeUser(user: RawUser): ActiveUser {
   return {
     ...user,
-    role: user.role || user.role_name || '',
+    role_name: user.role_name || user.role || '',
   }
 }
 
@@ -711,11 +711,14 @@ async function submitCreate() {
   createModal.value.loading = true
   try {
     const f = createModal.value.form
+    const cRoleItem = permissionStore.allRoles.find(r => r.value === f.role)
+    const cRoleId = cRoleItem?.id
+    if (!cRoleId) { Message.warning('请选择有效角色'); return }
     await rbacApi.createUser({
       username: f.username, full_name: f.full_name,
       password: f.password,
       email: f.email || undefined,
-      role: f.role, is_active: f.is_active,
+      role_id: cRoleId, is_active: f.is_active,
     })
     Message.success(`人员「${f.full_name}」创建成功`)
     createModal.value.visible = false
@@ -750,14 +753,17 @@ async function submitEdit() {
 
 // ── 修改角色 ───────────────────────────────────────────────
 function openRoleModal(user: ActiveUser) {
-  roleModal.value = { visible: true, loading: false, user, newRole: user.role }
+  roleModal.value = { visible: true, loading: false, user, newRole: user.role_name }
 }
 async function submitRoleChange() {
   const { user, newRole } = roleModal.value
   if (!user || !newRole) return
   roleModal.value.loading = true
   try {
-    await rbacApi.updateUserRole(user.id, newRole)
+    const roleItem = permissionStore.allRoles.find(r => r.value === newRole)
+    const roleId = roleItem?.id
+    if (!roleId) { Message.warning('未找到对应角色ID'); return }
+    await rbacApi.updateUserRole(user.id, roleId)
     Message.success(`已将「${user.full_name}」角色更新为 ${getRoleLabel(newRole)}`)
     roleModal.value.visible = false
     await loadUsers()

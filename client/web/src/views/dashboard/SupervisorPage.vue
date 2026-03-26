@@ -1077,7 +1077,7 @@ const dynamicRolesConfigRef = ref<InstanceType<typeof DynamicRolesConfig> | null
 const roleDistribution = computed(() => {
   const distribution: Record<string, number> = {}
   allUsers.value.forEach(user => {
-    distribution[user.role] = (distribution[user.role] || 0) + 1
+    distribution[user.role_name] = (distribution[user.role_name] || 0) + 1
   })
   return distribution
 })
@@ -1291,14 +1291,17 @@ const filterUsersByRole = () => {
   if (!userFilterRole.value) {
     filteredUsers.value = [...allUsers.value]
   } else {
-    filteredUsers.value = allUsers.value.filter(user => user.role === userFilterRole.value)
+    filteredUsers.value = allUsers.value.filter(user => user.role_name === userFilterRole.value)
   }
 }
 
 // 5. 更新用户角色
 const handleUpdateUserRole = async (userId: number, newRole: string) => {
   try {
-    const response = await rbacApi.updateUserRole(userId, newRole)
+    const roleItem = permissionStore.allRoles.find(r => r.value === newRole)
+    const roleId = roleItem?.id
+    if (!roleId) { Message.warning('未找到对应角色ID'); return }
+    const response = await rbacApi.updateUserRole(userId, roleId)
     
     if (response.success) {
       Message.success(response.message)

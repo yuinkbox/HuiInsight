@@ -158,7 +158,7 @@ def create_user(
             full_name=body.full_name,
             email=body.email,
             hashed_password=_pwd_context.hash(body.password),
-            role=body.role,
+            role_id=body.role_id,
             is_active=body.is_active,
             is_superuser=False,
         )
@@ -202,8 +202,8 @@ def update_user(
         raise HTTPException(status_code=404, detail="User not found.")
     if (
         target.id == current_user.id
-        and body.role
-        and body.role != current_user.role.name
+        and body.role_id is not None
+        and body.role_id != current_user.role_id
     ):
         raise HTTPException(status_code=400, detail="Cannot change your own role.")
     try:
@@ -211,8 +211,11 @@ def update_user(
             target.full_name = body.full_name
         if body.email is not None:
             target.email = body.email
-        if body.role is not None:
-            target.role = body.role  # type: ignore[assignment]
+        if body.role_id is not None:
+            role_obj = db.query(DynamicRole).filter(DynamicRole.id == body.role_id).first()
+            if not role_obj:
+                raise HTTPException(status_code=400, detail=f"Invalid role_id: {body.role_id}")
+            target.role_id = body.role_id
         if body.is_active is not None:
             target.is_active = body.is_active
         db.commit()
@@ -239,14 +242,14 @@ def update_user_role(
     target = db.query(User).filter(User.id == user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="User not found.")
-    valid_roles = {r.value for r in UserRole}
-    if body.role not in valid_roles:
-        raise HTTPException(status_code=400, detail=f"Invalid role '{body.role}'.")
+    role_obj = db.query(DynamicRole).filter(DynamicRole.id == body.role_id).first()
+    if not role_obj:
+        raise HTTPException(status_code=400, detail=f"Invalid role_id '{body.role_id}'.")
     try:
-        target.role = body.role  # type: ignore[assignment]
+        target.role_id = body.role_id
         db.commit()
         return OkResponse(
-            message=f"User {target.username} role updated to '{body.role}'."
+            message=f"User {target.username} role updated to '{role_obj.name}'."
         )
     except HTTPException:
         raise

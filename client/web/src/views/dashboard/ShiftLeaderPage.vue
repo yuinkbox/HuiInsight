@@ -52,7 +52,7 @@
                   <div class="user-item">
                     <a-avatar
                       :size="32"
-                      :style="{ backgroundColor: getUserColor(user.role) }"
+                      :style="{ backgroundColor: getUserColor(user.role_name) }"
                     >
                       {{ user.username?.charAt(0)?.toUpperCase() || 'U' }}
                     </a-avatar>
@@ -62,10 +62,10 @@
                       </div>
                       <div class="user-role">
                         <a-tag
-                          :color="getUserColor(user.role)"
+                          :color="getUserColor(user.role_name)"
                           size="small"
                         >
-                          {{ permissionStore.allRoles.find((r) => r.value === user.role)?.label ?? user.role }}
+                          {{ permissionStore.allRoles.find((r) => r.value === user.role_name)?.label ?? user.role_name }}
                         </a-tag>
                       </div>
                     </div>

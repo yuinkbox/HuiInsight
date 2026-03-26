@@ -152,6 +152,7 @@ def get_all_roles(
 
     role_descriptors = [
         {
+            "id": role.id,
             "value": role.name,
             "label": role.display_name,
             "color": role.color,
