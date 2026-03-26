@@ -30,7 +30,6 @@ from sqlalchemy.orm import Session
 
 from server.api.permissions import _get_current_user
 from server.constants.permissions import Permission
-from server.constants.roles import UserRole
 from server.core.database import get_db
 from server.db.models import ActionLog, User, UsernameChangeRequest
 from server.db.models_extended import DynamicRole
