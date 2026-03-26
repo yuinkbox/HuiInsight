@@ -343,6 +343,8 @@ def reject_username_change_request(
     except Exception as exc:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to reject request: {exc}") from exc
+
+
 @router.get("/{user_id}", response_model=UserOut)
 def get_user(
     user_id: int,
@@ -482,5 +484,3 @@ def delete_user(
     except Exception as exc:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete user: {exc}") from exc
-
-
