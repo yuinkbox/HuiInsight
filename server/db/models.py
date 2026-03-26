@@ -147,7 +147,6 @@ class ActionLog(Base):
         )
 
 
-
 class UsernameChangeRequest(Base):
     """Workflow record for username change requests."""
 

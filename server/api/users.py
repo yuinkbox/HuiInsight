@@ -69,7 +69,6 @@ def _validate_username_or_400(username: str) -> str:
     return normalized
 
 
-
 def _require_permission(current_user: User, perm: str, db: Session) -> None:
     """Raise 403 if current_user does not hold perm."""
     # Get user's role with permissions
@@ -330,7 +329,6 @@ def delete_user(
         raise HTTPException(
             status_code=500, detail=f"Failed to delete user: {exc}"
         ) from exc
-
 
 
 @router.post("/me/username-change-requests", response_model=UsernameChangeRequestOut, status_code=status.HTTP_201_CREATED)
