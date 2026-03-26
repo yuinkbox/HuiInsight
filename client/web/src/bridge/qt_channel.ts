@@ -52,6 +52,18 @@ export interface AppBridge {
   setAlwaysOnTop(enabled: boolean): void
   /** Switch between mini-float and normal window (desktop only). */
   setMiniMode(enabled: boolean): void
+  /** Minimize frameless desktop window. */
+  minimizeWindow(): void
+  /** Toggle maximize / restore for frameless desktop window. */
+  toggleMaximizeWindow(): void
+  /** Close desktop window. */
+  closeWindow(): void
+  /** Begin native drag session from custom title bar. */
+  startWindowDrag(screenX: number, screenY: number): void
+  /** Continue native drag session. */
+  dragWindow(screenX: number, screenY: number): void
+  /** End native drag session. */
+  endWindowDrag(): void
   /** Open a separate OS window for violation form (desktop mini mode). */
   openViolationPopup(): void
   /** Close the auxiliary violation form window. */

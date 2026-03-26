@@ -161,10 +161,14 @@ class UsernameChangeRequest(Base):
     old_username: Mapped[str] = mapped_column(String(64), nullable=False)
     new_username: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     reason: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    status: Mapped[str] = mapped_column(String(24), nullable=False, server_default="pending")
+    status: Mapped[str] = mapped_column(
+        String(24), nullable=False, server_default="pending"
+    )
     reviewer_user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     review_comment: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=False), nullable=True)
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=False), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=False, server_default=func.now()
     )

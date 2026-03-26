@@ -168,6 +168,51 @@ class AppBridge(QObject):
             logger.info("Bridge: miniMode -> %s", enabled)
 
     @pyqtSlot()
+    def minimizeWindow(self) -> None:
+        """Minimize desktop main window from JavaScript."""
+        win = self.parent()
+        if win and hasattr(win, "minimize_window"):
+            win.minimize_window()
+            logger.info("Bridge: minimizeWindow")
+
+    @pyqtSlot()
+    def toggleMaximizeWindow(self) -> None:
+        """Toggle maximize / restore for desktop main window."""
+        win = self.parent()
+        if win and hasattr(win, "toggle_maximize_window"):
+            win.toggle_maximize_window()
+            logger.info("Bridge: toggleMaximizeWindow")
+
+    @pyqtSlot()
+    def closeWindow(self) -> None:
+        """Close desktop main window from JavaScript."""
+        win = self.parent()
+        if win and hasattr(win, "close"):
+            win.close()
+            logger.info("Bridge: closeWindow")
+
+    @pyqtSlot(int, int)
+    def startWindowDrag(self, screen_x: int, screen_y: int) -> None:
+        """Begin frameless window dragging from JS title bar."""
+        win = self.parent()
+        if win and hasattr(win, "start_window_drag"):
+            win.start_window_drag(screen_x, screen_y)
+
+    @pyqtSlot(int, int)
+    def dragWindow(self, screen_x: int, screen_y: int) -> None:
+        """Continue frameless window dragging."""
+        win = self.parent()
+        if win and hasattr(win, "drag_window"):
+            win.drag_window(screen_x, screen_y)
+
+    @pyqtSlot()
+    def endWindowDrag(self) -> None:
+        """End frameless window dragging."""
+        win = self.parent()
+        if win and hasattr(win, "end_window_drag"):
+            win.end_window_drag()
+
+    @pyqtSlot()
     def openViolationPopup(self) -> None:
         """Open a separate OS window for the violation form (mini mode)."""
         win = self.parent()

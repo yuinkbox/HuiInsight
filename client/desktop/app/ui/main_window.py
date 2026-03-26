@@ -14,7 +14,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtCore import Qt, QUrl, QPoint
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWebChannel import QWebChannel
 from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile, QWebEngineSettings
@@ -182,6 +182,8 @@ class MainWindow(QMainWindow):
         self._is_mini = False
         self._normal_geometry = None
         self._violation_dialog: Optional[QDialog] = None
+        self._drag_active = False
+        self._drag_offset = QPoint()
 
         self._setup_window()
         self._setup_webengine()
@@ -200,6 +202,7 @@ class MainWindow(QMainWindow):
     def _setup_window(self) -> None:
         self.setWindowTitle("AHDUNYI Terminal PRO")
         self.resize(self._settings.gui.window_width, self._settings.gui.window_height)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         screen = QApplication.primaryScreen().geometry()
         self.move(
             (screen.width() - self.width()) // 2,
@@ -301,6 +304,34 @@ class MainWindow(QMainWindow):
                 )
             self._is_mini = False
             logger.info("Exited mini mode")
+
+    def minimize_window(self) -> None:
+        """Minimize frameless window."""
+        self.showMinimized()
+
+    def toggle_maximize_window(self) -> None:
+        """Toggle maximize/restore for frameless window."""
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
+
+    def start_window_drag(self, screen_x: int, screen_y: int) -> None:
+        """Start dragging frameless window."""
+        if self.isMaximized():
+            return
+        self._drag_active = True
+        self._drag_offset = QPoint(screen_x - self.x(), screen_y - self.y())
+
+    def drag_window(self, screen_x: int, screen_y: int) -> None:
+        """Drag frameless window according to cursor."""
+        if not self._drag_active or self.isMaximized():
+            return
+        self.move(screen_x - self._drag_offset.x(), screen_y - self._drag_offset.y())
+
+    def end_window_drag(self) -> None:
+        """Stop dragging frameless window."""
+        self._drag_active = False
 
     def open_violation_popup(self) -> None:
         """Second top-level WebEngine window sharing profile (same login storage)."""
