@@ -1,0 +1,198 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "devPath": "http://localhost:3000",
+    "distDir": "../dist",
+    "withGlobalTauri": false
+  },
+  "package": {
+    "productName": "徽鉴HuiInsight",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "fs": {
+        "all": false,
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,
+        "exists": true
+      },
+      "window": {
+        "all": false,
+        "create": true,
+        "center": true,
+        "requestUserAttention": true,
+        "setResizable": true,
+        "setMaximizable": true,
+        "setMinimizable": true,
+        "setClosable": true,
+        "setTitle": true,
+        "maximize": true,
+        "unmaximize": true,
+        "minimize": true,
+        "unminimize": true,
+        "show": true,
+        "hide": true,
+        "close": true,
+        "setDecorations": true,
+        "setAlwaysOnTop": true,
+        "setContentProtected": true,
+        "setSize": true,
+        "setMinSize": true,
+        "setMaxSize": true,
+        "setPosition": true,
+        "setFullscreen": true,
+        "setFocus": true,
+        "setIcon": true,
+        "setSkipTaskbar": true,
+        "setCursorGrab": true,
+        "setCursorVisible": true,
+        "setCursorIcon": true,
+        "setCursorPosition": true,
+        "setIgnoreCursorEvents": true,
+        "startDragging": true
+      },
+      "http": {
+        "all": false,
+        "request": true
+      },
+      "notification": {
+        "all": true
+      },
+      "globalShortcut": {
+        "all": true
+      },
+      "os": {
+        "all": false,
+        "platform": true,
+        "version": true,
+        "type": true,
+        "arch": true,
+        "family": true,
+        "hostname": true
+      },
+      "path": {
+        "all": true
+      },
+      "protocol": {
+        "asset": true,
+        "assetScope": ["**/*"]
+      },
+      "process": {
+        "all": false,
+        "exit": true,
+        "restart": true
+      },
+      "clipboard": {
+        "all": false,
+        "writeText": true,
+        "readText": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.xuyu.huiinsight",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "resources": [],
+      "externalBin": [],
+      "copyright": "© 2024 xuyu. All rights reserved.",
+      "category": "Business",
+      "shortDescription": "Windows桌面直播内容巡查终端",
+      "longDescription": "徽鉴HuiInsight是一款专业的Windows桌面应用，用于直播内容巡查和违规检测。",
+      "deb": {
+        "depends": []
+      },
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": "",
+        "exceptionDomain": "",
+        "signingIdentity": null,
+        "entitlements": null
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": "",
+        "tsp": false,
+        "webviewInstallMode": {
+          "type": "downloadBootstrapper"
+        },
+        "nsis": {
+          "license": null,
+          "headerImage": null,
+          "sidebarImage": null,
+          "installMode": "perMachine",
+          "languages": ["SimpChinese"],
+          "displayLanguageSelector": true
+        }
+      }
+    },
+    "security": {
+      "csp": "default-src 'self' http://localhost:*; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    },
+    "windows": [
+      {
+        "title": "徽鉴HuiInsight",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "visible": true,
+        "maximized": false,
+        "transparent": false,
+        "skipTaskbar": false,
+        "center": true,
+        "theme": "system"
+      }
+    ],
+    "systemTray": {
+      "iconPath": "icons/tray-icon.png",
+      "iconAsTemplate": false,
+      "menuOnLeftClick": false,
+      "menu": [
+        {
+          "id": "show",
+          "text": "显示窗口",
+          "enabled": true
+        },
+        {
+          "id": "hide",
+          "text": "隐藏窗口",
+          "enabled": true
+        },
+        {
+          "type": "Separator"
+        },
+        {
+          "id": "quit",
+          "text": "退出",
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

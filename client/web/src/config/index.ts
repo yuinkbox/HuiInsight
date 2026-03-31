@@ -53,6 +53,10 @@ const loadConfig = (): AppConfig => {
   
   // 固定使用后端地址（避免环境变量干扰）
   const getApiBaseUrl = () => {
+    // 开发环境使用本地地址，生产环境使用远程地址
+    if (environment === 'development') {
+      return 'http://localhost:8000'
+    }
     return 'http://106.15.32.246:8000'
   }
   

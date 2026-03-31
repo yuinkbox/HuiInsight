@@ -5,7 +5,8 @@ import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiBaseUrl = env.VITE_API_BASE_URL || 'http://106.15.32.246:8000'
+  // 开发环境使用本地地址，生产环境使用远程地址
+  const apiBaseUrl = env.VITE_API_BASE_URL || (mode === 'development' ? 'http://localhost:8000' : 'http://106.15.32.246:8000')
 
   return {
     plugins: [vue()],

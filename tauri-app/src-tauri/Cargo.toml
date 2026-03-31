@@ -1,0 +1,42 @@
+[package]
+name = "徽鉴HuiInsight"
+version = "1.0.0"
+description = "Windows桌面直播内容巡查终端"
+authors = ["xuyu"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.70"
+
+# 应用入口
+[[bin]]
+name = "徽鉴HuiInsight"
+path = "src/main.rs"
+
+[dependencies]
+tauri = { version = "1.5", features = ["shell-open", "system-tray", "global-shortcut", "notification"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+rusqlite = { version = "0.30", features = ["bundled"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+argon2 = "0.5"
+jsonwebtoken = "9.0"
+rand = "0.8"
+log = "0.4"
+env_logger = "0.10"
+thiserror = "1.0"
+anyhow = "1.0"
+
+# 开发依赖
+[dev-dependencies]
+tauri = { version = "1.5", features = [] }
+
+[build-dependencies]
+tauri-build = { version = "1.5" }
+
+[features]
+# 默认功能
+default = ["custom-protocol"]
+# 自定义协议支持
+custom-protocol = ["tauri/custom-protocol"]
