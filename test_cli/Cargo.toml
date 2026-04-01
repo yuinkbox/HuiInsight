@@ -1,0 +1,10 @@
+[package]
+name = "huiinsight-test"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+rusqlite = { version = "0.30", features = ["bundled"] }
+chrono = { version = "0.4", features = ["serde"] }
+argon2 = "0.6.0-rc.8"
+rand = "0.8"
